@@ -1,0 +1,46 @@
+name: enterpriseagent
+
+services:
+  postgres:
+    image: postgres:17.11-bookworm
+    environment:
+      POSTGRES_USER: ea_local_admin
+      POSTGRES_DB: enterprise_agent
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_superuser_password
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - ${EA_POSTGRES_DATA_DIR:-../var/postgres-data}:/var/lib/postgresql/data
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/10-enterpriseagent.sh:ro
+    secrets:
+      - postgres_superuser_password
+      - postgres_app_password
+      - postgres_test_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ea_local_admin -d enterprise_agent"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:56379:6379"
+    volumes:
+      - ${EA_REDIS_DATA_DIR:-../var/redis-data}:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+secrets:
+  postgres_superuser_password:
+    file: ../var/infra/postgres-superuser-password
+  postgres_app_password:
+    file: ../var/infra/postgres-app-password
+  postgres_test_password:
+    file: ../var/infra/postgres-test-password

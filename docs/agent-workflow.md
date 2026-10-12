@@ -1,6 +1,6 @@
 # LangGraph 工作流设计
 
-**当前 Phase 1 尚未实现 LangGraph、Tool Calling、Checkpoint、RAG 或人工确认。** 本文件记录 Phase 4 的实现合同，以及 Phase 3 / 5 / 6 与其对接的边界。
+**当前 Phase 2 尚未实现 LangGraph、Tool Calling、Checkpoint 或 RAG。** 已实现后端业务确认、确定性退款 Service 和订单 API，可供后续工具复用；业务确认尚不是 LangGraph interrupt。本文件记录 Phase 4 合同，以及 Phase 3 / 5 / 6 对接边界。
 
 ## 单 Agent 多工具
 
@@ -46,7 +46,7 @@ flowchart TD
 - 执行步数、工具次数、重试次数、时间预算。
 - 模型实际 Token 使用、耗时和安全错误摘要。
 
-`agent_sessions` 绑定会话所有者；`agent_tasks` 保存任务摘要、状态与步骤。LangGraph PostgreSQL Checkpointer 保存恢复所需状态。HTTP 客户端不能指定另一个用户身份，也不能自由访问别人的 thread ID。
+`agent_sessions` 与 `agent_tasks` 的模型和迁移已存在，但当前没有会话/任务 API 或图执行。Phase 4 会以会话所有者绑定 thread，并由 LangGraph PostgreSQL Checkpointer 保存恢复状态。HTTP 客户端不能指定另一用户身份或自由访问他人 thread ID。
 
 初期同一线程串行执行。Worker 用租约领取任务，超时租约可恢复。等待用户确认时持久化中断并释放 Worker，不占用 30 分钟的运行资源。
 
@@ -67,7 +67,9 @@ flowchart TD
 
 ## 人工确认与恢复
 
-退款确认卡片展示订单、金额、原因、政策来源和提交结果。后台保存 `approval_requests`，绑定确认人、任务、thread、操作快照、参数摘要与有效期。
+Phase 2 已由 `refund-preview` 创建 `approval_requests`，绑定用户、订单、操作快照、摘要和 30 分钟有效期；显式 confirmed=true 后 Service 重读并创建待审核申请。当前任务关联允许为空，没有 thread 或前端确认卡片。
+
+Phase 4 会在这个业务协议之上接入 LangGraph：卡片显示订单、金额、原因和政策来源，审批关联任务和 thread。业务权限、摘要与事务重查继续由同一 Service 执行，不在图中复制规则。
 
 用户确认后，服务端验证所有者、有效期和摘要，构造 `Command(resume=...)`。拒绝、过期或参数变化均不能继续写入。修改订单、金额或原因需要生成新的确认内容。
 
@@ -104,7 +106,7 @@ Validation 计划检查引用是否存在、文档版本是否有效、用户是
 
 接口地址、模型和 Thinking 选项配置化，通过 OpenAI 兼容接口接入。先验证非 Thinking 工具调用路径，不依赖 Thinking 模式中不受支持的强制工具选项。具体限制以实现时的 [DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/) 和实际调用为准。
 
-Phase 1 只预留安全配置，不发出模型请求。后续在线测试必须使用实际 API 返回的耗时和 Token；测试替身仅证明流程，不证明模型效果。
+Phase 2 仍只预留模型安全配置，没有模型 Client，不发出模型请求。后续在线测试必须使用实际 API 返回的耗时和 Token；测试替身仅证明流程，不证明模型效果。
 
 ## MCP 和分析分支
 

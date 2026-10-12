@@ -2,7 +2,7 @@
 
 ## 当前结果边界
 
-Phase 1 提供基础工程自动化测试；当前没有业务、检索、模型、SQL 或 MCP Evaluation 数据集和评估结果。**本文件中的数据量与指标均为后续计划，不是已运行指标。**
+Phase 1 提供基础测试，Phase 2 新增确定性退款规则、认证、业务输入与真实 PostgreSQL 集成测试。当前没有 RAG、模型、自然语言 SQL 或 MCP Evaluation 结果。**下方 Evaluation 数据集规模与指标为后续计划，不能把业务测试通过率当作模型能力成绩。**
 
 基础测试入口：
 
@@ -14,9 +14,34 @@ Phase 1 提供基础工程自动化测试；当前没有业务、检索、模型
 
 基础覆盖配置校验、SecretStr、应用生命周期、服务信息、健康检查、错误格式、请求 ID、CORS、文档开关和日志保护。测试日志不记录密码、模型 Key 或原始敏感输入。
 
-HTTP 测试包含两种执行机制：进程内 ASGI 测试用于精确检查应用生命周期和错误契约；`tests/e2e/test_local_server.py` 通过真实 CLI 子进程启动服务，在本机 loopback 地址执行 HTTP 请求，验证启动入口与网络响应。另有独立子进程在非法 `EA_` 环境下导入纯工厂模块，验证导入不会提前读取配置。后者不表示使用非法配置启动应用也应成功。
+HTTP 测试包含两种机制：ASGI 测试用于生命周期、权限和错误契约；e2e 通过真实 Uvicorn 子进程及 loopback TCP HTTP，验证空数据库 readiness=503，以及真实测试库上的登录 → 归属拒绝 → 预览 → 确认 → 幂等重放 → 客服批准 → 模拟完成，并断言订单仍是原交易状态。另有子进程在非法 EA_ 环境导入纯工厂，验证导入不提前读取配置；不表示非法配置可以启动。
 
-`check.ps1` 将缓存和 TEMP/TMP 放项目 `var`，依次执行 Ruff lint、格式检查、pytest 和 `pip check`，JUnit 报告写入 `var/test-results/phase1.xml`。它不执行在线模型或数据库业务 Evaluation。
+`check.ps1` 将缓存和 TEMP/TMP 放项目 `var`，导入私有本地基础设施配置，执行 Ruff、格式检查、pytest 和 `pip check`，结果保存在 `var/test-results/phase2.xml` 与 `phase2.json`。默认 --require-postgres 强制实际测试；`-SkipPostgres` 显式排除数据库用例。没有配置的直接 pytest 会跳过，不能将跳过视为验收通过；当前不调用在线模型。
+
+Phase 2 最终完整真实 PostgreSQL 运行为 191 项通过，0 失败、0 错误、0 跳过，176.147 秒；required_postgres=true，报告来源为 var/test-results/phase2.json 与 phase2.xml。Ruff 与 pip check 通过。运行耗时不代表单请求性能或模型效果。历史 Phase 1 的 75 项保留在 [Phase 1](phase-1.md)；环境、HTTP 证据和未运行范围见 [Phase 2](phase-2.md)。
+
+Windows 测试服务器清理增强后，按影响范围另重跑 2 项 e2e，全部通过（pytest 11.42 秒，JUnit 11.413 秒），均断言服务器停止监听。独立报告为 var/test-results/phase2-http-cleanup.xml；不把这次重跑算作新增用例或另一轮全量验收。初始 0.2 秒探测超时导致的失败、Windows 连接拒绝延迟及修复见阶段记录。
+
+## Phase 2 业务验证
+
+测试使用实际 PostgreSQL，与生产目标相同的约束和 psycopg 异步驱动。Alembic 管理建表，普通测试账号和初始化账号分离，并与开发库隔离。固定 seed=42 和 UTC 基准日期配合可注入时钟，保证退款期限不会随当前日期漂移；不同用例使用测试专用记录，不重置演示库。
+
+| 边界 | 断言 |
+| --- | --- |
+| 数据库 | 15 张业务表、迁移 head、主外键、金额、有效退款唯一约束 |
+| 账号 | 普通账号非 owner / 非超级用户，无 DDL、订单状态更新和审计改删，跨库 CONNECT 拒绝 |
+| 就绪权限 | 缺少业务必需权限或存在超额库/表 owner、订单状态/审计权限时 503 |
+| 认证 | Argon2、JWT 过期/伪造、停用账号、token_version、实时数据库角色 |
+| 归属 | 客户查自己的订单成功，另一客户资源 404，分析员不能查明细 |
+| 规则 | 未支付、超期、限制类目、金额整数分、签收事实、适用政策版本 |
+| 确认 | 只允许所属客户，严格布尔，过期/事实变化/摘要损坏不能写入，拒绝无退款 |
+| 幂等 | 同 Key 相同请求复用，同 Key 不同请求冲突，不同 Key 并发仅一笔有效退款 |
+| 事务 | 退款、工单、幂等、审计一起提交或回滚 |
+| 审核 | 仅客服/管理员，待审核后才能批准/拒绝，批准后才能模拟完成 |
+| 政策 | 发布版本不可 UPDATE / DELETE，按支付时点选择最新版，失效不回退 |
+| 基础设施 | PostgreSQL / Redis 健康，Redis 配置时登录限流与故障拒绝 |
+
+测试替身可以检查健康失败分支或流程条件，但真实 PostgreSQL 权限、并发、迁移和 Redis 调用必须分别实测。已迁移 Agent 表不能作为 Checkpoint 恢复测试通过的证据；该故障场景属于 Phase 4。
 
 ## 测试分层
 

@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
+from enterprise_agent.domain_errors import BusinessError
 from enterprise_agent.schemas.system import ErrorDetail, ErrorResponse, ValidationIssue
 
 logger = logging.getLogger("enterprise_agent.errors")
@@ -86,7 +87,18 @@ async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
+async def business_error_handler(request: Request, exc: BusinessError) -> JSONResponse:
+    return error_response(
+        request,
+        status_code=exc.status_code,
+        code=exc.code,
+        message=exc.message,
+        headers={"WWW-Authenticate": "Bearer"} if exc.status_code == 401 else None,
+    )
+
+
 def register_error_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(BusinessError, business_error_handler)
     app.add_exception_handler(HTTPException, http_error_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_exception_handler(Exception, unexpected_error_handler)

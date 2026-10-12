@@ -30,9 +30,16 @@ class Settings(BaseSettings):
     )
     data_dir: Path = PROJECT_ROOT / "var"
 
-    # No clients or business endpoints are connected in Phase 1.
     database_url: SecretStr | None = None
+    migration_database_url: SecretStr | None = None
+    test_database_url: SecretStr | None = None
+    test_migration_database_url: SecretStr | None = None
     redis_url: SecretStr | None = None
+    jwt_secret: SecretStr | None = None
+    jwt_expire_minutes: int = Field(default=30, ge=1, le=120)
+    demo_password: SecretStr = "DemoOnly!2026"
+    login_max_attempts: int = Field(default=10, ge=1, le=100)
+    login_window_seconds: int = Field(default=60, ge=1, le=3600)
     llm_enabled: bool = False
     deepseek_base_url: AnyHttpUrl = "https://api.deepseek.com"
     deepseek_api_key: SecretStr | None = None
@@ -42,7 +49,16 @@ class Settings(BaseSettings):
     def normalize_log_level(cls, value: object) -> object:
         return value.upper() if isinstance(value, str) else value
 
-    @field_validator("database_url", "redis_url", "deepseek_api_key", mode="before")
+    @field_validator(
+        "database_url",
+        "migration_database_url",
+        "test_database_url",
+        "test_migration_database_url",
+        "redis_url",
+        "jwt_secret",
+        "deepseek_api_key",
+        mode="before",
+    )
     @classmethod
     def empty_secret_is_none(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():
@@ -86,12 +102,38 @@ class Settings(BaseSettings):
     def validate_llm_configuration(self) -> Self:
         if self.llm_enabled and self.deepseek_api_key is None:
             raise ValueError("EA_DEEPSEEK_API_KEY is required when EA_LLM_ENABLED is true")
+        if self.jwt_secret is not None and len(self.jwt_secret.get_secret_value()) < 32:
+            raise ValueError("EA_JWT_SECRET must contain at least 32 characters")
+        if self.database_url is not None and self.jwt_secret is None:
+            raise ValueError("EA_JWT_SECRET is required when a business database is configured")
         return self
+
+    @field_validator(
+        "database_url", "migration_database_url", "test_database_url", "test_migration_database_url"
+    )
+    @classmethod
+    def validate_postgres_url(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None:
+            url = urlsplit(value.get_secret_value())
+            if url.scheme != "postgresql+psycopg" or not url.hostname or not url.path.strip("/"):
+                raise ValueError(
+                    "Database URLs must use postgresql+psycopg with a host and database"
+                )
+        return value
 
     def secret_values(self) -> tuple[str, ...]:
         """Provide configured secrets to the logger, never to an API response."""
         values: set[str] = set()
-        for secret in (self.database_url, self.redis_url, self.deepseek_api_key):
+        for secret in (
+            self.database_url,
+            self.migration_database_url,
+            self.test_database_url,
+            self.test_migration_database_url,
+            self.redis_url,
+            self.jwt_secret,
+            self.demo_password,
+            self.deepseek_api_key,
+        ):
             if secret is not None:
                 raw = secret.get_secret_value()
                 values.add(raw)

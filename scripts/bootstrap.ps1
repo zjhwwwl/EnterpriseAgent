@@ -29,7 +29,7 @@ try {
     if (-not (Test-Path -LiteralPath $environmentFile)) {
         Copy-Item -LiteralPath (Join-Path $projectPath '.env.example') -Destination $environmentFile
     }
-    Write-Output 'EnterpriseAgent Phase 1 environment is ready.'
+    Write-Output 'EnterpriseAgent Python environment is ready.'
 } finally {
     Pop-Location
 }

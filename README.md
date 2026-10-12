@@ -1,43 +1,46 @@
 # EnterpriseAgent
 
-基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手，面向中国大陆 AI Agent 开发工程师求职展示。项目使用模拟电商数据，逐步实现可运行、可测试、可评估的业务系统。
+基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手，面向中国大陆 AI Agent 开发工程师求职展示。使用模拟电商数据，逐步实现可运行、可测试、可评估的业务系统。
 
-**当前版本：0.1.0，完成 Phase 1 后端基础工程。** 目前可以启动 HTTP 服务、检查应用健康状态、查看 OpenAPI 文档，并运行配置、日志和 API 测试。数据库、知识检索、Agent、MCP、运营分析和 Vue 后台属于后续阶段；本仓库暂不提供这些业务功能。
+**当前版本：0.2.0，Phase 2 数据库、认证和订单售后 API。** 已实现 PostgreSQL 模型、Alembic、模拟数据、JWT、订单归属、确定性退款规则、用户确认、幂等与审计。RAG、LangGraph、MCP、自然语言分析和 Vue 后台尚未实现。
 
 ## 功能与进度
 
-| 模块 | 当前状态 | 后续验收目标 |
+| 模块 | 当前状态 | 范围 |
 | --- | --- | --- |
-| FastAPI 基础服务 | Phase 1 已实现 | 应用工厂、配置校验、健康检查、错误格式、请求 ID、CORS |
-| 结构化日志与测试 | Phase 1 已实现 | JSON 日志、敏感信息保护、核心基础测试 |
-| 订单与售后 | Phase 2 / 4 计划 | 数据库事实、归属校验、规则判断、确认申请、幂等与审计 |
-| 企业知识库 | Phase 3 计划 | PDF / DOCX / TXT / Markdown、混合检索、Rerank、引用与拒答 |
-| LangGraph Agent | Phase 4 计划 | 单 Agent 多工具、持久化 Checkpoint、人工确认、有限重试 |
-| MCP 工具服务 | Phase 5 计划 | 官方 SDK、独立 Server、真实 Client 调用、复用业务 Service |
-| 运营分析 | Phase 6 计划 | NL SQL、授权视图、只读账号、AST 校验、超时与结果限制 |
-| Vue 管理后台 | Phase 7 计划 | 对话、订单售后、知识库、图表与任务详情 |
-| Evaluation | Phase 8 计划 | 真实数据集与向量 / 混合检索对照实验 |
-| 全栈交付 | Phase 9 计划 | Docker Compose、GitHub Actions、部署验证与 Demo 截图 |
+| FastAPI 基础服务 | 已实现 | 应用工厂、配置、请求 ID、JSON 日志、CORS、统一错误 |
+| 数据库与认证 | Phase 2 已实现 | 15 张业务表、Alembic、seed、Argon2、JWT、实时角色校验 |
+| 订单与售后 API | Phase 2 已实现 | 查询、资格、确认、申请、客服审核、模拟完成、幂等、审计 |
+| 基础设施 Compose | Phase 2 已实现 | PostgreSQL、Redis、健康检查、开发/测试库隔离、D 盘数据 |
+| 企业知识库 | Phase 3 计划 | 四类解析、Embedding、混合检索、Rerank、引用、拒答 |
+| LangGraph Agent | Phase 4 计划 | Tool Calling、Checkpoint、人工中断、多轮、有限重试 |
+| MCP | Phase 5 计划 | 独立 Server、真实 Client、Service 复用 |
+| 运营分析 | Phase 6 计划 | NL SQL、视图、只读账号、AST、超时、结果限制 |
+| Vue 管理后台 | Phase 7 计划 | 对话、订单、知识库、图表、任务详情 |
+| Evaluation | Phase 8 计划 | 数据集、检索对照、真实耗时和 Token |
+| 全栈交付 | Phase 9 计划 | 应用容器、CI、干净环境启动、真实截图 |
 
 ## 技术栈
 
-当前基础工程使用 Python 3.13、FastAPI、Pydantic v2、pydantic-settings、Uvicorn、pytest、pytest-asyncio、HTTPX 和 Ruff。依赖在 [pyproject.toml](pyproject.toml) 声明，在 [requirements/](requirements/) 固定版本。当前锁文件在 Windows Python 3.13 环境生成，Linux 安装尚未验证；后续 CI 与容器阶段再生成并验证 Linux 约束。
+当前使用 Python 3.13、FastAPI、Pydantic v2、SQLAlchemy 2.x、psycopg 3、Alembic、PostgreSQL 17、Redis、PyJWT、Argon2、Uvicorn、pytest、pytest-asyncio、HTTPX 和 Ruff。依赖在 [pyproject.toml](pyproject.toml) 声明，在 [requirements/](requirements/) 锁定版本与哈希。
 
-已确定的后续方向：SQLAlchemy 2.x + PostgreSQL + Alembic、Redis、LangGraph、DeepSeek OpenAI 兼容接口、Chroma、中文 BM25 + 向量检索 + BGE Reranker、官方 MCP Python SDK，以及 Vue 3 + TypeScript + Vite + Element Plus。这些依赖尚未全部安装，实际兼容验证和锁定将在对应阶段执行。Langfuse 为可选接入，默认关闭。
+本机 Docker Desktop 4.95.0、Engine 29.8.2、Compose 5.6.0 已实际运行 PostgreSQL `17.11-bookworm` 和 Redis `8.4.7`。API 使用 Windows 项目虚拟环境运行；Linux 应用镜像和全栈部署尚未验证。
+
+后续按阶段验证 LangGraph、DeepSeek 兼容接口、Chroma、中文 BM25、BGE Embedding/Reranker、官方 MCP SDK、Vue 3、TypeScript、Vite、Element Plus。Langfuse 可选，默认关闭。
 
 ## 架构
 
-采用模块化单体。API、Worker 和 MCP Server 共用业务 Service，Agent 通过受控工具调用 Service。下面表示目标架构，Phase 1 仅实现 API 基础层。
+采用模块化单体。当前 API → Service → Repository → PostgreSQL 已实现；图中的 Agent、Worker、RAG、MCP、分析与前端为后续架构。
 
 ```mermaid
 flowchart TD
     UI[Vue 管理后台] --> API[FastAPI：认证与参数校验]
     API --> TASK[任务管理与同仓 Worker]
-    TASK --> GRAPH[LangGraph 单 Agent 工作流]
+    TASK --> GRAPH[LangGraph 单 Agent]
     GRAPH --> MODEL[DeepSeek]
     GRAPH --> RAG[混合检索与 Reranker]
-    GRAPH --> TOOLS[业务工具适配层]
-    API --> SERVICE[业务 Service]
+    GRAPH --> TOOLS[工具适配层]
+    API --> SERVICE[Service：权限、规则、事务、审计]
     TOOLS --> SERVICE
     CLIENT[MCP Client] --> MCP[MCP Server]
     MCP --> SERVICE
@@ -47,151 +50,162 @@ flowchart TD
     RAG --> BM25[BM25 索引]
     GRAPH --> ANALYTICS[只读分析 Service]
     ANALYTICS --> VIEWS[授权分析视图]
-    TASK --> REDIS[(Redis)]
+    API --> REDIS[(Redis：登录限流)]
+    TASK --> REDIS
 ```
 
-完整职责、实体关系和权限设计见 [架构文档](docs/architecture.md)，工作流见 [Agent 工作流](docs/agent-workflow.md)。
+模型或前端不能直接决定金额、替换身份或修改订单状态。职责和实体关系见 [架构](docs/architecture.md)。
 
 ## 项目目录
 
 ```text
 EnterpriseAgent/
 ├─ main.py                         # 本地启动入口
-├─ pyproject.toml                  # 包与工具配置
-├─ requirements/                   # 基础、开发依赖锁文件
-├─ .env.example                    # 安全配置示例
+├─ pyproject.toml
+├─ requirements/                   # 基础/开发锁文件
+├─ .env.example                    # 不含实际凭据
 ├─ src/enterprise_agent/
-│  ├─ application.py               # 纯应用工厂
-│  ├─ main.py                      # ASGI app 入口
-│  ├─ cli.py                       # 配置驱动的 Uvicorn 启动
-│  ├─ config.py                    # EA_ 环境变量与校验
-│  ├─ logging_config.py            # JSON 日志
-│  ├─ request_context.py           # 请求 ID 与安全请求日志
-│  ├─ api/                         # API 与请求处理基础设施
-│  └─ schemas/                     # 当前响应契约
-├─ tests/                          # Phase 1 自动化测试
-├─ scripts/                        # Windows 安装与检查入口
-├─ docs/                           # 实现说明与后续设计
-└─ var/                            # 本地运行数据、缓存和临时文件；不提交
+│  ├─ application.py               # 应用工厂与生命周期
+│  ├─ config.py                    # EA_ 配置
+│  ├─ database.py                  # 异步 PostgreSQL
+│  ├─ security.py                  # Argon2 / JWT / Principal
+│  ├─ seed.py                      # 固定种子/日期模拟数据
+│  ├─ logging_config.py
+│  ├─ request_context.py
+│  ├─ api/                         # auth / orders / refunds / health
+│  ├─ schemas/
+│  ├─ models/
+│  ├─ repositories/
+│  └─ services/
+├─ alembic/                        # 迁移、约束、授权
+├─ data/knowledge/                 # 5 份政策；尚未向量索引
+├─ tests/                          # 单元、PostgreSQL、HTTP
+├─ scripts/                        # 安装、迁移、seed、检查
+├─ deploy/                         # 当前只含基础设施 Compose
+├─ docs/
+└─ var/                            # 密钥、缓存、报告；不提交
 ```
 
-后续阶段按需增加 `models/`、`repositories/`、`services/`、`agents/`、`tools/`、`rag/`、`analytics/`、`mcp/`、`alembic/`、`evals/`、`frontend/` 和 `deploy/`。完整目标目录见 [架构文档](docs/architecture.md#目标目录)。
+后续目录按需增加，见 [目标目录](docs/architecture.md#目标目录)。
 
 ## 快速启动
 
-以下命令在 Windows PowerShell 中执行，工作目录为仓库根目录。需要可运行的 Python 3.13；当前工作区已使用 D 盘项目内 `.venv`。首次克隆仓库时先在 PyCharm 配置项目的 Python 3.13 虚拟环境；若已安装 Python 3.13 和 Windows Python Launcher，也可执行 `py -3.13 -m venv .venv`。`bootstrap.ps1` 使用已有虚拟环境，不负责安装 Python。Phase 1 不需要 Docker、数据库或 DeepSeek Key。
+在 Windows PowerShell 仓库根目录执行。需要 Python 3.13 虚拟环境和运行中的 Docker Desktop。项目使用 D 盘 `.venv`；首次克隆先在 PyCharm 配置 Python 3.13 并创建 `.venv`，或使用已安装的 Launcher 执行 `py -3.13 -m venv .venv`。
 
 ```powershell
 Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 .\scripts\bootstrap.ps1
+.\scripts\init-infra.ps1
+.\scripts\migrate.ps1
+.\scripts\migrate.ps1 -TestDatabase
+.\scripts\seed.ps1
 .\scripts\check.ps1
-.\.venv\Scripts\python.exe main.py
+.\scripts\run.ps1
 ```
 
-`bootstrap.ps1` 先检查 Python 3.13，通过 `--require-hashes` 校验并安装锁定的开发依赖，随后安装可编辑项目包。在缺少 `.env` 时复制示例，已有 `.env` 不会被覆盖。安装和检查脚本均将缓存、临时目录指向项目内 `var/cache`、`var/tmp`，避免默认缓存累积到 C 盘。依赖安装需要网络；HTTP 服务运行本身不需要模型或外部服务。
+`init-infra.ps1` 生成随机 PostgreSQL 密码和 JWT Secret，已有文件不覆盖，并启动基础设施、等待健康。秘密保存在被 Git 忽略的 `var/infra/` 与 `var/infra-secrets.env`，不要打印、提交或复制到文档。`run.ps1` 注入本地应用配置并移除迁移/测试 URL；单独 `python main.py` 需要自行配置环境，空示例配置的 readiness 为 503。迁移/seed 使用初始化账号，API 使用普通账号；测试账号不能连接开发库。见 [部署](docs/deployment.md)。
 
-启动后可访问：
+pip 缓存和 TEMP/TMP 使用项目 `var/cache`、`var/tmp`。Docker 程序位于 `D:\tools\DockerDesktop`，实际 WSL 数据盘位于 `D:\DockerData`；少量 Windows 配置仍可能保留在 C 盘。
 
-- 服务信息：<http://127.0.0.1:8000/>
-- 存活检查：<http://127.0.0.1:8000/health/live>
-- 应用就绪检查：<http://127.0.0.1:8000/health/ready>
-- Swagger UI：<http://127.0.0.1:8000/docs>
+访问 [服务信息](http://127.0.0.1:8000/)、[存活](http://127.0.0.1:8000/health/live)、[就绪](http://127.0.0.1:8000/health/ready) 和 [Swagger](http://127.0.0.1:8000/docs)。
 
-也可以使用 ASGI 入口，适合调试时自动重载：
+本次工作区已保留一个可访问的本地 Demo API。需要重新运行 run.ps1 前，先执行 `scripts/stop.ps1` 停止本项目登记的后台进程，避免 8000 端口冲突；该脚本检查进程是否仍属于当前项目。交互式启动则用 Ctrl+C 关闭。
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn enterprise_agent.main:app --host 127.0.0.1 --port 8000 --reload --no-access-log
-```
+`/health/ready` 检查数据库连通、迁移版本、应用账号权限，并在配置 Redis 时实际 PING。无数据库或未迁移返回 503。启动不自动迁移、重建或 seed。
 
-推荐使用 `main.py`，由项目统一配置 JSON 日志，并关闭包含原始 URL 的 Uvicorn access log。直接 Uvicorn 命令会使用其自身的启动/错误日志配置，因此示例显式关闭 access log，但不保证所有日志均采用项目 JSON 格式。CLI 的 host / port 控制该命令的监听地址；`main.py` 使用 `EA_HOST` / `EA_PORT`。不要将开发用 `--reload` 用于部署。
+## 本地业务 Demo
 
-手动安装方式以及配置说明见 [部署文档](docs/deployment.md)。
+公开的**模拟账号**共用演示密码 `DemoOnly!2026`：
+
+| 账号 | 用途 |
+| --- | --- |
+| `demo_customer` | 查询自己的订单、确认退款 |
+| `demo_other` | 验证跨客户访问拒绝 |
+| `demo_support` | 查询订单、审核、标记模拟完成 |
+| `demo_analyst` | 分析角色；分析 API 尚未实现，无订单明细权限 |
+| `demo_admin` | 当前可执行客服业务；用户/知识库管理 API 尚未实现 |
+
+`seed.ps1` 默认取当天日期作为 UTC 基准日、随机种子 42 和 500 订单；本阶段实际使用 `-AsOf 2026-10-12` 生成 25 用户、30 商品与约 90 天事实。订单 `10086` 属于 `demo_customer`，商品实付 12900 分、运费 800 分；标准政策不退运费。另有 `10087`（其他客户）、`10088`（超期）、`10089`（未支付）、`10090`（已模拟完成退款）。
+
+API 用当前 UTC 时间判断期限，固定日期数据会变旧；集成测试使用固定时钟。新空库演示可指定新的 seed 日期，seed 不覆盖已有数据。
+
+Swagger 登录后使用 Bearer Token，查询订单、请求 `refund-preview`、人工核对金额/原因/政策，再 `POST /refunds` 显式确认，最后用客服账号审核。确认只创建待审核申请与工单，不执行真实退款。见 [API 和 PowerShell 示例](docs/api.md)。
+
+当前没有 Vue 后台或 Agent 截图。Phase 7 真实浏览器验收后再加入截图，Swagger 不替代前端验收。
 
 ## 配置
 
-复制 `.env.example` 后修改 `.env`。配置通过 `EA_` 前缀读取，并在启动时校验。
+配置采用 `EA_` 前缀和 SecretStr，主要新增项：
 
-| 变量 | 默认值 | 用途 |
-| --- | --- | --- |
-| `EA_APP_ENV` | `development` | `development` / `test` / `production` |
-| `EA_HOST` / `EA_PORT` | `127.0.0.1` / `8000` | `main.py` 监听配置 |
-| `EA_LOG_LEVEL` | `INFO` | 日志等级 |
-| `EA_DOCS_ENABLED` | `true` | OpenAPI 和 Swagger 文档开关 |
-| `EA_CORS_ORIGINS` | `["http://localhost:5173","http://127.0.0.1:5173"]` | 精确配置允许跨域的前端 Origin |
-| `EA_DATA_DIR` | `var` | 本地数据目录 |
-| `EA_LLM_ENABLED` | `false` | 预留模型配置开关；Phase 1 不调用模型 |
-| `EA_DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | 预留 DeepSeek 兼容接口地址 |
-| `EA_DEEPSEEK_API_KEY` | 空 | SecretStr 密钥字段；Phase 1 不使用 |
-| `EA_DATABASE_URL` / `EA_REDIS_URL` | 空 | 后续连接配置；Phase 1 不建立连接 |
+| 变量 | 用途 |
+| --- | --- |
+| `EA_DATABASE_URL` | 受限应用账号，仅 `postgresql+psycopg` URL |
+| `EA_MIGRATION_DATABASE_URL` | 初始化账号，仅迁移/seed |
+| `EA_TEST_DATABASE_URL` / `EA_TEST_MIGRATION_DATABASE_URL` | 独立测试库 |
+| `EA_REDIS_URL` | 配置后登录限流依赖 Redis，故障时登录 503 |
+| `EA_JWT_SECRET` | 至少 32 字符，配置业务数据库时必填 |
+| `EA_JWT_EXPIRE_MINUTES` | 默认 30 分钟 |
+| `EA_LOGIN_MAX_ATTEMPTS` / `EA_LOGIN_WINDOW_SECONDS` | 默认单 IP 10 次 / 60 秒 |
+| `EA_DEMO_PASSWORD` | seed 密码，可覆盖公开默认值 |
+| `EA_LLM_ENABLED` / `EA_DEEPSEEK_API_KEY` | 预留，当前不调用模型 |
 
-`.env`、上传文件、运行目录和虚拟环境不提交到 Git。日志不记录请求体、查询字符串、Authorization 或配置密钥。不要把 API Key 放在前端代码、截图、测试数据或提交信息中。
-
-启用 `EA_LLM_ENABLED=true` 时配置校验要求非空模型 Key；Phase 1 仍未实现模型 Client，不会因该开关执行聊天或 Agent 调用。
-
-## Demo
-
-Phase 1 Demo 是可实际访问的服务信息和 Swagger 页面，可以查看响应模型、调用健康检查并查看 `X-Request-ID`。目前没有电商后台、Agent 对话或业务 Demo 截图。Phase 7 完成浏览器流程后再添加真实截图及演示步骤。
+`.env`、秘密、虚拟环境和运行目录不提交。日志不记录请求体、查询字符串、Authorization 或完整配置。未配置 Redis 时不启用登录限流。
 
 ## 测试与 Evaluation
 
-统一检查入口：
-
 ```powershell
 .\scripts\check.ps1
-```
-
-该脚本依次执行 Ruff lint、格式检查、pytest 和 `pip check`，测试 JUnit 结果写入 `var/test-results/phase1.xml`。
-
-单独运行测试：
-
-```powershell
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-Phase 1 测试覆盖配置输入、应用生命周期、服务信息、健康检查、统一错误、请求 ID、CORS、文档开关和日志敏感信息处理。除进程内 ASGI 测试，还通过真实 CLI 子进程启动服务，在本机 loopback 地址发出 HTTP 请求（`tests/e2e/test_local_server.py`）；另用独立子进程验证非法 `EA_` 环境不会影响纯工厂模块导入。当前测试不代表 PostgreSQL、RAG、模型调用、业务权限或 Docker 集成已经通过。
+统一入口加载本地测试配置并要求真实 PostgreSQL，执行 Ruff、格式、pytest、`pip check`，保存 `var/test-results/phase2.xml` 与 `phase2.json`。数据库集成验证迁移、约束、归属、事务、确认、幂等和并发，不能用 SQLite 替代。直接 pytest 未配置测试库时会跳过；`check.ps1 -SkipPostgres` 显式排除数据库测试，不能作为完整阶段验收。
 
-Evaluation 尚未实现，也没有检索指标或模型 Token 报告。计划和指标定义见 [评估文档](docs/evaluation.md)。后续报告只使用真实执行结果：缺少模型 Key 或服务条件时明确标记跳过，测试替身不作为模型效果证据。
+Phase 2 完整真实 PostgreSQL 验收：**191 项通过，0 失败、0 错误、0 跳过**，Ruff 与 pip check 通过，包括真实 TCP / Uvicorn 退款确认、重放、审核、模拟完成及数据库权限隔离。报告耗时 176.147 秒，仅为测试运行时间。环境和限制见 [Phase 2](docs/phase-2.md)。Phase 1 的 **75 项**历史验收保留在 [Phase 1](docs/phase-1.md)。
 
-2026-10-12 的 Windows Python 3.13 验收：**75 项测试通过**，Ruff 与依赖一致性检查通过，包含真实 CLI / loopback HTTP 启动。详细证据和未验证范围见 [Phase 1 验收记录](docs/phase-1.md)。
+RAG、模型、SQL 分析和 MCP Evaluation 尚未运行，没有相关准确率、性能或 Token 报告。见 [评估计划](docs/evaluation.md)。
 
 ## 技术展示重点
 
-当前可展示：应用工厂与可测试配置、统一 API 契约、生命周期健康检查、请求关联与敏感信息保护、D 盘本地开发脚本、版本锁定和渐进式开发。
+当前可以演示 Service 规则边界、数据库账号隔离、整数金额、发布政策不可变、订单行锁、幂等冲突、同事务退款/工单/审计、用户确认、JWT 撤销版本和实时角色校验，以及 D 盘开发与真实 PostgreSQL 验证。
 
-后续阶段重点验证：数据库归属与事务边界、退款确认和幂等恢复、引用可追溯的 Agentic RAG、SQL 多层只读限制、MCP 业务复用、检索对照实验。具体取舍见 [技术决策](docs/technical-decisions.md)。
+后续为引用可追溯 RAG、LangGraph 审批恢复、MCP 复用、SQL 多层限制和检索实验。见 [技术决策](docs/technical-decisions.md)。
 
 ## 分阶段计划
 
-| 阶段 | 内容 | 主要验收 |
+| 阶段 | 内容 | 验收 |
 | --- | --- | --- |
-| 1 | 基础工程 | 启动、配置、日志、错误契约与基础测试 |
-| 2 | 数据库与业务 | 迁移、可复现种子、认证、真实数据库权限与事务测试 |
-| 3 | RAG | 四类文件解析、真实索引、混合检索、引用、删除与重索引 |
-| 4 | Agent | 工具调用、人工确认、多轮状态、持久化与副作用恢复 |
-| 5 | MCP | 真实 Server / Client 发现和调用，复用 Service |
-| 6 | 分析 | 固定样例查询正确，真实只读账号、SQL 校验与超时限制 |
-| 7 | 前端 | 构建通过、浏览器完成核心流程、引用和确认可见 |
-| 8 | 评估 | 可复跑数据集、真实对照结果、耗时及 Token 记录 |
-| 9 | 交付 | 干净环境 Compose 启动、CI、完整文档与实际截图 |
+| 1 | 基础工程 | 启动、配置、日志、API 测试；已完成 |
+| 2 | 数据库与业务 | 迁移、seed、认证、归属、事务、并发、真实设施 |
+| 3 | RAG | 四类解析、索引、混合检索、引用、删除、重索引 |
+| 4 | Agent | Tool Calling、人工中断、多轮、Checkpoint、恢复 |
+| 5 | MCP | 真实发现和调用、复用 Service |
+| 6 | 分析 | 只读账号、SQL AST、查询正确、超时 |
+| 7 | 前端 | 构建、真实浏览器流程、引用和确认 |
+| 8 | Evaluation | 可复跑数据集、真实对照、耗时和 Token |
+| 9 | 全栈交付 | Compose、CI、干净环境、文档和截图 |
 
-每个阶段运行适用检查，报告已实现、未解决和未验证事项，并形成清晰的本地 Git Commit。Phase 2 提前提供基础设施 Compose，Phase 9 完成全栈 Compose。后续阶段的功能只有在完成验证后才进入“已实现”列表。
+每阶段运行适用检查，记录问题和未验证项，形成本地 Git Commit。下一阶段为 Phase 3 知识库，不提前声称 Agent 可用。
 
 ## 已知限制
 
-- 当前没有登录和业务 API，仅适合本机开发与验证；默认监听 `127.0.0.1`。
-- `/health/ready` 只表示 Phase 1 应用生命周期就绪，不检查数据库、Redis、Chroma 或模型。
-- DeepSeek、PostgreSQL、Chroma、本地 Embedding / Reranker 和 MCP 尚未进行集成验证。
-- 当前没有 Evaluation 结果、Docker 部署记录、CI 运行结果或公网部署。
-- 目标首版仅支持整单退款、一单一包裹和文本 PDF；部分退款、拆单物流、扫描 PDF OCR 暂不在范围内。
-- 项目使用模拟数据与模拟退款状态，不连接真实支付或退款服务。
+- 模拟业务 API，没有真实支付、退款、客户资料或生产部署。
+- 仅整单退款、一单一包裹，没有部分退款、拆单物流。
+- 5 份政策已登记，尚未生成 Chunk、Embedding 或向量索引。
+- Agent 会话/任务/Chunk 表存在不代表相应功能已实现。
+- 没有 LangGraph、MCP、NL SQL、Vue、模型评估或 Langfuse 集成结果。
+- Compose 只运行 PostgreSQL/Redis，没有全栈应用镜像、CI 执行或公网发布。
+- 公开账号只用于本地演示，不能直接复用到公网环境。
+- `/health/ready` 不检查未实现的 Chroma、模型或 Worker。
 
 ## 文档与许可证
 
-- [架构与实体关系](docs/architecture.md)
-- [当前 API 与后续接口设计](docs/api.md)
-- [LangGraph 工作流设计](docs/agent-workflow.md)
-- [测试与 Evaluation 计划](docs/evaluation.md)
-- [本地开发与部署边界](docs/deployment.md)
+- [架构](docs/architecture.md)
+- [API](docs/api.md)
+- [Agent 工作流](docs/agent-workflow.md)
+- [Evaluation](docs/evaluation.md)
+- [部署](docs/deployment.md)
 - [技术决策](docs/technical-decisions.md)
+- [Phase 1 历史验收](docs/phase-1.md)
+- [Phase 2 验收](docs/phase-2.md)
 
 代码采用 [MIT License](LICENSE)。

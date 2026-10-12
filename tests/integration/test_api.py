@@ -36,8 +36,8 @@ async def test_service_information_and_liveness(client):
     assert info.status_code == 200
     assert info.json() == {
         "name": "EnterpriseAgent",
-        "version": "0.1.0",
-        "phase": 1,
+        "version": "0.2.0",
+        "phase": 2,
         "docs_url": "/docs",
         "health_url": "/health/ready",
     }
@@ -47,8 +47,8 @@ async def test_service_information_and_liveness(client):
     assert live.json() == {
         "status": "ok",
         "service": "EnterpriseAgent",
-        "version": "0.1.0",
-        "phase": 1,
+        "version": "0.2.0",
+        "phase": 2,
         "checks": {"application": "ok"},
     }
 
@@ -63,15 +63,15 @@ async def test_readiness_follows_lifespan_and_does_not_claim_database_health(app
         assert before.json() == {
             "status": "not_ready",
             "service": "EnterpriseAgent",
-            "version": "0.1.0",
-            "phase": 1,
-            "checks": {"application": "not_ready"},
+            "version": "0.2.0",
+            "phase": 2,
+            "checks": {"application": "not_ready", "database": "not_ready"},
         }
         async with app.router.lifespan_context(app):
             assert app.state.ready is True
             ready = await http.get("/health/ready")
-            assert ready.status_code == 200
-            assert ready.json()["checks"] == {"application": "ok"}
+            assert ready.status_code == 503
+            assert ready.json()["checks"] == {"application": "ok", "database": "not_ready"}
         after = await http.get("/health/ready")
         assert after.status_code == 503
     assert app.state.ready is False

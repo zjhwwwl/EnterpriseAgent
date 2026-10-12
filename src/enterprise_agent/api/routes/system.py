@@ -1,6 +1,7 @@
-"""Application health only; Phase 1 does not probe external services."""
+"""Liveness and dependency readiness; never disclose connection credentials."""
 
 from fastapi import APIRouter, Request, Response
+from redis.exceptions import RedisError
 
 from enterprise_agent import DEVELOPMENT_PHASE, __version__
 from enterprise_agent.schemas.system import HealthResponse, ServiceInfo
@@ -34,10 +35,23 @@ async def liveness() -> HealthResponse:
     "/health/ready",
     response_model=HealthResponse,
     responses={503: {"model": HealthResponse}},
-    summary="Phase 1 应用生命周期就绪检查",
+    summary="业务数据库、迁移版本及已配置 Redis 的就绪检查",
 )
 async def readiness(request: Request, response: Response) -> HealthResponse:
-    ready = request.app.state.ready
+    checks = {"application": "ok" if request.app.state.ready else "not_ready"}
+    database = request.app.state.database
+    checks["database"] = (
+        "ok"
+        if request.app.state.ready and database is not None and await database.is_ready()
+        else "not_ready"
+    )
+    redis = request.app.state.redis
+    if redis is not None:
+        try:
+            checks["redis"] = "ok" if await redis.ping() else "not_ready"
+        except RedisError:
+            checks["redis"] = "not_ready"
+    ready = all(value == "ok" for value in checks.values())
     if not ready:
         response.status_code = 503
     return HealthResponse(
@@ -45,5 +59,5 @@ async def readiness(request: Request, response: Response) -> HealthResponse:
         service="EnterpriseAgent",
         version=__version__,
         phase=DEVELOPMENT_PHASE,
-        checks={"application": "ok" if ready else "not_ready"},
+        checks=checks,
     )

@@ -2,9 +2,9 @@
 
 ## 当前实现范围
 
-本文件描述已确认的目标架构，并区分已经实现的基础层和后续设计。**Phase 1 已实现 FastAPI 应用工厂、配置、JSON 日志、统一错误、请求 ID、CORS 与基础测试。数据库、业务 Service、Agent、RAG、MCP、分析、Worker 和前端尚未实现。**
+本文件描述已确认的目标架构，并区分已实现与后续设计。**Phase 2 已实现 FastAPI 基础层、PostgreSQL / Alembic、15 张业务表、模拟数据、JWT 认证、订单与退款 Service / Repository / API、用户确认、幂等、审计和基础设施 Compose。Agent、RAG、MCP、分析、Worker 和前端尚未实现。**
 
-Phase 1 启动不建立 PostgreSQL、Redis、Chroma 或模型连接。`/health/ready` 仅反映应用的 lifespan 状态，不能作为这些依赖已就绪的证据。
+当前启动建立已配置的 PostgreSQL、Redis 客户端；`/health/ready` 实际检查数据库连通、迁移 head、业务所需权限和应用账号权限，并在配置 Redis 时 PING。数据库缺失、未迁移、必要权限缺失、超级用户、库/表 owner 或订单状态/审计超额写权限均返回 503。不自动迁移或 seed，也不连接未实现的 Chroma / 模型。
 
 ## 设计目标
 
@@ -37,7 +37,7 @@ flowchart TD
     JOBS --> REDIS[(Redis：缓存、限流、唤醒)]
 ```
 
-API、Worker 和 MCP 是同仓的不同进程入口，共享业务逻辑和版本。初期只运行一个 Worker，负责文档索引和 Agent 任务。PostgreSQL 记录任务状态和执行租约，Redis 负责通知与缓存；Redis 数据丢失不应丢失审批或业务任务。
+上图为目标架构。Phase 2 的 API、Service、Repository、PostgreSQL 及 Redis 登录限流已落地。后续 Worker 与 MCP 将是同仓的不同入口，共享业务逻辑和版本；首版一个 Worker 处理索引和 Agent 任务。PostgreSQL 保存任务及租约，Redis 负责唤醒与缓存，避免 Redis 数据丢失导致业务任务消失。
 
 | 层 | 职责 | 边界 |
 | --- | --- | --- |
@@ -55,7 +55,11 @@ API、Worker 和 MCP 是同仓的不同进程入口，共享业务逻辑和版�
 
 包采用 `src/enterprise_agent` 布局，通过可编辑安装导入。`application.py` 提供 `create_app(settings=None, configure_logs=True)`；导入该工厂模块不会读取真实 `.env` 或创建应用，测试通过它注入配置并控制日志初始化。包内 `main.py` 创建并暴露 ASGI `app`，同时重新导出工厂。仓库根目录 `main.py` 调用 `cli.py`，使用配置启动 Uvicorn，并保留项目 JSON 日志配置、关闭原始 access log。
 
-配置通过 Pydantic Settings 读取 `EA_` 环境变量。SecretStr 用于保护密钥的默认表示。生命周期启动后标记应用就绪，关闭后清除就绪状态。请求处理提供统一错误格式与 `X-Request-ID`，日志不采集请求体、查询字符串或 Authorization。
+配置通过 Pydantic Settings 读取 `EA_` 环境变量，SecretStr 保护密钥的默认表示。配置业务数据库时必须提供至少 32 字符 JWT Secret。`database.py` 创建异步连接池，`security.py` 负责 Argon2 与 JWT，`seed.py` 初始化模拟数据。请求提供统一错误与 `X-Request-ID`，日志不采集请求体、查询字符串或 Authorization。
+
+当前运行 API 使用 `ea_app`；集成测试使用另一数据库的 `ea_test_app`。两个账号均非 owner、非超级用户，并无迁移权限。`ea_local_admin` 仅用于本地迁移与 seed。应用读取政策但不能修改发布版本；审计表仅追加。数据库间 CONNECT 权限隔离，集成测试不能连接开发库。
+
+运行账号仅有当前业务所需的逐表权限；订单只提供 id 列 UPDATE 以满足 FOR UPDATE 行锁权限，状态和金额更新不授权。没有未来模块的通用写权限；新增知识库、任务等功能时需要显式迁移授权和测试。
 
 ## 目标目录
 
@@ -110,11 +114,11 @@ deploy/
 
 ## 数据库实体
 
-以下实体在 Phase 2 开始落地迁移；当前未创建数据库表。客户作为 `users` 中的角色表示，不再维护一套重复的客户账号实体。
+以下 15 张业务表已在 Phase 2 的 Alembic 迁移中实现，另有 Alembic 自己的版本登记表。客户由 `users` 中的角色表示，不重复维护客户账户。会话、任务、Chunk 表是后续功能的实体基础，当前没有 Agent 或向量索引写入流程。
 
 | 表 | 关键字段与约束 |
 | --- | --- |
-| `users` | 登录名唯一、密码哈希、角色、启用状态 |
+| `users` | 登录名唯一、Argon2 哈希、角色、启用状态、JWT 撤销版本 |
 | `products` | SKU 唯一、名称、类目、价格、售后属性 |
 | `orders` | 订单号唯一、客户 FK、状态、商品金额/运费/实付、支付和签收时间 |
 | `order_items` | 订单 FK、商品 FK、交易名称/价格快照、数量、优惠分摊后实付 |
@@ -127,7 +131,7 @@ deploy/
 | `knowledge_chunks` | 文档 FK、索引版本、文本、页码/段落位置、Chunk ID |
 | `refund_policy_versions` | 有效期、适用类目、期限、运费规则、来源文档、规则版本 |
 | `agent_sessions` | 会话所有者、LangGraph thread ID、创建时间 |
-| `approval_requests` | 任务 FK、确认人、操作快照及摘要、有效期、确认/消费状态 |
+| `approval_requests` | 可选任务 FK、确认人、订单 FK、操作快照及摘要、有效期、确认/消费状态 |
 | `idempotency_records` | 操作者、操作、幂等键、参数摘要、结果引用；组合唯一 |
 
 ```mermaid
@@ -148,7 +152,7 @@ erDiagram
     users ||--o{ idempotency_records : submits
 ```
 
-LangGraph Checkpointer 使用其自己的 PostgreSQL 持久化表。业务任务摘要不替代图状态，图状态也不替代退款事务或审计记录。
+LangGraph Checkpointer 计划在 Phase 4 使用自己的 PostgreSQL 表，目前尚未创建。业务任务摘要不替代图状态，图状态也不替代退款事务或审计。
 
 ### 数据一致性
 
@@ -159,20 +163,28 @@ LangGraph Checkpointer 使用其自己的 PostgreSQL 持久化表。业务任务
 - 提交退款时锁定订单并再次读取资格，不能仅信任先前模型或页面结果。
 - 同一订单最多一笔待审核、已批准或模拟完成的退款；拒绝/撤销后按规则允许重试。
 - 同一个幂等键、相同参数返回原结果；参数不同返回冲突。
-- 已发布政策不可原地修改，申请保留规则版本和计算快照。
-- 删除知识文档只退出当前检索，历史业务保留必要政策快照。
+- 已发布政策通过 PostgreSQL trigger 禁止 UPDATE / DELETE，申请保留规则版本和计算快照。
+- 政策版本以支付时间选择最新已生效 `valid_from`，再检查 `valid_until`；最新版本失效时不回退旧版本。有效起点与版本建立唯一约束。
+- 同键并发先获得 PostgreSQL 事务级 advisory lock；订单行锁、有效退款唯一约束保护不同键并发。
+- 未来文档删除会退出检索并保留历史快照；删除与索引 API 尚未实现。
 
 ### 模拟数据
 
-种子脚本使用固定随机种子，可指定基准日期。计划覆盖约 90 天订单，并覆盖未支付、未发货、运输中、已签收、符合退款、超期、重复申请等场景。订单 `10086` 为可演示样例；另外配置其他客户订单验证越权拒绝。所有用户、联系方式、地址与运单均为模拟内容。
+种子默认使用随机种子 42、500 个订单，`seed.ps1` 默认日期为当天。Phase 2 实际以 `-AsOf 2026-10-12` 生成约 90 天事实、25 个用户、30 个商品、500 订单、1016 明细、456 物流、19 退款及工单、5 文档、41 审计。种子事务获得 advisory lock，重复运行返回现有统计，不覆盖或 reset；密码哈希随机 salt 不作为业务事实可复现要求。
+
+`10086` 属于 `demo_customer`；`10087` 属于另一客户；`10088` 签收已超 7 天；`10089` 未支付；`10090` 有已模拟完成的退款。5 份 Markdown 政策登记为 uploaded，尚未产生 Chunk 或向量。API 使用当前 UTC，固定 seed 日期会逐渐过期；业务集成测试注入固定时钟，避免测试随日期漂移。全部数据为虚构内容。
 
 ## 业务权限与退款边界
 
-认证计划采用密码哈希与短时效 JWT。角色为客户、客服、运营分析员和管理员。客户只读取自己的订单和任务；客服处理售后；分析员读取脱敏视图；管理员管理知识库和用户。
+当前认证使用 Argon2 哈希、默认 30 分钟 JWT，每个请求从数据库重读启用状态、角色和 token_version。角色为客户、客服、运营分析员、管理员。客户只读取自己的订单和退款，跨用户返回 404；客服与管理员可查询订单及审核售后；分析员不能读取订单详情。任务、脱敏分析视图、知识库和用户管理权限在相应阶段实现。
+
+配置 Redis 时，登录通过原子计数按 IP 限流，默认 10 次 / 60 秒，Redis key 中使用 JWT Secret 的 HMAC 隐藏 IP。Redis 不可用时登录返回 503；未配置 Redis 则没有这项限流保障。CORS 不替代身份或归属校验。
 
 归属过滤在 Service / Repository 读取时执行，不能先读取全部敏感数据再依赖模型隐藏。模型可提交订单号，不能提供替代认证身份的 `user_id`。
 
-首版支持整单退款。用户确认意味着创建待审核申请；客服审核与模拟退款完成是独立操作，不连接真实退款服务。Agent 不可直接修改订单支付状态。
+当前支持整单退款。`refund-preview` 由 Service 保存 30 分钟待确认操作，绑定用户、订单、金额、原因、政策和订单事实摘要；`POST /refunds` 必须提交 approval_id、严格布尔 confirmed 及幂等键。确认时锁定记录与订单并重查事实，变化、过期、其他用户或已消费确认被拒绝。拒绝确认不创建退款和工单。
+
+用户确认只创建待审核申请；客服审核与模拟完成使用独立接口和状态校验，不连接真实退款服务，不修改订单支付状态。所有写入记录必要审计摘要。LangGraph 人工中断属于 Phase 4，当前只是后端业务确认协议。
 
 售后政策分两层：知识文档解释并提供引用，结构化政策字段供 Service 确定性判断。上传文档不自动发布新业务规则；缺少有效规则时不能通过模型推断规则来批准申请。
 

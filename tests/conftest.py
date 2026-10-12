@@ -1,13 +1,170 @@
-"""Test isolation shared by the Phase 1 API and configuration checks."""
+"""Isolated API tests and real PostgreSQL tests against a dedicated database."""
 
+import asyncio
 import os
+import subprocess
+import sys
+from datetime import UTC, datetime
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from enterprise_agent.application import create_app
-from enterprise_agent.config import Settings, get_settings
+from enterprise_agent.config import PROJECT_ROOT, Settings, get_settings
+from enterprise_agent.models import Base
+from enterprise_agent.seed import seed_demo
+
+# Capture explicitly exported credentials before the autouse isolation fixture.
+_PG_ENV = {
+    name: os.environ.get(name)
+    for name in (
+        "EA_TEST_DATABASE_URL",
+        "EA_TEST_MIGRATION_DATABASE_URL",
+        "EA_REDIS_URL",
+    )
+}
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--require-postgres", action="store_true", help="Fail rather than skip PostgreSQL tests"
+    )
+
+
+@pytest.fixture(scope="session")
+def pg_urls(request):
+    urls = (_PG_ENV["EA_TEST_DATABASE_URL"], _PG_ENV["EA_TEST_MIGRATION_DATABASE_URL"])
+    if not all(urls):
+        if request.config.getoption("--require-postgres"):
+            pytest.fail("Explicit dedicated PostgreSQL test credentials are required")
+        pytest.skip("Dedicated PostgreSQL test credentials are not exported")
+    for raw in urls:
+        parsed = make_url(raw)
+        if parsed.database != "enterprise_agent_test" or parsed.get_backend_name() != "postgresql":
+            pytest.fail("Tests refuse any database other than enterprise_agent_test")
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("EA_")}
+    environment.update(
+        {
+            "PYTHONUTF8": "1",
+            "EA_APP_ENV": "test",
+            "EA_DATABASE_URL": urls[0],
+            "EA_MIGRATION_DATABASE_URL": urls[1],
+            "EA_JWT_SECRET": uuid4().hex + uuid4().hex,
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=PROJECT_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+    )
+    if result.returncode:
+        pytest.fail("Test database migration failed; verify infrastructure and credentials")
+    return urls
+
+
+@pytest_asyncio.fixture
+async def pg_factory(pg_urls):
+    engine = create_async_engine(
+        pg_urls[0],
+        poolclass=NullPool,
+        hide_parameters=True,
+        connect_args={"options": "-c statement_timeout=10000"},
+    )
+    try:
+        yield async_sessionmaker(engine, expire_on_commit=False)
+    finally:
+        await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def pg_admin_factory(pg_urls):
+    engine = create_async_engine(pg_urls[1], poolclass=NullPool, hide_parameters=True)
+    try:
+        yield async_sessionmaker(engine, expire_on_commit=False)
+    finally:
+        await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def pg_seed(pg_admin_factory):
+    async with pg_admin_factory() as session, session.begin():
+        # This reset is restricted by pg_urls to our disposable test database.
+        tables = ", ".join('"' + name + '"' for name in Base.metadata.tables)
+        await session.execute(text("TRUNCATE " + tables + " RESTART IDENTITY CASCADE"))
+    return await seed_demo(
+        pg_admin_factory,
+        as_of=datetime(2026, 10, 12, tzinfo=UTC),
+        seed=42,
+        orders_count=500,
+        demo_password="DemoOnly!2026",
+    )
+
+
+@pytest.fixture
+def pg_api_app(pg_urls, tmp_path):
+    app = create_app(
+        Settings(
+            _env_file=None,
+            app_env="test",
+            database_url=pg_urls[0],
+            jwt_secret=uuid4().hex + uuid4().hex,
+            data_dir=tmp_path,
+        ),
+        configure_logs=False,
+    )
+    app.state.clock = lambda: datetime(2026, 10, 12, tzinfo=UTC)
+    return app
+
+
+@pytest_asyncio.fixture
+async def pg_api_client(pg_api_app, pg_seed):
+    async with pg_api_app.router.lifespan_context(pg_api_app):
+        assert pg_api_app.state.database.verified, "Migrated ordinary API account must be ready"
+        async with AsyncClient(
+            transport=ASGITransport(app=pg_api_app, raise_app_exceptions=False),
+            base_url="http://testserver",
+        ) as http:
+            yield http
+
+
+@pytest_asyncio.fixture
+async def pg_rate_limited_client(pg_urls, pg_seed, request, tmp_path):
+    raw = _PG_ENV["EA_REDIS_URL"]
+    if not raw:
+        if request.config.getoption("--require-postgres"):
+            pytest.fail("Real Redis URL is required for the login limiter test")
+        pytest.skip("Redis URL not exported")
+    app = create_app(
+        Settings(
+            _env_file=None,
+            app_env="test",
+            database_url=pg_urls[0],
+            redis_url=raw,
+            jwt_secret=uuid4().hex + uuid4().hex,
+            data_dir=tmp_path,
+            login_max_attempts=3,
+        ),
+        configure_logs=False,
+    )
+    async with app.router.lifespan_context(app):
+        assert await app.state.redis.ping(), "Real Redis must be available"
+        async with AsyncClient(
+            transport=ASGITransport(app=app, raise_app_exceptions=False),
+            base_url="http://testserver",
+        ) as http:
+            yield http
 
 
 @pytest.fixture(autouse=True)

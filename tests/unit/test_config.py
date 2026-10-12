@@ -153,3 +153,18 @@ def test_settings_cache_is_stable_until_explicitly_cleared(monkeypatch):
 
     get_settings.cache_clear()
     assert get_settings().port == 8200
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"database_url": "sqlite:///demo.db", "jwt_secret": "x" * 32},
+        {"database_url": "postgresql+psycopg://localhost/demo"},
+        {"jwt_secret": "too-short"},
+        {"login_max_attempts": 0},
+        {"jwt_expire_minutes": 121},
+    ],
+)
+def test_business_configuration_fails_closed(overrides):
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, **overrides)
