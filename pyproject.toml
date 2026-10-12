@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=77,<83"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "enterprise-agent"
+version = "0.1.0"
+description = "An ecommerce business assistant with auditable AI workflows."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+license = "MIT"
+dependencies = [
+    "fastapi>=0.115.6,<1.0",
+    "pydantic>=2.12,<3",
+    "pydantic-settings>=2.12,<3",
+    "uvicorn>=0.34,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28,<1.0",
+    "pytest>=8.3,<10",
+    "pytest-asyncio>=1.0,<2",
+    "ruff>=0.11,<1.0",
+    "pip-tools>=7.5,<8",
+    "setuptools>=77,<83",
+]
+
+[project.scripts]
+enterprise-agent = "enterprise_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: in-process HTTP integration and future real database integration",
+    "live: explicitly authorized external model or service calls",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
