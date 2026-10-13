@@ -21,6 +21,7 @@ evals/results/*
 !evals/results/.gitkeep
 !evals/results/phase3/
 !evals/results/phase3-initial/
+!evals/results/phase4/
 node_modules/
 frontend/dist/
 .DS_Store

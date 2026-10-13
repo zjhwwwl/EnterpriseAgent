@@ -1,0 +1,37 @@
+{
+  "checked_at_utc": "2026-10-13T09:39:58.257469+00:00",
+  "controlled_model_only": true,
+  "online_deepseek_tested": false,
+  "provider_token_usage": null,
+  "database": "enterprise_agent_test",
+  "real_dependencies": [
+    "Uvicorn TCP HTTP",
+    "PostgreSQL ordinary account",
+    "official PostgreSQL checkpoint saver",
+    "Chroma HTTP",
+    "verified local CPU embedding and reranker"
+  ],
+  "events": [
+    {
+      "event": "waiting_approval",
+      "status": "waiting_approval",
+      "refunds": 0,
+      "tickets": 0
+    },
+    {
+      "event": "first_owned_process_stopped_and_port_closed"
+    },
+    {
+      "event": "confirmed_after_process_restart",
+      "status": "completed",
+      "refunds": 1,
+      "tickets": 1
+    },
+    {
+      "event": "repeat_confirmation",
+      "same_refund": true,
+      "foreign_access_status": 404
+    }
+  ],
+  "passed": true
+}

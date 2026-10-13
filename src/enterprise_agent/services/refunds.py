@@ -14,10 +14,12 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from enterprise_agent.domain_errors import BusinessError
 from enterprise_agent.models import (
+    AgentTask,
     ApprovalRequest,
     ApprovalStatus,
     AuditLog,
@@ -298,10 +300,46 @@ class RefundService:
             result, _ = await self._assess(session, order, validated.reason, "", self._now())
             return result
 
-    async def prepare_refund(self, actor: Principal, order_no: str, *, reason: str, notes=""):
+    async def prepare_refund(
+        self, actor: Principal, order_no: str, *, reason: str, notes="", task_id: UUID | None = None
+    ):
         _customer(actor)
         validated = RefundPrepareInput(reason=reason, notes=notes)
         async with self.sessions() as session, session.begin():
+            if task_id is not None:
+                task = await session.scalar(
+                    select(AgentTask)
+                    .where(AgentTask.id == task_id, AgentTask.user_id == actor.user_id)
+                    .with_for_update()
+                )
+                if task is None or task.status not in ("running", "waiting_approval"):
+                    raise BusinessError("agent_task_unavailable", "退款任务不存在或已结束。", 409)
+                previous = await session.scalar(
+                    select(ApprovalRequest).where(
+                        ApprovalRequest.task_id == task_id, ApprovalRequest.user_id == actor.user_id
+                    )
+                )
+                if previous is not None:
+                    payload = previous.action_payload
+                    if (
+                        payload.get("order_no") != order_no
+                        or payload.get("reason") != validated.reason
+                        or payload.get("notes") != validated.notes
+                        or not hmac.compare_digest(
+                            previous.action_digest, canonical_digest(payload)
+                        )
+                    ):
+                        raise BusinessError("approval_changed", "任务的退款参数已变化。", 409)
+                    return ApprovalResponse(
+                        approval_id=previous.id,
+                        order_no=order_no,
+                        status=previous.status,
+                        reason=validated.reason,
+                        notes=validated.notes,
+                        amount_cents=payload["amount_cents"],
+                        expires_at=previous.expires_at,
+                        policy=PolicyResponse.model_validate(payload["policy"]),
+                    )
             order = await self._visible_order(session, actor, order_no, lock=True)
             now = self._now()
             result, payload = await self._assess(
@@ -312,6 +350,7 @@ class RefundService:
             approval = ApprovalRequest(
                 id=uuid4(),
                 user_id=actor.user_id,
+                task_id=task_id,
                 order_id=order.id,
                 operation=OPERATION,
                 action_payload=payload,

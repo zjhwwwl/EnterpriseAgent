@@ -1,6 +1,6 @@
 # API 契约
 
-**当前版本 0.3.0 / Phase 3。** 已实现健康、认证、订单、退款、知识库管理和证据检索接口。LangGraph、聊天生成、任务、MCP 和分析 API 尚未提供。OpenAPI 与实际代码是当前契约来源。
+**当前版本0.4.0 / Phase 4。** 已实现健康、认证、订单、退款、知识库以及LangGraph会话、任务、人工确认和显式恢复接口。MCP、分析与Vue尚未提供。OpenAPI与实际代码是当前契约来源；工程和真实HTTP验收已完成，DeepSeek在线任务效果尚未验收，详见[阶段记录](phase-4.md)。
 
 ## 基础接口与认证
 
@@ -8,13 +8,13 @@
 
 | 方法 | 路径 | 成功码 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/` | 200 | 名称、版本、phase=3、文档及健康入口 |
+| GET | `/` | 200 | 名称、版本、phase=4、文档及健康入口 |
 | GET | `/health/live` | 200 | HTTP 进程存活 |
 | GET | `/health/ready` | 200 / 503 | 实际数据库与已配置 Redis 的就绪检查 |
 | POST | `/api/v1/auth/login` | 200 | JSON 账号密码，返回 JWT |
 | GET | `/api/v1/auth/me` | 200 | 需要 Bearer Token，返回当前用户 |
 
-就绪响应的 `checks` 包含 application、database；配置 Redis 时包含 redis，启用 RAG 时包含 knowledge。数据库检查 Alembic `0002_knowledge`、业务必需权限和普通运行账号；库/表 owner、超级用户、public CREATE、订单状态 UPDATE 或审计 UPDATE/DELETE 等超额权限被拒绝。knowledge 检查固定本地模型文件及 Chroma 心跳。未配置、未迁移或依赖故障不算就绪，健康通过也不证明所有文档已索引或每个问题都有答案。
+就绪响应的 `checks` 包含 application、database；配置 Redis 时包含 redis，启用 RAG 时包含 knowledge，建立 Agent 持久化时包含 agent_checkpoint。数据库检查 Alembic 当前 head、业务必需权限和普通运行账号；库/表 owner、超级用户、public CREATE、订单状态 UPDATE 或审计 UPDATE/DELETE 等超额权限被拒绝。knowledge 检查固定本地模型文件及 Chroma 心跳，agent_checkpoint 检查官方 schema 版本与受限权限。健康不调用 DeepSeek，不代表模型配置或在线可用、所有文档已索引或每个问题都有答案。
 
 登录请求：
 
@@ -140,9 +140,55 @@ $result | Select-Object status, replayed, refund
 
 日志 JSON 记录必要字段和请求 ID，不记录请求体、查询字符串、Authorization 或全量配置。审计仅保存必要变更摘要。CORS 使用精确 Origin，不能代替认证与归属校验。
 
-## 后续接口
+## Agent 会话与任务
 
-Agent 会话与执行步骤、LangGraph 中断恢复、MCP 和自然语言分析在后续阶段实现。本阶段的业务确认尚不是 LangGraph interrupt，也不提供可任意提交 resume 命令的 HTTP 接口。知识库接口如下。
+全部需要 Bearer Token，各角色只能访问自己的会话、任务与审批。会话绑定服务器记录的创建角色，角色变化需创建新会话；恢复为相同角色后可再次访问原合法会话。客服/管理员也不能通过 UUID 访问另一用户的任务。路由不授予业务权限，分析员仍不能调用订单工具。客户端不能提交 thread_id、user_id、role、graph 配置或任选恢复节点。
+
+| 方法 | 路径 | 成功码 | 用途 |
+| --- | --- | --- | --- |
+| POST | `/api/v1/agent/sessions` | 201 | 创建服务端私有 thread 关联会话，空请求 |
+| GET | `/api/v1/agent/sessions` | 200 | 自己的分页会话 |
+| GET | `/api/v1/agent/sessions/{session_id}` | 200 | 自己的会话详情 |
+| POST | `/api/v1/agent/sessions/{session_id}/messages` | 200 | 执行一次有预算的 LangGraph 任务 |
+| GET | `/api/v1/agent/tasks` | 200 | 自己的任务，可用 session_id 筛选 |
+| GET | `/api/v1/agent/tasks/{task_id}` | 200 | 状态、步骤、结果和使用量 |
+| POST | `/api/v1/agent/tasks/{task_id}/resume` | 200 | 明确确认/拒绝当前任务关联审批 |
+| POST | `/api/v1/agent/tasks/{task_id}/recover` | 200 | 显式从服务器 Checkpoint 核对并继续中断执行，空请求 |
+
+分页默认 limit=20，范围 1–100，offset 范围 0–100000。SessionResponse 仅包含 id、current_task_id、created_at、updated_at，不暴露内部 thread。创建会话和 recover 只接受无请求体或空 JSON 对象，额外字段拒绝。Agent JSON POST 请求体限制 16 KiB。
+
+消息请求仅接受 2–2000 字符的 message：
+
+```json
+{"message":"订单 10086 的商品不想要了，请申请无理由退款。"}
+```
+
+TaskResponse 包括 id、session_id、task_type、status、message、result、steps、token_usage、error_code、elapsed_ms 与时间。status 支持 running / waiting_approval / completed / failed / rejected / expired / cancelled；具体失败以 error_code 为准，不能把 HTTP 200 当作任务成功。result 包括 answer、approval、refund_result、citations、facts、warning_codes。未配置模型时返回 503，不创建伪造回答。
+
+Agent 退款参数只允许订单号、reason 与 notes；订单号限定 5–30 位 ASCII 数字。服务器先判断真实资格并限定适用政策文档检索，再准备审批。waiting_approval 时 result.approval 包含服务器计算的订单、金额、原因、期限、policy 和 requires_confirmation=true；尚未创建退款或工单。
+
+人工核对后只提交：
+
+```json
+{"approval_id":"<result.approval.approval_id>","confirmed":true}
+```
+
+confirmed 必须是 JSON 布尔值，false 也记录拒绝与审计。Agent 确认幂等键由服务器根据 task_id 生成，不能由模型/请求体提供。确认记录须属于当前用户、当前任务并匹配持久化中断，服务器重查有效期、摘要和订单事实；成功后仅创建 pending_review。后续仍经现有客服审核和模拟完成接口处理。
+
+同会话正在执行或待确认时返回 409。真实业务提交后若请求或 Checkpoint 中断，recover 核对持久状态：审批准备绑定 task_id，退款具有事务幂等保护；没有自动恢复 Worker。已完成任务重复相同确认返回原任务；改变决定或审批编号拒绝。提交后陈旧引用被移除并列入 warning_codes，数据库申请结果保留。
+
+知识回答来自模型选择且验证过的连续原文；证据不足仅改写一次。订单回答由结构化事实生成，不采用模型自由文本。steps 记录节点/工具、耗时与安全错误；token_usage 累计 provider 报告的 prompt/completion/total 和 model_calls。未知消费记录 unknown_usage_calls、usage_complete=false，不伪造为零；中断的不完整标记跨 recover 保留，不因任务恢复成功而变为完整消费。
+
+| 情况 | 状态/示例 code |
+| --- | --- |
+| 会话/任务不存在、归属或创建角色不匹配 | 404，agent_session_not_found / agent_task_not_found |
+| 同会话已有任务或跨 worker 并发 | 409，agent_session_busy |
+| 不匹配审批、非确认节点、任务已结束 | 409，approval_changed / agent_not_waiting_approval / agent_task_unavailable |
+| 工作流、Checkpoint 或模型未配置 | 503，agent_unavailable / agent_model_not_configured |
+| 图/工具/模型已执行但受规则终止 | Task.status=failed 与 error_code，如 invalid_tool_arguments / agent_tool_limit / insufficient_policy_evidence |
+| 中断需恢复 | Task.status=failed 与 agent_timeout / agent_checkpoint_error，并明确提示恢复核对 |
+
+MCP 与运营分析接口属于后续阶段。
 
 
 ## 知识库管理
@@ -200,7 +246,7 @@ Citation 包含 document_id、document_title、document_version、index_generati
 
 source_location 保留一基页码、段落、表格位置或行号；char_start 为解析 section 内零基字符起点，char_end 为不包含的终点。TXT/Markdown Chunk 行号按实际范围细化。
 
-Reranker 输出为 logit 经 sigmoid 得到的 0–1 未校准分数，不能当作概率。所有模式需通过向量相似度门槛；hybrid_rerank 还需同时通过重排分数门槛。evidence_found 只表示有候选通过相关性启发式，不能证明语义足够、政策无冲突或生成答案正确。当前没有查询改写、LLM 回答或 LangGraph 校验节点。
+Reranker 输出为 logit 经 sigmoid 得到的 0–1 未校准分数，不能当作概率。所有模式需通过向量相似度门槛；hybrid_rerank 还需同时通过重排分数门槛。evidence_found 只表示有候选通过相关性启发式，不能证明语义足够、政策无冲突或生成答案正确。该直接检索接口不调用聊天模型；查询改写、原文选择与回答验证仅在 Agent 会话路径执行。
 
 检索前后都用 SQL 权限和活动代数约束，引用详情再次校验。删除文档或发布新代数后，旧 chunk_id 返回 citation_not_found；无法访问的内部文档也不会通过引用路径泄露。
 

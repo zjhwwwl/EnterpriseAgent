@@ -1,7 +1,6 @@
 """PostgreSQL ecommerce entities and database-enforced invariants.
 
 Identity, money and policy checks live in the database as well as in Services.
-Future RAG/Agent tables are persistence structures, not implemented AI features.
 """
 
 from datetime import datetime
@@ -321,12 +320,27 @@ class AgentSession(Base):
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     thread_id: Mapped[str] = mapped_column(String(100), unique=True)
+    role_at_creation: Mapped[UserRole] = mapped_column(enum_column(UserRole, "agent_session_role"))
+    # The Service changes this pointer under a short session row lock. Avoid a
+    # circular FK: agent_tasks already references this session.
+    current_task_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class AgentTask(Base):
     __tablename__ = "agent_tasks"
-    __table_args__ = (Index("ix_agent_tasks_user_created", "user_id", "created_at"),)
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('running', 'waiting_approval', 'completed', 'failed', "
+            "'rejected', 'expired', 'cancelled')",
+            name="status_valid",
+        ),
+        CheckConstraint("elapsed_ms IS NULL OR elapsed_ms >= 0", name="elapsed_nonnegative"),
+        CheckConstraint("char_length(message) <= 2000", name="message_bounded"),
+        Index("ix_agent_tasks_user_created", "user_id", "created_at"),
+        Index("ix_agent_tasks_session_created", "session_id", "created_at"),
+    )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     session_id: Mapped[UUID | None] = mapped_column(
@@ -335,6 +349,10 @@ class AgentTask(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     task_type: Mapped[str] = mapped_column(String(40))
     status: Mapped[str] = mapped_column(String(40), index=True)
+    message: Mapped[str] = mapped_column(Text, default="", server_default="")
+    result: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default=sql_text("'{}'::jsonb")
+    )
     steps: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, default=list, server_default=sql_text("'[]'::jsonb")
     )
@@ -342,6 +360,10 @@ class AgentTask(Base):
         JSONB, default=dict, server_default=sql_text("'{}'::jsonb")
     )
     error_code: Mapped[str | None] = mapped_column(String(80))
+    elapsed_ms: Mapped[int | None] = mapped_column(Integer)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

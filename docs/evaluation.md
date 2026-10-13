@@ -2,14 +2,14 @@
 
 ## 真实结果的边界
 
-Phase 3 已实现解析、排序、真实本地模型、知识 API、索引与 PostgreSQL 保护测试，以及实际检索对照执行器。完整检查与本阶段实测结果记录在 [Phase 3](phase-3.md)，不能用基础业务测试通过率代表模型效果。Phase 1/2 历史验收保留原文件。
+Phase 4 在真实检索与业务测试上增加LangGraph、Tool Calling协议、人工中断、官方持久化、重启恢复与故障边界测试。[Phase 4](phase-4.md)最终511项通过、零失败/错误/跳过；DeepSeek在线任务/参数/回答质量未验收。历史检索对照保留于[Phase 3](phase-3.md)，不当作Phase 4 Agent完整效果分数，Phase 1/2历史验收保留原文件。
 
 ```powershell
 .\scripts\check.ps1
 .\scripts\evaluate-rag.ps1
 ```
 
-check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，保存 `var/test-results/phase3.xml`、`phase3.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。
+check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，保存 `var/test-results/phase4.xml`、`phase4.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。
 
 ## 测试分层
 
@@ -21,6 +21,10 @@ check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgr
 | 真实进程 HTTP | Uvicorn + TCP、数据库退款闭环与服务停止监听；新增知识路径按实际报告验收 |
 | 真实模型/Chroma | 固定模型校验、真实向量及重排、官方 SDK/实际向量库；没有内置假向量回退 |
 | Retrieval Evaluation | 固定五文档、同配置对照、文档级相关性、引用合法性和耗时 |
+| Tool 契约 | 严格参数、禁止身份/确认注入、复用 Service、安全错误；单元控制不当数据库证明 |
+| Chat HTTP 协议 | 受控 HTTP 响应验证 Tool Call、usage、非法 JSON、未知工具、响应上限和超时，不调用线上模型 |
+| 官方 Checkpoint | 实际 PostgreSQL saver、runtime 重启、interrupt/resume、普通账号无 DDL、advisory lock 与取消释放 |
+| 真实 Agent 流程 | ScriptedChatModel 只控制路线；业务数据库、CPU Embedding/Reranker、Chroma 与官方图状态实际执行 |
 
 控制流程测试可以注入明确测试替身来隔离故障，但不能用这些结果冒充真实模型或向量库成绩。事务/锁/权限测试使用 PostgreSQL，不使用 SQLite 替代。解析测试使用实际 PDF/DOCX bytes，不用粘贴文本充当 PDF 解析证明。
 
@@ -72,11 +76,23 @@ Reranker 返回 logit 经 sigmoid 得到的0–1未校准分数，不是概率�
 
 文件 SHA256 记录运行时的原始字节；Git 换行归一化可能使检出文件的 SHA 不同。复现时同时核对 Git 版本、平台、模型与配置。
 
-检查通过及引用合法不能替代开放式语义正确性。当前没有答案生成、Agent 任务完成率、工具意图/参数效果、NL SQL 正确率或 MCP 端到端 Evaluation 分数。
+检查通过及引用合法不能替代开放式语义正确性。Agent 原文抽取与业务报告已有代码及流程测试，但没有 DeepSeek 在线任务完成率、工具意图/参数效果或开放式语义质量分数；NL SQL 与 MCP 端到端分数也尚未提供。
+
+## Phase 4 受控图验收
+
+tests/integration/test_agent_workflow.py 使用固定 seed UTC 2026-10-12、真实普通 PostgreSQL 连接、真实固定 CPU 模型、独立 Chroma 集合、适用退款政策索引与官方 PostgreSQL Checkpointer。ScriptedChatModel 给出明确 route_task / 业务工具规划，assistant/tool_calls JSON 符合兼容协议，脚本耗尽会失败。
+
+覆盖待确认无退款/工单、task_id 准备重放、runtime 重启后一次确认、重复确认、跨用户拒绝、拒绝审计、同会话 busy、参数拒绝、工具/步数上限、有限临时错误重试与多轮历史。在真实 prepare/confirm 事务返回后注入 CancelledError 模拟 worker loss；SDK包装后的可恢复失败经 recover 重跑，实际审批、退款、工单和审计只有原记录。不宣称OS进程恰好在业务提交瞬间被杀的实测。独立Uvicorn TCP测试在waiting_approval阶段真实停止/重启进程后确认一次。重索引跨审批后仍保留已提交事实，并明确清除陈旧引用、记录 warnings。
+
+这验证软件控制与业务一致性，不验证模型是否能独立理解问题。usage中的明确控制零值/非零元数据仅验证计账代码，不能列为实际模型消费。此前161项unit、37项真实PG/RAG/API、1项TCP重启分组均通过；加入权限与恢复标记边界修正后的最终完整套件511项通过，JUnit524.068秒、81条Chroma第三方弃用warning，Ruff及pip check通过。分组属于全量子集，不累计为额外成绩或DeepSeek任务成功率。TCP JSON明确controlled_model_only=true、online_deepseek_tested=false、provider_token_usage=null，见[阶段记录](phase-4.md)。
+
+真实在线运行必须另外记录所用模型、供应商时间与usage、源码/数据版本、完整任务结果及人工质量标签。未报告usage的失败标记 unknown_usage_calls 与 usage_complete=false，已知Token和不能代替完整消费。中断的不完整标记跨 recover 保留，恢复后也不能把未知消费宣称完整或归零。缺Key或未实际运行时明确保留“未在线验收”，不补零Token或预填正确率。
+
+Phase 4公共证据已归档到evals/results/phase4/：[verification.json](../evals/results/phase4/verification.json)、[http-restart.json](../evals/results/phase4/http-restart.json)、[demo-http.json](../evals/results/phase4/demo-http.json)、[report.md](../evals/results/phase4/report.md)。历史Phase3原始报告保持不变，最终图测试与HTTP证据不替代在线模型语义评估。
 
 ## 后续评估
 
-Phase 4–8 逐步加入真实图执行、人工中断恢复、权限/异常、Tool Calling、SQL 和生成答案忠实度数据集。关键用例包括业务提交而 Checkpoint 未保存、重复恢复不增加退款/工单、越权 thread 拒绝、模型临时失败有限重试、超步数终止、只读 SQL 绕过测试，以及无证据时不编造政策。
+Phase 5–8 在已有真实图与业务一致性测试之上扩展 MCP、SQL 和在线任务/工具/回答语义数据集。只读 SQL 绕过、工具意图和参数效果、引文语义充分性、政策冲突及领域外问题需要独立标注，不能仅靠 schema 通过或 substring 匹配证明。
 
 线上模型缺 Key 或未经实际调用时明确标记未运行；Token 从实际 API usage 获取。优化没有改善也保留原始结果，不预填分数、伪造压测或部署成绩。
 

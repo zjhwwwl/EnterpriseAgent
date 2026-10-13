@@ -2,7 +2,7 @@
 
 基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手，面向中国大陆 AI Agent 开发工程师求职展示。项目使用虚构电商数据，以业务规则、权限、事务、可追溯检索和真实验证为重点，分阶段交付。
 
-**当前版本 0.3.0 / Phase 3：订单售后 API + 企业知识检索。** 已实现四类文档解析、本地中文 Embedding、Chroma、BM25 + Vector + Reranker、引用与知识库管理。当前返回 `answer_mode=evidence_only` 的证据，没有聊天模型生成回答。LangGraph、Tool Calling、MCP、NL SQL 和 Vue 后台属于后续阶段。
+**当前版本 0.4.0 / Phase 4：LangGraph 单 Agent、知识问答与人工确认退款。** 在真实订单售后和本地混合检索之上加入模型路由、Tool Calling、一次查询改写、多轮会话、官方 PostgreSQL Checkpoint 和中断恢复。知识回答选择并验证引用原文；订单报告根据 Service 事实构造。511项工程测试与真实TCP重启验收通过，DeepSeek在线效果尚未验收；MCP、NL SQL和Vue后台属于后续阶段。
 
 ## 功能与技术栈
 
@@ -14,10 +14,12 @@
 | 知识库 | PDF / DOCX / UTF-8 TXT / Markdown 上传、列表、详情、原件下载、删除、重新索引 |
 | 检索 | 512 维中文 BGE、Chroma 1.5.9 HTTP、中文字符/二元组 BM25、RRF、量化 BGE Reranker |
 | 来源与权限 | 页码/段落/行号/字符位置、文档与索引版本、公开/内部可见性、失效引用拒绝 |
+| Agent | LangGraph 1.2.14、HTTPX DeepSeek 兼容接口、Pydantic 工具参数、有限执行、原文抽取回答 |
+| 会话与审批 | 私有 thread、官方 PostgreSQL Checkpoint、多轮历史、人工 interrupt/resume、显式恢复与幂等写入 |
 | 评估 | 30 条中文 dev/test 数据集、真实向量与混合重排对照 CLI、JSON / CSV / Markdown |
 | 本地部署 | Windows Python 3.13 + Linux PostgreSQL / Redis / Chroma 容器，缓存与数据位于 D 盘 |
 
-AI 检索使用 **真实 CPU ONNX 推理**，通过 FastEmbed 和 ONNX Runtime 运行；模型固定仓库 revision、大小和 SHA256，启动与查询不隐式下载。具体版本见 [pyproject.toml](pyproject.toml)、[哈希锁文件](requirements/) 和模型 manifest。DeepSeek 兼容接口在 Phase 4 接入，当前无需模型 API Key。
+AI 检索使用 **真实 CPU ONNX 推理**，通过 FastEmbed 和 ONNX Runtime 运行；模型固定仓库 revision、大小和 SHA256，启动与查询不隐式下载。具体版本见 [pyproject.toml](pyproject.toml)、[哈希锁文件](requirements/) 和模型 manifest。直接知识检索与业务 API 不需要聊天模型 Key；Agent 发消息与执行恢复需配置 DeepSeek，默认 `EA_LLM_ENABLED=false`。
 
 ## 架构
 
@@ -38,12 +40,18 @@ flowchart TD
     EVIDENCE --> PG
     KB --> PG
     API --> REDIS["Redis 登录限流"]
-
-    FUTURE["Phase 4：LangGraph 单 Agent"] -.-> BIZ
-    FUTURE -.-> KB
+    API --> AGENT["AgentService / LangGraph 单 Agent"]
+    AGENT --> LLM["DeepSeek Tool Calling"]
+    AGENT --> TOOLS["BusinessTools：可信用户上下文"]
+    TOOLS --> BIZ
+    TOOLS --> KB
+    AGENT --> APPROVAL["Human Approval：interrupt / resume"]
+    APPROVAL --> BIZ
+    AGENT --> CHECKPOINT["官方 PostgreSQL Checkpointer"]
+    CHECKPOINT --> PG
 ```
 
-业务事实与可执行政策由 Service 和 PostgreSQL 决定；检索文档不能替换身份或直接批准退款。索引发布使用尝试代数与 job ID，删除或重新索引后的旧 Chunk 不能通过当前 SQL 登记成为证据。当前索引通过请求/CLI 执行，没有独立 Worker 框架。详见 [架构](docs/architecture.md)。
+业务事实与可执行政策由 Service 和 PostgreSQL 决定；检索文档不能替换身份或直接批准退款。模型只能准备服务器生成的审批摘要，人工确认后 Service 重查并创建待审核申请。审批准备绑定任务、确认使用服务端幂等键，业务提交后丢失 Checkpoint 可显式恢复。索引发布使用尝试代数与 job ID；当前没有独立 Worker 或自动领取任务。详见 [架构](docs/architecture.md)。
 
 ## 项目目录
 
@@ -56,13 +64,15 @@ EnterpriseAgent/
 ├─ src/enterprise_agent/
 │  ├─ application.py             # 工厂与生命周期
 │  ├─ config.py / database.py / security.py
-│  ├─ api/                       # 认证、订单、退款、知识库、健康
+│  ├─ api/                       # 认证、订单、退款、知识库、Agent、健康
 │  ├─ models/ schemas/ repositories/ services/
+│  ├─ agents/                    # LangGraph / Chat协议 / PostgreSQL Checkpoint
+│  ├─ tools/                     # Pydantic工具与业务Service复用
 │  ├─ rag/                       # parsing/chunking/ranking/backends/runtime/store
 │  ├─ knowledge_cli.py           # 复用 Service 索引已登记文档
 │  ├─ evaluation.py              # 真实检索对照
 │  └─ seed.py
-├─ alembic/                      # 0001_ecommerce → 0002_knowledge
+├─ alembic/                      # 0001_ecommerce → 0002_knowledge → 0003_agent → 0004_agent_role
 ├─ data/knowledge/               # 5 篇模拟政策
 ├─ evals/datasets/rag.json
 ├─ scripts/                      # bootstrap/init/migrate/seed/prepare/index/eval/check/run
@@ -92,6 +102,8 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 
 首次模型准备显式下载固定版本公开文件，合计 **396,800,683 字节**；可使用可信离线副本与 `prepare-rag-models.py --offline-source`。模型推理只读取校验成功的本地文件。索引脚本处理已登记且未删除的文档，当前 fingerprint 已索引的文档会跳过。评估限定五篇种子文档，不把用户上传内容混入对照。
 
+使用 Agent 前在不提交的 `.env` 设置 `EA_LLM_ENABLED=true` 并填写自己的 `EA_DEEPSEEK_API_KEY`，随后重启。默认 `EA_DEEPSEEK_MODEL=deepseek-flash`，显式禁用 Thinking；Key 只留后端。未配置时发消息返回 `agent_model_not_configured`，不会用测试脚本伪装模型回答。完整配置见 [部署](docs/deployment.md)。
+
 `init-infra.ps1` 生成并保留本地随机 PostgreSQL/JWT 秘密，启动 PostgreSQL、Redis、Chroma。秘密位于被 Git 忽略的 `var/infra/` 和 `var/infra-secrets.env`。迁移和 seed 使用初始化账号；API 与评估使用受限账号。API 启动不自动迁移、seed、下载模型或索引。详情见 [部署](docs/deployment.md)。
 
 项目、`.venv`、pip/TEMP/TMP、模型及报告使用 D 盘。Docker 程序位于 `D:\tools\DockerDesktop`，实际 Docker/WSL 数据盘位于 `D:\DockerData`，三个服务的数据目录位于该盘下；少量 Windows 配置可能仍位于 C 盘。
@@ -119,13 +131,15 @@ Authorization: Bearer <token>
 {"query":"已签收订单多久内可以申请退款？","mode":"hybrid_rerank","top_k":5}
 ```
 
-响应包括 `status`、`answer_mode=evidence_only`、引用、文档版本、Chunk 与位置、各阶段耗时。证据分数不足时为 `insufficient_evidence`；相关性门槛是启发式，不能证明引用足以回答所有问题。当前不生成自然语言政策结论，也未实现 Agent 查询改写。
+该直接检索接口仍返回 `answer_mode=evidence_only`、引用、文档版本、Chunk 与位置和各阶段耗时；证据分数不足时为 `insufficient_evidence`。Agent 知识分支可改写一次查询，再调用模型选择原文并逐一校验，不能把相关性分数当作完整语义证明。
+
+Agent Demo：`POST /api/v1/agent/sessions` 创建会话 → 向 `/sessions/{id}/messages` 发送 `{"message":"查询订单 10086 的物流状态"}`。退款请求得到 `waiting_approval` 后，在返回的 `result.approval` 核对订单、金额、原因与政策，再向 `/tasks/{id}/resume` 提交 `approval_id` 和明确的 `confirmed`。客户端不能提供 graph 配置、thread、用户、角色或金额；执行中断时使用 `/tasks/{id}/recover` 核对持久状态。
 
 退款 Demo：查询订单 → `refund-preview` → 人工核对 → `POST /refunds` 明确确认与幂等键 → 客服审核 → 模拟完成。仅创建和管理模拟记录，不调用支付平台。订单 `10086` 属于 demo_customer，商品实付 12900 分、运费 800 分；标准政策不退运费。
 
 seed 默认当天 UTC 基准、随机种子 42、500 订单；本工作区使用 2026-10-12 的固定数据。API 用当前 UTC 判断期限，数据会随时间超期；重复 seed 不覆盖已有数据。业务测试注入固定时钟。
 
-目前没有 Vue 后台、Agent 对话或真实浏览器 Demo 截图。Phase 7 完成后加入实际截图，Swagger 不替代前端验收。完整接口见 [API](docs/api.md)。
+目前没有 Vue 后台或真实浏览器 Demo 截图，Agent 会话通过 Swagger / HTTP 使用。Phase 7 完成后加入实际截图，Swagger 不替代前端验收。完整接口见 [API](docs/api.md)。
 
 ## 测试与 Evaluation
 
@@ -134,7 +148,7 @@ seed 默认当天 UTC 基准、随机种子 42、500 订单；本工作区使用
 .\scripts\evaluate-rag.ps1
 ```
 
-check 默认传 `--require-postgres --require-rag`，真实数据库或模型/Chroma 缺失不会被算作通过；执行 Ruff、格式、pytest 与 pip check，保存 `var/test-results/phase3.xml` 和 `phase3.json`。`-SkipPostgres` / `-SkipRag` 可明确排除对应测试，不能作为完整验收。
+check 默认传 `--require-postgres --require-rag`，执行 Ruff、格式、pytest 与 pip check，保存本阶段 JSON/JUnit。Phase 4 最终 **511项通过，0失败/错误/跳过**，JUnit套件524.068秒，Ruff114文件与pip check通过；81条Chroma第三方legacy embedding弃用警告未屏蔽。真实Uvicorn在待确认阶段停止/重启后仅创建一条退款和工单，重复确认不增记录、越权404；主服务五项健康通过，缺模型Key时503且零任务。查看[验证摘要](evals/results/phase4/verification.json)、[重启证据](evals/results/phase4/http-restart.json)、[主服务HTTP](evals/results/phase4/demo-http.json)与[阶段记录](docs/phase-4.md)。套件耗时不是API性能；受控模型不能证明DeepSeek在线效果。`-SkipPostgres` / `-SkipRag`仅用于局部检查，不能作为完整验收。
 
 Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格式 89 文件与 pip check 通过；真实 TCP 知识库流程 15 项通过。测试套件 327.041 秒，不是 API 性能。官方 SDK 的 51 条 DeprecationWarning 未屏蔽，已归档 [检查摘要](evals/results/phase3/verification.json) 和 [HTTP 验收](evals/results/phase3/http.json)，限制见 [Phase 3 验收](docs/phase-3.md)。Phase 1 的 75 项与 Phase 2 的 191 项保留历史记录，不累计成新指标。
 
@@ -148,12 +162,14 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 - 向量候选与中文 BM25 通过 RRF 融合，真实量化 Reranker 重排，模型来源可复现。
 - SQL 可见性与活动代数在检索前后校验，跨库索引发布有明确失败与并发边界。
 - 真实模型、数据库、HTTP 与评估结果分别验收，不用控制流程替身冒充模型效果。
+- Agent 身份通过可信 Context 注入；模型只能计划，Service 始终检查归属与业务规则。
+- 任务关联审批、服务端幂等确认、线程 advisory lock 与显式恢复共同处理跨库提交边界。
+- 原文抽取校验与确定性业务报告，记录工具步骤、实际报告的 Token 和未知使用量。
 
 ## 后续阶段
 
 | 阶段 | 内容 |
 | --- | --- |
-| Phase 4 | LangGraph 单 Agent、多工具、Checkpoint、多轮、有限重试与人工审批 |
 | Phase 5 | 官方 MCP Server / Client 与 Service 复用 |
 | Phase 6 | NL SQL、授权视图、只读账号、AST、超时与结果限制 |
 | Phase 7 | Vue 3 / TypeScript / Element Plus 五个业务页面 |
@@ -169,13 +185,15 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 - PDF 只读已有文本层，无 OCR；DOCX 覆盖正文与表格，不包含页眉页脚、修订文本及文本框；TXT/MD 仅 UTF-8。
 - 默认 Chunk 为 500 **字符**、重叠 80；模型输入上限 512 Token，字符不等于 Token，较长内容会被模型截断。
 - 本地 CPU 推理、同步请求/CLI 索引，不是独立持久队列或高吞吐生产服务；向量清理失败可能留下旧条目，未知数据库提交结果可能留下未登记原件，没有自动清理工具。
-- 没有 LangGraph、MCP、NL SQL、Vue、回答生成、Langfuse 或在线模型评估结果。
+- DeepSeek 在线意图、工具参数与回答质量尚未验收；没有 MCP、NL SQL、Vue 或 Langfuse。
+- 知识回答为可追溯原文抽取，能限制文字编造，但不能证明选段语义足够或已识别所有政策冲突。
+- Agent 通过请求同步执行、人工等待持久化，不提供流式 UI、独立 Worker、自动任务重领或自动恢复调度。
 - 当前 Compose 是基础设施，Windows 应用与 ONNX 推理已验证；Linux 应用镜像和全栈部署尚未验证。
 - 小型人工数据集与分数门控不能代表开放式回答语义可靠性。
 - 公开演示账号与 loopback 服务不能直接作为公网配置。
 
 ## 文档与许可证
 
-[架构](docs/architecture.md) · [API](docs/api.md) · [Agent 工作流](docs/agent-workflow.md) · [Evaluation](docs/evaluation.md) · [部署](docs/deployment.md) · [技术决策](docs/technical-decisions.md) · [Phase 1](docs/phase-1.md) · [Phase 2](docs/phase-2.md) · [Phase 3](docs/phase-3.md)
+[架构](docs/architecture.md) · [API](docs/api.md) · [Agent 工作流](docs/agent-workflow.md) · [Evaluation](docs/evaluation.md) · [部署](docs/deployment.md) · [技术决策](docs/technical-decisions.md) · [Phase 1](docs/phase-1.md) · [Phase 2](docs/phase-2.md) · [Phase 3](docs/phase-3.md) · [Phase 4](docs/phase-4.md)
 
 代码采用 [MIT License](LICENSE)。

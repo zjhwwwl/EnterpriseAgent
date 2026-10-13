@@ -1,0 +1,24 @@
+{
+  "checked_at_utc": "2026-10-13T09:40:47.632514+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "version": "0.4.0",
+  "ready_checks": {
+    "application": "ok",
+    "database": "ok",
+    "redis": "ok",
+    "knowledge": "ok",
+    "agent_checkpoint": "ok"
+  },
+  "real_http": true,
+  "online_deepseek_tested": false,
+  "provider_token_usage": null,
+  "anonymous_sessions_status": 401,
+  "session_create_status": 201,
+  "other_customer_and_admin_access_status": 404,
+  "forged_role_status": 422,
+  "missing_model_send_status": 503,
+  "missing_model_error_code": "agent_model_not_configured",
+  "tasks_created_by_missing_model_request": 0,
+  "openapi_resume_and_recover_present": true,
+  "passed": true
+}

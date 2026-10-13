@@ -1,126 +1,98 @@
-# LangGraph 工作流设计
+# LangGraph 工作流
 
-**当前 Phase 3 尚未实现 LangGraph、Tool Calling、Checkpoint 或生成模型回答。** 已实现后端确认、确定性退款 Service、订单 API 和真实知识检索，可供后续工具复用；知识响应为 evidence_only，业务确认尚不是 LangGraph interrupt。本文件记录 Phase 4 合同和 Phase 5/6 对接边界。
+Phase 4 已实现一张LangGraph图，复用真实OrderService、RefundService与KnowledgeService。模型负责路由、选择工具、有限查询改写和引用原文选择；后端决定权限、金额、政策、确认与写入。511项工程检查和真实TCP重启结果见[Phase 4](phase-4.md)，受控模型流程测试不能证明DeepSeek在线效果。
 
-## 单 Agent 多工具
-
-采用一张图处理知识问答、订单售后和运营分析。通过 Intent Router 选择分支，不为了技术展示拆分多个 Agent。业务权限由后端检查，路由结果不授予额外权限。
+## 当前图
 
 ```mermaid
 flowchart TD
-    START[输入与认证上下文] --> ROUTER[Intent Router]
-    ROUTER --> AUTH[任务范围和权限校验]
-    AUTH -->|知识问答| RETRIEVE[Knowledge Retrieval]
-    RETRIEVE --> CHECK[证据检查]
-    CHECK -->|不足且可重试| REWRITE[查询改写：最多一次]
+    START[输入与可信 Context] --> ROUTER[intent_router]
+    ROUTER -->|knowledge| RETRIEVE[knowledge_retrieval]
+    RETRIEVE -->|无证据且未改写| REWRITE[query_rewrite：最多一次]
     REWRITE --> RETRIEVE
-    CHECK -->|充分| RESPONSE[Response Generation]
-    CHECK -->|仍不足| INSUFFICIENT[明确说明证据不足]
-    AUTH -->|订单与售后| PLAN[模型选择工具]
-    PLAN -->|读取| EXEC[Tool Execution]
+    RETRIEVE -->|有引用或改写后仍不足| RESPONSE[response_generation]
+    ROUTER -->|order| PLAN[planner：Tool Calling]
+    PLAN -->|只读工具| EXEC[tool_execution]
     EXEC --> PLAN
-    PLAN -->|准备写入| PREPARE[构造待确认操作]
-    PREPARE --> APPROVAL[Human Approval：interrupt]
-    APPROVAL -->|确认| WRITE[Service 重查并执行]
-    APPROVAL -->|拒绝| CANCEL[结束且不写入]
-    WRITE --> RESPONSE
-    PLAN -->|事实完整| RESPONSE
-    AUTH -->|运营分析| SQL[生成 SQL]
-    SQL --> GUARD[AST 与权限校验]
-    GUARD --> QUERY[只读执行]
-    QUERY --> RESPONSE
-    RESPONSE --> VALIDATION[Validation]
-    INSUFFICIENT --> VALIDATION
-    CANCEL --> VALIDATION
-    VALIDATION --> END[持久化结果并结束]
+    PLAN -->|退款准备| POLICY[适用政策与限定文档检索]
+    POLICY --> PREPARE[Service 准备审批：task_id 幂等]
+    PREPARE --> HUMAN[human_approval：interrupt]
+    HUMAN --> COMMIT[commit_refund：确认或拒绝]
+    COMMIT --> RESPONSE
+    PLAN -->|工具调用结束| RESPONSE
+    ROUTER -->|unsupported| RESPONSE
+    RESPONSE --> CHECK[validation]
+    CHECK --> END[同步 Task 与结果]
 ```
 
-## State 与任务记录
+POLICY/PREPARE 是 tool_execution 内部步骤，不是额外独立 Agent。各节点失败按安全错误终止；没有 NL SQL 或 MCP 分支，路由为 unsupported 时明确说明当前范围。
 
-图状态计划包含：
+## State、Context 与持久化
 
-- 任务 ID、会话 ID、可信用户上下文与 thread ID。
-- 当前消息、意图、已执行工具调用及结构化结果。
-- 检索证据的文档、版本、Chunk 和位置。
-- 待确认操作、审批记录引用和执行结果。
-- 执行步数、工具次数、重试次数、时间预算。
-- 模型实际 Token 使用、耗时和安全错误摘要。
+State 保存 task_id、用户消息、意图、查询、历史、模型消息、工具计划与结果、引用、服务器审批、退款结果、步数、工具次数、改写次数、steps、usage、状态、回答和 warning_codes。
 
-`agent_sessions` 与 `agent_tasks` 的模型和迁移已存在，但当前没有会话/任务 API 或图执行。Phase 4 会以会话所有者绑定 thread，并由 LangGraph PostgreSQL Checkpointer 保存恢复状态。HTTP 客户端不能指定另一用户身份或自由访问他人 thread ID。
+Principal、Service、模型和配置放在可信 AgentContext。State 中的订单用户字段仅为业务事实，不能用来决定认证；模型不能提供 user_id、role、权限或 graph config。session/thread 由后端产生，HTTP 仅接受会话和任务 UUID，所有角色都只能查询自己的会话、任务和确认记录，当前角色还须匹配不可变创建角色；角色变化需新会话，恢复原角色后可访问原合法会话。
 
-Phase 4 计划同一 thread 串行执行，确认等待以持久化中断保存，避免占用整个等待期的执行资源。当前没有独立 Worker、任务租约或自动领取/恢复机制，数据库任务表不代替这些实现。
+AgentService 使用官方 AsyncPostgresSaver 保存图状态。0003_agent 管理 ea_checkpoint schema 和对应 SDK 版本，运行账号没有 DDL、schema CREATE、检查点 DELETE 或版本表修改权限；启动不调用 saver.setup()。序列化禁用 pickle fallback 和任意类重建。参见 [LangGraph 持久化](https://docs.langchain.com/oss/python/langgraph/persistence)。
 
-## 工具合同
+每个 thread 使用 PostgreSQL advisory lock 排除并发 worker；短事务登记当前任务，执行图时不持有业务行锁。待确认任务也阻止同一会话开始新任务。人工等待作为持久化中断保存，等待期不占用 HTTP 请求、执行预算或 thread 锁。没有 Worker、自动任务重领或自动恢复调度。
 
-| 工具 | 作用 | 限制 |
-| --- | --- | --- |
-| `get_order` | 获取订单事实 | 必须验证归属和角色 |
-| `get_order_items` | 获取交易快照和数量 | 复用订单归属检查 |
-| `get_logistics` | 获取真实模拟数据库物流 | 无记录时返回明确状态 |
-| `get_refund_policy` | 获取适用政策版本及来源 | 不把通用检索文本当可执行规则 |
-| `create_refund_request` | 创建待审核退款和工单 | 必须消费有效确认，事务重查、幂等、审计 |
-| `get_refund_status` | 获取申请和审核进度 | 不暴露其他用户申请 |
+## 业务工具
 
-工具名限定白名单，参数由 Pydantic 校验。工具结果采用结构化数据和明确错误；Agent 只能展示 Service 返回的申请状态。不存在“直接把订单改为已退款”的 Agent 工具。
+| 工具 | 当前行为 |
+| --- | --- |
+| get_order | 数据库订单状态和整数分金额，Service 校验角色与归属 |
+| get_order_items | 交易商品、类目、数量及金额快照 |
+| get_logistics | 数据库物流状态和已有事件，不推断缺失动态 |
+| get_refund_policy | 付款时适用的结构化政策与事实判断，再仅检索 policy.document_id |
+| create_refund_request | 只准备服务器审批摘要；图必须先检查政策证据，不直接创建退款 |
+| get_refund_status | UUID 直查；订单号先验证归属，再在最多 2000 条授权记录中找最新申请，超限明确要求 UUID |
+| search_knowledge | 真实混合检索与相关性门槛，保留权限、当前版本及来源 |
 
-模型选择读取工具后执行；写入工具被工作流拦截为待确认操作，确认后才执行。Tool Calling 中的 `user_id`、授权信息和审批权限不能由模型生成。
+工具参数采用 Pydantic strict + extra forbid。Agent 订单号为 5–30 位 ASCII 数字；退款 reason 为 change_mind / quality_issue / not_received，notes 最长 500 字符。模型不能传入 amount_cents、approval_id、confirmed、idempotency_key、task_id 或身份。支持普通业务 API 的安全标识格式不意味着 Agent 工具也接受同样格式。
+
+prepare_refund 的 task_id 由服务端可信上下文提供；同任务同参数重放审批，参数变化拒绝。execute_confirmed_refund 是可信确认入口，不出现在模型 tool schema 中；确认和拒绝都复用现有事务、摘要、归属、期限、审计及幂等规则。
+
+## 知识与业务回答
+
+知识分支先检索，证据不足只允许改写一次查询；仍不足直接说明不能确认政策。证据存在时模型调用 select_knowledge_quotes 选择 1–3 个连续原文，服务器确认选段来自已返回 Chunk，引用仍可访问、文本相同且索引代数当前，随后构造带来源链接的回答。它是原文抽取，不是自由生成政策，也不是完整语义蕴含或政策冲突检测。
+
+订单分支仅采纳 Service 返回的结构化事实，用确定性报告展示订单、商品、物流、资格和申请状态。planner 最终自由文本不成为业务结论；业务变化原因没有事实支持时不能推断。退款准备必须同时满足数据库资格和对应政策文档证据，不以模型判断替代后端规则。
 
 ## 人工确认与恢复
 
-Phase 2 已由 `refund-preview` 创建 `approval_requests`，绑定用户、订单、操作快照、摘要和 30 分钟有效期；显式 confirmed=true 后 Service 重读并创建待审核申请。当前任务关联允许为空，没有 thread 或前端确认卡片。
+退款审批卡片包括服务器产生的 approval_id、订单号、整数分金额、原因、notes、有效期、适用政策与 requires_confirmation=true。任务状态为 waiting_approval 时，尚未创建退款或售后工单。
 
-Phase 4 会在这个业务协议之上接入 LangGraph：卡片显示订单、金额、原因和政策来源，审批关联任务和 thread。业务权限、摘要与事务重查继续由同一 Service 执行，不在图中复制规则。
+认证客户端向 tasks/{id}/resume 发送 approval_id 和 JSON 布尔值 confirmed。API 校验任务所有者、当前 thread、待确认节点和服务器审批绑定后，构造 Command(resume=...)。客户端不能指定恢复节点或修改审批金额、政策、订单和原因。confirmed=false 记录拒绝并结束；true 重新检查实际事实、期限、摘要与活动退款后创建 pending_review 申请和工单，尚未完成支付退款。
 
-用户确认后，服务端验证所有者、有效期和摘要，构造 `Command(resume=...)`。拒绝、过期或参数变化均不能继续写入。修改订单、金额或原因需要生成新的确认内容。
+human_approval 在 interrupt 前没有业务副作用，因为恢复会重新执行该节点；提交放在单独 commit_refund。准备按 task_id 绑定，确认使用服务器固定任务幂等键，退款、工单、幂等和审计同事务提交。参见 [LangGraph 中断](https://docs.langchain.com/oss/python/langgraph/interrupts)。
 
-LangGraph 恢复时可能重新执行中断所在节点，因此副作用放在独立节点，并通过数据库幂等记录保护。业务事务可能已经提交，而图 Checkpoint 尚未保存；恢复时应找到原结果，不能再创建退款或重复工单。
+业务事务与 Checkpoint 没有共同提交。请求取消可能发生在业务已提交、图尚未记录节点结果时；recover 从官方持久状态继续，同一审批或退款通过数据库记录重放，避免额外记录。失败恢复需要用户显式调用，不能把网络超时直接当作退款未创建。对已完成任务重复相同确认返回原任务，改变决定被拒绝。
 
-参见 [LangGraph Interrupts 官方文档](https://docs.langchain.com/oss/python/langgraph/interrupts)。实现阶段锁定具体依赖，并通过实际故障用例验证。
+业务提交后旧引用失效只清除无效显示引用并加入 warning_codes，保留真实已提交申请结果；未提交回答引用失效则终止。敏感操作预先保留人工确认、提交、报告及校验步数，避免预算耗尽后误报已提交业务。
 
-## 有限执行
+## 有限执行与记录
 
-以下是 Phase 4 初始设计值，届时在配置中实现并测试终止分支；当前尚未生效：
-
-| 限制 | 初始值 |
+| 配置/限制 | 默认值 |
 | --- | --- |
-| 图节点步数 | 12 |
-| 工具调用次数 | 8 |
-| 检索查询改写 | 1 |
-| SQL 修复 | 1，修复后重新通过安全检查 |
-| 临时网络重试 | 最多 2 次 |
-| 单次模型请求 | 30 秒 |
-| 单轮主动执行 | 90 秒 |
-| 确认有效期 | 30 分钟 |
+| EA_AGENT_MAX_STEPS | 24，配置 6–60 |
+| EA_AGENT_MAX_TOOL_CALLS | 8，配置 1–16；自动政策查询也计入 |
+| 查询改写 | 最多 1 次，代码固定 |
+| EA_AGENT_MAX_RETRIES | 2 次重试，配置 0–2；即每次调用最多 3 次尝试 |
+| EA_AGENT_MODEL_TIMEOUT_SECONDS | 30 秒 |
+| EA_AGENT_TIMEOUT_SECONDS | 90 秒，每次主动 send/resume/recover 执行预算 |
+| EA_AGENT_MODEL_MAX_TOKENS | 1024 输出 Token 上限 |
+| EA_AGENT_MAX_HISTORY_MESSAGES | 12 条，保存完整问答对 |
+| 审批有效期 | 30 分钟，RefundService 控制 |
 
-这些值是初始设计，当前不是已测性能。权限拒绝、非法参数、政策不符合和用户取消不做网络式重试。数据库写入重试仍须幂等，不能因模型或网络失败扩大申请次数。
+只重试明确临时模型连接/限流/超时错误，退避有限。角色拒绝、非法参数、政策不符合、不可用证据和拒绝确认不当作临时网络错误重试。模型 HTTP 请求/响应最多 256 KiB，单次最多 4 个 Tool Call，工具 JSON 参数最多 16 KiB；业务执行仍受总步数、次数和预算控制。
 
-## 证据与响应验证
+steps 记录节点、业务工具名、耗时和安全错误；usage 累计实际供应商报告的 prompt/completion/total Token。供应商没有报告 usage 的失败增加 unknown_usage_calls，usage_complete=false，不能把未知消费写成真实零消费。执行中断可能还有尚未写入 Checkpoint 的未知消费；该不完整标记跨 recover 保留，恢复成功不能把未知消费重写为完整零消费。Task 保存结果、错误与累计执行耗时；本机检索的 Embedding/Reranker 计费 Token 为 N/A。
 
-知识问答先检查检索证据；允许有限改写，仍不足时明确说明。订单退款判断同时包含数据库事实和有效政策，关键金额由 Service 计算。
+## 模型配置与边界
 
-Validation 计划检查引用是否存在、文档版本是否有效、用户是否有访问权、关键订单字段是否对应工具结果，以及业务写入是否已经实际成功。它不等同于对开放式文本的完整事实证明，语义支持程度需要 Evaluation 与人工抽查。
+HTTPX 发送 OpenAI 兼容 Chat Completions JSON，校验 assistant/tool 消息、工具白名单、JSON 参数、finish_reason 与 usage；不安装 OpenAI SDK，不自动跟随重定向。默认模型 deepseek-flash，明确 thinking.type=disabled，temperature=0，非流式请求，不强制 required/named tool_choice。[DeepSeek API 契约](https://api-docs.deepseek.com/api/create-chat-completion/) 是协议来源，具体任务效果仍需真实在线验收。
 
-检索到的文档和工具数据都是任务数据，不能覆盖 system 指令、追加未经授权工具或绕过人工确认。失败结果不包装成任务成功。
+EA_LLM_ENABLED 默认 false；本机没有 Key 时不创建真实聊天 Client，发消息返回明确 503。图测试使用标注清楚的 ScriptedChatModel 驱动，而数据库、检索模型、Chroma 和 Checkpoint 实际运行。没有在线结果时不声称 DeepSeek 意图、参数或回答质量已经验证。
 
-## DeepSeek 接入
-
-接口地址、模型和 Thinking 选项配置化，通过 OpenAI 兼容接口接入。先验证非 Thinking 工具调用路径，不依赖 Thinking 模式中不受支持的强制工具选项。具体限制以实现时的 [DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/) 和实际调用为准。
-
-Phase 3 只预留聊天模型安全配置，没有 DeepSeek Client 或生成请求；本地 Embedding/Reranker 已真实执行。后续在线测试必须使用实际 API 返回的耗时和 Token；测试替身仅证明流程，不证明模型效果。
-
-## MCP 和分析分支
-
-MCP 首版提供 stdio Server，封装 `query_order`、`query_logistics`、`query_refund_policy`。真实 Client 子进程演示工具发现、参数校验与错误。至少接入一条 Agent 的只读 MCP 路径，退款写入继续经过本地确认与 Service。
-
-分析分支仅在角色授权后提供白名单视图 Schema，由独立只读 Service 执行。SQL 失败允许一次修复，每次均重新做 AST、视图、列和函数校验。报告明确指标口径，只解释结果所能支持的结论。
-
-
-## 已实现的 RAG 对接合同
-
-Phase 3 的 KnowledgeService.search 接受可信 Principal 和 SearchInput，支持 vector/hybrid/hybrid_rerank。返回 evidence_found 或 insufficient_evidence、固定 evidence_only、文档/版本/Chunk/位置、阶段耗时及真实模型指纹；没有自然语言生成结论。
-
-角色过滤与活动代数检查在SQL执行，模型推理后再校验，旧引用通过citation详情拒绝。未来图的Knowledge Retrieval节点直接复用该Service，不在图内复制权限，也不将检索文本直接变成可执行退款政策。
-
-分数门槛只是相关性启发式。Phase4需要明确如何判断具体问题的证据支持、政策版本和业务事实；不能因为evidence_found就跳过工具事实或宣称答案语义充分。有限查询改写、Response Generation及Validation当前均是后续设计。
-
-RAG线程超时后仍占用实际容量到结束，这与Agent最大步数/有限重试是不同边界。未来图的重试不能绕过RAG预算或创建无限模型工作线程。当前30条检索对照也不等同于Agent任务完成率评估。
+下一阶段 MCP 只作为只读协议入口，复用这些 Service；分析分支要另加只读账号、授权视图、SQL AST 和执行限额，当前不执行模型 SQL。

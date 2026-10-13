@@ -36,8 +36,8 @@ async def test_service_information_and_liveness(client):
     assert info.status_code == 200
     assert info.json() == {
         "name": "EnterpriseAgent",
-        "version": "0.3.0",
-        "phase": 3,
+        "version": "0.4.0",
+        "phase": 4,
         "docs_url": "/docs",
         "health_url": "/health/ready",
     }
@@ -47,8 +47,8 @@ async def test_service_information_and_liveness(client):
     assert live.json() == {
         "status": "ok",
         "service": "EnterpriseAgent",
-        "version": "0.3.0",
-        "phase": 3,
+        "version": "0.4.0",
+        "phase": 4,
         "checks": {"application": "ok"},
     }
 
@@ -63,8 +63,8 @@ async def test_readiness_follows_lifespan_and_does_not_claim_database_health(app
         assert before.json() == {
             "status": "not_ready",
             "service": "EnterpriseAgent",
-            "version": "0.3.0",
-            "phase": 3,
+            "version": "0.4.0",
+            "phase": 4,
             "checks": {"application": "not_ready", "database": "not_ready"},
         }
         async with app.router.lifespan_context(app):

@@ -2,7 +2,7 @@
 
 ## 实际支持范围
 
-Phase 3 支持 **Windows 本机 FastAPI / CPU ONNX + Linux PostgreSQL / Redis / Chroma 容器**。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
+Phase 4 支持 **Windows本机FastAPI / LangGraph / CPU ONNX + Linux PostgreSQL / Redis / Chroma容器**。本地工程及真实HTTP重启验收已完成，DeepSeek在线效果尚未验收。当前Compose为基础设施，没有应用Dockerfile、全栈前端镜像、GitHub Actions执行、公网发布或生产部署证明。
 
 默认仅绑定 loopback，使用虚构数据与公开演示账号。没有真实支付、退款或付费云资源。
 
@@ -86,13 +86,13 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 
 秘密保存在被 Git 忽略的 var/infra/、var/infra-secrets.env；.env 也不提交。初始化脚本不覆盖既有秘密。运行账号 ea_app 非 owner/超级用户，ea_test_app 只能连接独立测试库；初始化账号仅用于迁移/seed。不要把测试 URL 指向开发库，测试夹具会重置专用测试记录。
 
-API 没有订单状态/金额写权限，政策只能读，审计仅追加。确认、退款、工单、幂等、agent_tasks/agent_sessions 具有迁移明确授予的 DML；后两者尚无业务接口。Phase 3 另授权知识登记 INSERT/UPDATE 和 Chunk INSERT/DELETE，政策来源仍被独立 trigger 保护。
+API 没有订单状态/金额写权限，政策只能读，审计仅追加。确认、退款、工单、幂等、agent_tasks/agent_sessions 具有迁移明确授予的 DML。Phase 3 另授权知识登记 INSERT/UPDATE 和 Chunk INSERT/DELETE，政策来源仍被独立 trigger 保护。0003_agent 由迁移账号建立官方 Checkpoint schema 与版本记录；运行账号不能 DDL、删除检查点或变更 SDK 版本，应用不调用 saver.setup()。
 
 Redis 与 Chroma 当前没有公网认证方案，仅 loopback 隔离。需要公网部署时必须另行完成生产配置与验证，不能直接使用公开模拟账号。文档、脚本及日志不打印真实 URL、JWT Secret、模型 Key 或完整环境。
 
-## Phase 3 配置
+## 知识检索配置
 
-操作系统环境覆盖 .env。完整模板为 [.env.example](../.env.example)，包括数据库、Redis、JWT 和预留聊天模型字段。EA_RAG_ENABLED 在 Settings/模板中默认 false；run、索引和评估脚本显式启用，直接 main.py 时需自行启用。
+操作系统环境覆盖 .env。完整模板为 [.env.example](../.env.example)，包括数据库、Redis、JWT、本地检索和 Agent 字段。EA_RAG_ENABLED 在 Settings/模板中默认 false；run、索引和评估脚本显式启用，直接 main.py 时需自行启用。
 
 | 变量 | 默认值与含义 |
 | --- | --- |
@@ -109,7 +109,30 @@ Redis 与 Chroma 当前没有公网认证方案，仅 loopback 隔离。需要�
 | EA_RAG_MIN_VECTOR_SIMILARITY | 0.45，相关性启发式 |
 | EA_RAG_MIN_RERANK_SCORE | 0.05，sigmoid 后的未校准分数门槛，不是概率 |
 
-EA_LLM_ENABLED、EA_DEEPSEEK_BASE_URL、EA_DEEPSEEK_API_KEY 仍为 Phase 4 预留。当前检索和评估不发送生成模型请求。
+直接检索与 retrieval evaluation 不发送聊天模型请求。Agent 配置如下。
+
+## DeepSeek 与 Agent 配置
+
+在本机被忽略的 .env 中填写自己的 EA_DEEPSEEK_API_KEY，再设置 EA_LLM_ENABLED=true 并重启。不要在 shell 命令、截图、日志或 Git 中暴露 Key。API 启用时未填写 Key 会在配置校验拒绝启动；默认 false 时业务和检索可运行，会话历史可查询，但 Agent 消息/执行恢复明确返回 503。健康不发送在线模型请求。
+
+| 变量 | 默认值与用途 |
+| --- | --- |
+| EA_LLM_ENABLED | false，不在未配置时发送聊天请求 |
+| EA_DEEPSEEK_BASE_URL | https://api.deepseek.com |
+| EA_DEEPSEEK_API_KEY | 空；仅后端实际启用模型时需要 |
+| EA_DEEPSEEK_MODEL | deepseek-flash，允许配置其他兼容模型标识 |
+| EA_AGENT_ENABLED | true，建立持久化并启用会话/任务接口 |
+| EA_AGENT_MODEL_TIMEOUT_SECONDS | 30，范围0.1–120，单次请求总预算 |
+| EA_AGENT_MODEL_MAX_TOKENS | 1024，范围128–4096，模型输出上限 |
+| EA_AGENT_TIMEOUT_SECONDS | 90，范围5–300，每次主动执行预算 |
+| EA_AGENT_MAX_STEPS | 24，范围6–60，敏感操作提前预留后续步数 |
+| EA_AGENT_MAX_TOOL_CALLS | 8，范围1–16，自动政策查询计入 |
+| EA_AGENT_MAX_RETRIES | 2，范围0–2，明确临时失败的有限重试 |
+| EA_AGENT_MAX_HISTORY_MESSAGES | 12，范围2–24，完整问答对 |
+
+HTTPX 发送 OpenAI 兼容 Chat Completions，显式 Thinking disabled、非流式、temperature=0；不装 OpenAI SDK，不强制 tool_choice。协议参考 [DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)。模型选择与工具效果需要在线实际调用验证，当前缺 Key，不能把受控图测试当作 DeepSeek 在线结果。
+
+迁移包括 0003_agent 的官方 Checkpoint 与 0004_agent_role 的不可变会话创建角色。角色变化需新会话，恢复原相同角色后可访问原合法会话；服务端私有 thread 不能通过 HTTP 指定。Agent 随请求运行，无后台 Worker 或自动任务重领；中断后显式调用 recover 核对已提交业务。
 
 Chroma SDK 1.5.9 使用窄适配桥，将实际 HTTP session timeout 在初始网络调用前设置；connect/pool 最多3秒，read/write 使用配置秒数。它是各阶段超时，不是整次多请求操作总耗时保证；外层还有 RAG 时间预算。客户端升级需要复查适配和真实 HTTP 测试，不用不存在的 SDK 配置键假装限制请求。
 
@@ -129,11 +152,11 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/live'
 Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/ready'
 ```
 
-ready 要求 application、database、已配置 Redis 和已启用 knowledge 通过。数据库验证 head=0002_knowledge、必需权限及账号边界；knowledge 校验本地模型与 Chroma 心跳。没有模型/RAG 时不能据业务健康通过声称知识功能可用。健康不验证每个语料的活动索引。
+ready 要求 application、database、已配置 Redis、已启用 knowledge 和已建立 agent_checkpoint 通过。数据库验证当前迁移 head、必需权限及账号边界；knowledge 校验本地模型与 Chroma 心跳，checkpoint 检查官方 SDK 版本和运行账号权限。健康不验证每个语料活动索引、模型配置或 DeepSeek 在线状态。
 
-完整检查结果写 var/test-results/phase3.xml/json；评估写 var/evaluation/phase3/results.json、metrics.csv、queries.csv、report.md。依赖未配置导致的跳过不属于通过，SkipPostgres/SkipRag 只用于局部开发。实际阶段记录见 [Phase 3](phase-3.md)。
+完整检查结果保存本阶段var/test-results JSON/JUnit；Phase 4最终511项通过，零失败/错误/跳过，Ruff与pip check通过，公共证据见[验收记录](phase-4.md)及[验证摘要](../evals/results/phase4/verification.json)。检索评估输出路径仍由evaluate-rag配置，历史Phase 3原始JSON/CSV/报告保留，不作为Phase 4 Agent效果分数。依赖缺失的跳过不属于通过，SkipPostgres/SkipRag只用于局部开发。
 
-应用代码升级后必须重启，并实际检查版本、phase、ready 和知识接口，不能将旧进程当作最新服务。当前最终实例的 HTTP 证据按阶段记录填写。
+应用代码升级后必须重启，并实际检查版本、phase、ready和知识接口，不能将旧进程当作最新服务。[最新主服务HTTP](../evals/results/phase4/demo-http.json)确认0.4.0、五项健康、所属会话201、越权404、非法角色422、缺模型503且零新增任务；健康通过不代表DeepSeek在线成功。
 
 ## 关闭与后续交付
 

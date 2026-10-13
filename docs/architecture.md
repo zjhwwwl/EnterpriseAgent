@@ -2,9 +2,9 @@
 
 ## 当前实现
 
-Phase 3 的可运行范围是 FastAPI、PostgreSQL、Redis 登录限流、订单退款 Service、知识库管理、真实中文 RAG 检索及评估 CLI。**知识接口返回引用证据，不调用聊天模型生成答案。** LangGraph、MCP、NL SQL、Vue、独立 Worker 与 Langfuse 尚未实现。
+Phase 4 在 FastAPI、PostgreSQL、订单售后及真实本地 RAG 上加入 LangGraph 单 Agent、DeepSeek Tool Calling 兼容适配、官方 PostgreSQL Checkpoint、会话任务 API、有限执行与人工审批。直接知识接口仍返回 evidence_only；Agent 通过原文抽取回答知识问题、通过 Service 事实报告订单结果。511项工程检查与真实TCP重启验收通过，DeepSeek在线效果尚未验收。MCP、NL SQL、Vue、独立Worker与Langfuse尚未实现，实测边界见[Phase 4](phase-4.md)。
 
-采用模块化单体：API、Service、Repository、Schemas 分工明确，模型和前端不能自行修改订单状态或替换当前用户身份。任务表存在不代表图执行或任务队列已落地。
+采用模块化单体：API、Service、Repository、Schemas、Agents、Tools 分工明确，模型和前端不能自行修改订单状态或替换当前用户身份。图随请求执行，人工等待写入 Checkpoint；没有任务队列 Worker。
 
 ```mermaid
 flowchart TD
@@ -27,6 +27,14 @@ flowchart TD
     CITE --> KREPO
     HTTP --> REDIS["Redis 来源 IP 登录限流"]
     EVAL["真实 Evaluation CLI"] --> KNOW
+    API --> AGENT["AgentService：会话归属与执行"]
+    AGENT --> GRAPH["LangGraph：路由、工具、审批、验证"]
+    GRAPH --> LLM["DeepSeek HTTPX 兼容接口"]
+    GRAPH --> TOOLS["BusinessTools + 可信 Principal Context"]
+    TOOLS --> ORDER
+    TOOLS --> KNOW
+    GRAPH --> CHECKPOINT["官方 AsyncPostgresSaver"]
+    CHECKPOINT --> DB
 ```
 
 ## 代码分层
@@ -41,14 +49,18 @@ flowchart TD
 | RAG backends/runtime | 固定模型文件验证、CPU 推理、线程容量和超时 |
 | RAG store/ranking | Chroma SDK、中文字符/二元组 BM25 与 RRF |
 | Evaluation | 固定 corpus、文档级排序、门控、引用合法性和真实耗时 |
+| Agents graph | 状态、模型规划、一次检索改写、人工中断、执行预算及结果验证 |
+| Agents llm | OpenAI 兼容 HTTP 协议、有限响应与超时、严格 Tool Call / usage 校验 |
+| Agents checkpoint | 官方 PostgreSQL saver、私有 thread advisory lock、安全序列化 |
+| Tools | 参数白名单、可信身份注入、复用业务 Service，模型不能确认写入 |
 
-`application.create_app` 为可注入工厂；导入不会创建运行实例或提前读取用户环境。生命周期按配置建立数据库、Redis 和 RAG runtime，关闭时等待实际推理线程并释放连接。根目录 `main.py` 使用项目 CLI、JSON 日志及 Windows Selector 事件循环。
+`application.create_app` 为可注入工厂；导入不会创建运行实例或提前读取用户环境。生命周期按配置建立数据库、Redis、RAG、Checkpoint 与可选模型 Client，关闭时释放 HTTP/数据库连接并等待实际推理线程。根目录 `main.py` 使用项目 CLI、JSON 日志及 Windows Selector 事件循环。
 
 知识索引在 HTTP 请求或 CLI 中执行，没有 Redis 工作队列。解析、分块及模型/向量工作通过 Runtime 工作线程与统一容量/超时执行；一次允许一个实际任务，外层超时后线程仍持有容量，直至实际结束，避免连续超时创建无限线程。
 
 ## 数据与实体
 
-15 张业务表来自 `0001_ecommerce`，`0002_knowledge` 增加索引发布状态和政策来源保护，另有 Alembic 版本表。
+15 张业务表来自 `0001_ecommerce`，`0002_knowledge` 增加索引发布状态和政策来源保护，`0003_agent` 补充会话任务状态、审批任务唯一绑定和官方 Checkpointer 的 `ea_checkpoint` schema，`0004_agent_role` 固定会话创建角色；另有 Alembic 版本表。官方 Checkpoint 的四张内部表不当成额外业务实体。
 
 | 表 | 关键内容 |
 | --- | --- |
@@ -65,8 +77,8 @@ flowchart TD
 | approval_requests | 用户、订单、可选任务、摘要、有效期和消费状态 |
 | idempotency_records | 操作者/操作/Key 唯一、参数摘要、结果 |
 | audit_logs | 操作者、动作、资源、请求 ID、必要摘要 |
-| agent_sessions | 用户、thread ID；暂无会话 API |
-| agent_tasks | 会话、用户、类型、状态、steps、token_usage、错误；暂无任务执行 |
+| agent_sessions | 用户、不可变创建角色、私有 thread ID、当前任务指针、创建与更新时间；API 同时校验所有者和当前角色 |
+| agent_tasks | 消息、会话、用户、类型、状态、结果、steps、token_usage、错误和耗时 |
 
 ```mermaid
 erDiagram
@@ -80,7 +92,6 @@ erDiagram
     knowledge_documents ||--o{ knowledge_chunks : contains
     knowledge_documents ||--o{ refund_policy_versions : supports
     users ||--o{ agent_sessions : owns
-    agent_sessions ||--o{ agent_tasks : owns
     agent_sessions ||--o{ agent_tasks : contains
     agent_tasks ||--o{ approval_requests : associates
     users ||--o{ audit_logs : performs
@@ -97,7 +108,9 @@ erDiagram
 
 知识可见性：customer、analyst 仅公开文档，support、admin 可见公开及内部文档；上传、删除、重索引只允许 admin。列表、下载、检索和引用都经过相同 SQL 权限规则。
 
-数据库运行账号不是 owner、超级用户或建表账号。订单仅授予 id 列 UPDATE 供行锁；状态和金额无写权限，审计仅 SELECT/INSERT，政策只能读取。确认、退款、工单、幂等及 Agent 任务/会话表具有迁移明确授予的 DML 权限；后两者尚无执行/API。Phase 3 明确增加 knowledge_documents INSERT/UPDATE 与 knowledge_chunks INSERT/DELETE，不提供修改 Chunk 或物理删除文档的业务路径。
+数据库运行账号不是 owner、超级用户或建表账号。订单仅授予 id 列 UPDATE 供行锁；状态和金额无写权限，审计仅 SELECT/INSERT，政策只能读取。确认、退款、工单、幂等及 Agent 任务/会话表具有迁移明确授予的 DML 权限。Phase 3 明确增加 knowledge_documents INSERT/UPDATE 与 knowledge_chunks INSERT/DELETE，不提供修改 Chunk 或物理删除文档的业务路径。
+
+`ea_checkpoint` 仅由 `0003_agent` 建立并保存 SDK schema 版本。运行账号具有 schema USAGE、检查点数据表 SELECT/INSERT/UPDATE、版本表 SELECT，没有 schema CREATE、DDL、检查点 DELETE 或版本变更权限；应用不调用 saver.setup()。
 
 ## 解析、模型和检索
 
@@ -109,7 +122,7 @@ Embedding 为 BAAI/bge-small-zh-v1.5 的固定 ONNX 导出，512 维、CLS 与 L
 
 向量候选最多 30，BM25 用中文字符/二元组及英文数字业务标识，也最多 30；RRF k=60 融合后最多 30 个候选再重排。BM25 从当前可访问 SQL Chunk 构建，没有独立持久倒排索引或 Redis 检索缓存。
 
-相关性阈值用于保守筛选候选，不能证明语义足够、政策无冲突或开放问题可回答。所有模式需满足向量相似度门槛，hybrid_rerank 还需同时满足 sigmoid 重排门槛。`evidence_found` 表示有候选通过门槛；`insufficient_evidence` 明确说明无法确认。当前没有 LLM 生成、查询改写或 Agent 工作流。
+相关性阈值用于保守筛选候选，不能证明语义足够、政策无冲突或开放问题可回答。所有模式需满足向量相似度门槛，hybrid_rerank 还需同时满足 sigmoid 重排门槛。`evidence_found` 表示有候选通过门槛；`insufficient_evidence` 明确说明无法确认。Agent 知识分支可改写一次查询，并要求模型选择连续原文；回答前重新验证引用权限、文本和当前代数。
 
 ## 跨存储索引一致性
 
@@ -125,8 +138,16 @@ Chroma 使用官方 1.5.9 SDK，针对其 HTTP session 的窄兼容桥在首次�
 
 ## 健康与部署
 
-当前运行分布为 Windows Python API/ONNX，Linux PostgreSQL、Redis 和 Chroma 容器，数据与模型优先 D 盘。健康区分进程存活与依赖就绪：数据库检查迁移/权限，Redis 配置后 PING，RAG 启用后校验模型文件与 Chroma 心跳。健康通过不证明所有文档已索引或所有查询正确。
+当前运行分布为 Windows Python API/ONNX，Linux PostgreSQL、Redis 和 Chroma 容器，数据与模型优先 D 盘。健康区分进程存活与依赖就绪：数据库检查迁移/权限，Redis 配置后 PING，RAG 启用后校验模型文件与 Chroma 心跳，建立 Agent Checkpoint 后检查其版本和受限权限。健康不发送模型请求，也不能证明在线模型可用、所有文档已索引或所有查询正确。
+
+## Agent 一致性与恢复
+
+Principal 放在可信 `AgentContext`，不从模型参数、图 State 或 resume JSON 决定身份。API 暴露 session/task UUID，内部 thread 随会话生成；每种角色都只能访问自己的会话和任务，且当前角色必须匹配会话创建角色。角色变化需要新会话，恢复原角色后可再次访问原合法会话。官方 saver 只处理字典等允许的数据类型，禁用 pickle fallback 与任意类重建。
+
+同一 thread 使用跨进程 PostgreSQL advisory lock，线程执行时其他 worker 被拒绝；等待人工确认时释放锁和执行资源。模型只准备审批，服务器记录任务关联、金额、原因、适用政策、摘要和有效期。确认后以固定任务幂等键调用同一 RefundService；审批准备也按 task_id 重放原记录。
+
+业务事务与 Checkpoint 没有共同事务。取消请求可能发生在真实审批或退款提交之后，通过 recover 重跑未完成节点，审批唯一绑定和确认幂等保护原记录。需要用户显式恢复，没有后台自动重领。业务提交后的显示引用若失效，仅移除引用并添加 warning_codes，保留数据库已提交结果；敏感操作开始前预留后续执行与验证步数。
 
 ## 后续架构
 
-Phase 4 以单 LangGraph 图复用现有 Service，建立可信 State、Tool Calling、Checkpoint、多轮、有限执行和人工中断。Phase 5 的 MCP 只作为协议入口；Phase 6 的分析使用独立只读账号/视图/AST；Phase 7 实现五页 Vue 后台。任务调度、应用镜像、CI 和 tracing 在确有实现及验证后加入文档，不把目标图当作当前运行能力。
+Phase 5 的 MCP 只作为协议入口并复用当前 Service；Phase 6 的分析使用独立只读账号/视图/AST；Phase 7 实现五页 Vue 后台。任务调度、应用镜像、CI 和 tracing 在确有实现及验证后加入文档，不把目标图当作当前运行能力。

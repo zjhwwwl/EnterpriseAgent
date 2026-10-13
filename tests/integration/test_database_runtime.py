@@ -44,8 +44,77 @@ async def test_missing_required_grants_are_not_reported_ready(
 async def test_ready_api_checks_real_database_and_returns_no_credentials(pg_api_client):
     response = await pg_api_client.get("/health/ready")
     assert response.status_code == 200
-    assert response.json()["checks"] == {"application": "ok", "database": "ok"}
+    assert response.json()["checks"] == {
+        "application": "ok",
+        "database": "ok",
+        "agent_checkpoint": "ok",
+    }
     assert "password" not in response.text and "postgresql" not in response.text
+
+
+@pytest.mark.parametrize(
+    "operation, permission, failed_check",
+    [
+        ("REVOKE", "SELECT ON knowledge_chunks", "database"),
+        ("GRANT", "INSERT(v) ON ea_checkpoint.checkpoint_migrations", "agent_checkpoint"),
+        ("GRANT", "UPDATE(v) ON ea_checkpoint.checkpoint_migrations", "agent_checkpoint"),
+    ],
+    ids=["missing-chunk-read", "migration-column-insert", "migration-column-update"],
+)
+async def test_readiness_rejects_missing_chunk_reads_and_column_level_migration_writes(
+    operation, permission, failed_check, pg_api_app, pg_factory, pg_admin_factory
+):
+    destination = "FROM" if operation == "REVOKE" else "TO"
+    async with pg_admin_factory() as session, session.begin():
+        await session.execute(text(f"{operation} {permission} {destination} ea_test_app"))
+    try:
+        async with pg_factory() as session:
+            if operation == "REVOKE":
+                assert (
+                    await session.scalar(
+                        text(
+                            "SELECT has_table_privilege(current_user, 'knowledge_chunks', 'SELECT')"
+                        )
+                    )
+                    is False
+                )
+            else:
+                privilege = permission.split("(", 1)[0]
+                assert (
+                    await session.scalar(
+                        text(
+                            "SELECT has_column_privilege(current_user, "
+                            "'ea_checkpoint.checkpoint_migrations', 'v', :privilege)"
+                        ),
+                        {"privilege": privilege},
+                    )
+                    is True
+                )
+                assert (
+                    await session.scalar(
+                        text(
+                            "SELECT has_table_privilege(current_user, "
+                            "'ea_checkpoint.checkpoint_migrations', :privilege)"
+                        ),
+                        {"privilege": privilege},
+                    )
+                    is False
+                )
+        async with (
+            pg_api_app.router.lifespan_context(pg_api_app),
+            AsyncClient(
+                transport=ASGITransport(app=pg_api_app), base_url="http://testserver"
+            ) as http,
+        ):
+            response = await http.get("/health/ready")
+            assert response.status_code == 503
+            assert response.json()["checks"][failed_check] == "not_ready"
+            assert "password" not in response.text and "postgresql" not in response.text
+    finally:
+        inverse = "GRANT" if operation == "REVOKE" else "REVOKE"
+        destination = "TO" if inverse == "GRANT" else "FROM"
+        async with pg_admin_factory() as session, session.begin():
+            await session.execute(text(f"{inverse} {permission} {destination} ea_test_app"))
 
 
 async def test_api_refuses_migration_owner_even_with_the_correct_schema(pg_urls, tmp_path):

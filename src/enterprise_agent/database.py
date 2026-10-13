@@ -6,7 +6,7 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-EXPECTED_SCHEMA_REVISION = "0002_knowledge"
+EXPECTED_SCHEMA_REVISION = "0004_agent_role"
 logger = logging.getLogger("enterprise_agent.database")
 
 
@@ -56,7 +56,8 @@ class Database:
                       (SELECT bool_and(has_table_privilege(current_user, name, 'SELECT'))
                        FROM unnest(ARRAY['users', 'orders', 'order_items', 'logistics',
                          'refund_requests', 'support_tickets', 'refund_policy_versions',
-                         'knowledge_documents', 'approval_requests', 'idempotency_records',
+                         'knowledge_documents', 'knowledge_chunks', 'approval_requests',
+                         'idempotency_records',
                          'audit_logs']) AS t(name))
                       AND (SELECT bool_and(has_table_privilege(current_user, name, privilege))
                        FROM unnest(ARRAY['approval_requests', 'refund_requests',
@@ -67,6 +68,9 @@ class Database:
                       AND has_table_privilege(current_user, 'knowledge_documents', 'UPDATE')
                       AND has_table_privilege(current_user, 'knowledge_chunks', 'INSERT')
                       AND has_table_privilege(current_user, 'knowledge_chunks', 'DELETE')
+                      AND (SELECT bool_and(has_table_privilege(current_user, name, privilege))
+                       FROM unnest(ARRAY['agent_sessions', 'agent_tasks']) AS t(name)
+                       CROSS JOIN unnest(ARRAY['SELECT', 'INSERT', 'UPDATE']) AS p(privilege))
                       AND has_column_privilege(current_user, 'orders', 'id', 'UPDATE')
                       AND has_sequence_privilege(current_user,
                         pg_get_serial_sequence('audit_logs', 'id'), 'USAGE')

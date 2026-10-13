@@ -57,6 +57,15 @@ class Settings(BaseSettings):
     llm_enabled: bool = False
     deepseek_base_url: AnyHttpUrl = "https://api.deepseek.com"
     deepseek_api_key: SecretStr | None = None
+    deepseek_model: str = Field(default="deepseek-flash", pattern=r"^[A-Za-z0-9._-]{1,80}$")
+    agent_enabled: bool = True
+    agent_model_timeout_seconds: float = Field(default=30, ge=0.1, le=120)
+    agent_model_max_tokens: int = Field(default=1024, ge=128, le=4096)
+    agent_timeout_seconds: int = Field(default=90, ge=5, le=300)
+    agent_max_steps: int = Field(default=24, ge=6, le=60)
+    agent_max_tool_calls: int = Field(default=8, ge=1, le=16)
+    agent_max_retries: int = Field(default=2, ge=0, le=2)
+    agent_max_history_messages: int = Field(default=12, ge=2, le=24)
 
     @field_validator("log_level", mode="before")
     @classmethod

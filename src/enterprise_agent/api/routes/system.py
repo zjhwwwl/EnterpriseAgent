@@ -60,6 +60,9 @@ async def readiness(request: Request, response: Response) -> HealthResponse:
                 checks["knowledge"] = "ok" if await rag.ready() else "not_ready"
         except Exception:
             checks["knowledge"] = "not_ready"
+    checkpoint = request.app.state.agent_checkpoint
+    if checkpoint is not None:
+        checks["agent_checkpoint"] = "ok" if await checkpoint.is_ready() else "not_ready"
     ready = all(value == "ok" for value in checks.values())
     if not ready:
         response.status_code = 503
