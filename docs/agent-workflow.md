@@ -95,4 +95,6 @@ HTTPX发送OpenAI兼容Chat Completions，校验消息、工具白名单、JSON�
 
 EA_LLM_ENABLED模板默认false；未配置时不创建真实聊天Client，发消息503。图回归测试中的ScriptedChatModel与[真实在线补充](../evals/results/phase4-live/report.md)分开记录。5个手选烟测用于发现和修复问题，不证明开放式意图、参数与语义质量。
 
-下一阶段 MCP 只作为只读协议入口，复用这些 Service；分析分支要另加只读账号、授权视图、SQL AST 和执行限额，当前不执行模型 SQL。
+Phase 5 的独立 stdio MCP Server 已复用 BusinessTools 的 get_order、get_logistics、get_refund_policy，提供 query_order、query_logistics、query_refund_policy。客户端发现和调用由官方 SDK 执行；身份由 MCP 启动环境中的 JWT 逐次认证，协议参数不进入 AgentContext 或图 State。当前图仍无 MCP 分支，退款准备和确认继续使用已有可信工作流，详见[Phase 5](phase-5.md)。
+
+后续分析分支要另加只读账号、授权视图、SQL AST 和执行限额，当前不执行模型 SQL。

@@ -66,6 +66,8 @@ class Settings(BaseSettings):
     agent_max_tool_calls: int = Field(default=8, ge=1, le=16)
     agent_max_retries: int = Field(default=2, ge=0, le=2)
     agent_max_history_messages: int = Field(default=12, ge=2, le=24)
+    mcp_access_token: SecretStr | None = None
+    mcp_request_timeout_seconds: float = Field(default=15, ge=1, le=120)
 
     @field_validator("log_level", mode="before")
     @classmethod
@@ -80,12 +82,20 @@ class Settings(BaseSettings):
         "redis_url",
         "jwt_secret",
         "deepseek_api_key",
+        "mcp_access_token",
         mode="before",
     )
     @classmethod
     def empty_secret_is_none(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():
             return None
+        return value
+
+    @field_validator("mcp_access_token")
+    @classmethod
+    def bounded_mcp_token(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None and len(value.get_secret_value()) > 8192:
+            raise ValueError("MCP access token exceeds the credential size limit")
         return value
 
     @field_validator("data_dir", "rag_model_dir")
@@ -167,6 +177,7 @@ class Settings(BaseSettings):
             self.jwt_secret,
             self.demo_password,
             self.deepseek_api_key,
+            self.mcp_access_token,
         ):
             if secret is not None:
                 raw = secret.get_secret_value()

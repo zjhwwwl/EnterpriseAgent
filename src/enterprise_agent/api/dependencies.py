@@ -4,12 +4,11 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
 
 from enterprise_agent.database import Database
 from enterprise_agent.domain_errors import BusinessError
-from enterprise_agent.models import User
-from enterprise_agent.security import Principal, decode_access_token
+from enterprise_agent.security import Principal
+from enterprise_agent.services.auth import AuthService
 from enterprise_agent.services.orders import OrderService
 from enterprise_agent.services.refunds import RefundService
 
@@ -29,13 +28,10 @@ async def get_current_user(
 ) -> Principal:
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise BusinessError("unauthenticated", "请先登录", 401)
-    user_id, version = decode_access_token(credentials.credentials, request.app.state.settings)
     database = get_database(request)
-    async with database.session_factory() as session:
-        user = await session.scalar(select(User).where(User.id == user_id))
-        if user is None or not user.is_active or user.token_version != version:
-            raise BusinessError("unauthenticated", "登录已失效，请重新登录", 401)
-        return Principal(user_id=user.id, role=user.role)
+    return await AuthService(database.session_factory, request.app.state.settings).authenticate(
+        credentials.credentials
+    )
 
 
 def get_order_service(database: Annotated[Database, Depends(get_database)]) -> OrderService:

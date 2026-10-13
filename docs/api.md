@@ -1,6 +1,6 @@
 # API 契约
 
-**当前版本0.4.0 / Phase 4。** 已实现健康、认证、订单、退款、知识库以及LangGraph会话、任务、人工确认和显式恢复接口。MCP、分析与Vue尚未提供。OpenAPI与实际代码是当前契约来源；初验工程与真实HTTP通过，真实在线5场景烟测见补充报告；完整模型质量未评估，在线修复后[517项完整复验通过](../evals/results/phase4-live/verification.json)，详见[阶段记录](phase-4.md)。
+**当前版本 0.5.0 / Phase 5。** 已有健康、认证、订单、退款、知识库及 LangGraph 会话、任务、人工确认和恢复 HTTP 接口，新增独立 stdio MCP 三个只读工具。MCP 不注册 HTTP 路由，OpenAPI 仅覆盖 HTTP；分析与 Vue 尚未提供。当前契约以实际代码和 OpenAPI 为准，Phase 5 验收见[阶段记录](phase-5.md)。此前[517 项完整复验](../evals/results/phase4-live/verification.json)与真实 DeepSeek 5 场景烟测保留为历史证据，不代表完整模型质量。
 
 ## 基础接口与认证
 
@@ -8,7 +8,7 @@
 
 | 方法 | 路径 | 成功码 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/` | 200 | 名称、版本、phase=4、文档及健康入口 |
+| GET | `/` | 200 | 名称、版本、phase=5、文档及健康入口 |
 | GET | `/health/live` | 200 | HTTP 进程存活 |
 | GET | `/health/ready` | 200 / 503 | 实际数据库与已配置 Redis 的就绪检查 |
 | POST | `/api/v1/auth/login` | 200 | JSON 账号密码，返回 JWT |
@@ -188,7 +188,7 @@ confirmed 必须是 JSON 布尔值，false 也记录拒绝与审计。Agent 确�
 | 图/工具/模型已执行但受规则终止 | Task.status=failed 与 error_code，如 invalid_tool_arguments / agent_tool_limit / insufficient_policy_evidence |
 | 中断需恢复 | Task.status=failed 与 agent_timeout / agent_checkpoint_error，并明确提示恢复核对 |
 
-MCP 与运营分析接口属于后续阶段。
+运营分析接口属于后续阶段；MCP 契约见下文。
 
 
 ## 知识库管理
@@ -272,3 +272,43 @@ Swagger 可用 admin 账号执行文件上传。生成真实文件并检查返�
 | 503 | rag_not_enabled / rag_models_unavailable / rag_timeout / vector_store_unavailable | 配置或真实依赖/执行不可用 |
 
 底层解析错误不回显上传内容；上传、删除、索引开始、发布及失败记录必要审计。Chroma 客户端版本/距离配置不匹配时也会拒绝使用，不默默切到其他向量实现。
+
+## MCP stdio 契约
+
+独立入口为 `python -m enterprise_agent.mcp.server` 或安装后的 `enterprise-agent-mcp`。官方 SDK 1.30.0 通过 stdin/stdout 传输 JSON-RPC，客户端先 initialize，再 tools/list 与 tools/call；该入口没有 HTTP 地址、OpenAPI 页面或 OAuth 服务。Server 启动需要进程环境中的普通 `EA_DATABASE_URL`、`EA_JWT_SECRET`、`EA_MCP_ACCESS_TOKEN`；不读取 `.env`。政策证据还需要启用并准备 RAG。
+
+| MCP 工具 | arguments | 共享入口 | 返回 data |
+| --- | --- | --- | --- |
+| query_order | order_no | BusinessTools.get_order / OrderService | 订单状态、整数分金额及现有字段 |
+| query_logistics | order_no | BusinessTools.get_logistics / OrderService | 数据库已有物流状态、运单与事件 |
+| query_refund_policy | order_no、可选 reason | BusinessTools.get_refund_policy / RefundService / KnowledgeService | eligibility 与限定政策文档的 knowledge |
+
+order_no 必须为 JSON 字符串，包含 5–30 位 ASCII 数字；数字类型、全角数字或额外字段拒绝。reason 默认 change_mind，可选 quality_issue / not_received。工具发现包含共享 inputSchema、outputSchema 和只读/非破坏性注解；任何未知工具或写入工具都不会分派。注解不替代白名单、Service 权限或事务规则。
+
+调用参数示例：
+
+```json
+{"name":"query_refund_policy","arguments":{"order_no":"10086","reason":"change_mind"}}
+```
+
+这是 tools/call 的 params，完整 JSON-RPC 请求由 SDK 生成。成功结果 `isError=false`，structuredContent 为 `{"data": ...}`，content 同时包含该对象的 JSON 文本。data 使用实际 Service 返回；eligible 只表示是否可申请待审核退款。knowledge 保留 status、citations、来源位置与耗时，证据不足不会编造政策；没有适用政策时 knowledge 可为 null。存在政策但未启用 RAG 时返回 rag_not_enabled。
+
+每次调用由 AuthService 重新认证启动 JWT，核对数据库当前角色、启用状态及 token_version。客户只能查自己的订单；客服/管理员使用既有查询权限，分析员不能读订单明细。arguments 或 `_meta` 的角色、用户、token 和确认字段不被信任；修改订单 ID 不会绕过归属。
+
+业务错误以 `isError=true` 返回，structuredContent 与 content 均使用以下安全结构；status_code 为业务语义，不是 HTTP 响应：
+
+```json
+{"error":{"code":"order_not_found","message":"订单不存在。","status_code":404}}
+```
+
+| 业务状态 | 示例 code | 含义 |
+| --- | --- | --- |
+| 401 | unauthenticated | JWT 无效、到期、撤销或用户不可用；沿用 AuthService |
+| 403 | forbidden | 当前角色不允许订单查询 |
+| 404 | order_not_found | 不存在或无权访问的订单，统一返回 |
+| 422 | invalid_tool_arguments / unknown_tool | 参数类型、格式、额外字段或工具白名单不符 |
+| 503 | rag_not_enabled / mcp_request_timeout / mcp_tool_unavailable | 政策证据不可用、认证/业务超时或安全内部错误 |
+
+客户端应先检查 isError，再读 data；JSON-RPC 协议错误与读取超时可能由 SDK 抛 McpError，不是成功业务结果。业务 handler 不回显原始参数、Pydantic 输入、SQL/DSN 异常或未知工具名。默认服务端每次认证和查询共 15 秒，客户端示例总预算 60 秒。MCP 不创建退款、工单或审批；敏感写入继续使用已有人工确认接口。
+
+可运行 Client 示例与环境设置见[部署](deployment.md)，实际协议、权限、真实子进程退出验证见[Phase 5](phase-5.md)。

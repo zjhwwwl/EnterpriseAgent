@@ -2,7 +2,7 @@
 
 基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手，面向中国大陆 AI Agent 开发工程师求职展示。项目使用虚构电商数据，以业务规则、权限、事务、可追溯检索和真实验证为重点，分阶段交付。
 
-**当前版本0.4.0 / Phase 4：LangGraph单Agent、知识问答与人工确认退款。** 已有模型路由、Tool Calling、一次查询改写、多轮、PostgreSQL Checkpoint和中断恢复。初验511项工程测试及真实TCP重启通过；随后真实DeepSeek手选烟测最终5/5检查通过，修复后110项核心测试通过，[517项完整复验通过](evals/results/phase4-live/verification.json)。小样本不代表完整模型质量，MCP、NL SQL和Vue仍属后续阶段。
+**当前版本 0.5.0 / Phase 5：独立 MCP Server、Client 与业务工具复用。** 官方 MCP Python SDK 1.30.0 通过 stdio 暴露订单、物流和退款政策三个只读工具，逐次验证 JWT、当前用户及订单归属。已有 LangGraph 单 Agent、Agentic RAG、多轮、PostgreSQL Checkpoint 与人工确认退款；MCP 不调用云模型，也不增加图分支。[614 项完整测试通过](evals/results/phase5/verification.json)，真实 stdio 与客户端 Demo 通过，见[阶段记录](docs/phase-5.md)。Phase 4 [517 项完整复验](evals/results/phase4-live/verification.json)及真实 DeepSeek 5 场景烟测保留为历史证据；NL SQL 与 Vue 属于后续阶段。
 
 ## 功能与技术栈
 
@@ -16,6 +16,7 @@
 | 来源与权限 | 页码/段落/行号/字符位置、文档与索引版本、公开/内部可见性、失效引用拒绝 |
 | Agent | LangGraph 1.2.14、HTTPX DeepSeek 兼容接口、Pydantic 工具参数、有限执行、原文抽取回答 |
 | 会话与审批 | 私有 thread、官方 PostgreSQL Checkpoint、多轮历史、人工 interrupt/resume、显式恢复与幂等写入 |
+| MCP | 官方 SDK 1.30.0、独立 stdio Server / Client、工具发现、三个只读工具、每次调用重新认证 |
 | 评估 | 30 条中文 dev/test 数据集、真实向量与混合重排对照 CLI、JSON / CSV / Markdown |
 | 本地部署 | Windows Python 3.13 + Linux PostgreSQL / Redis / Chroma 容器，缓存与数据位于 D 盘 |
 
@@ -49,6 +50,8 @@ flowchart TD
     APPROVAL --> BIZ
     AGENT --> CHECKPOINT["官方 PostgreSQL Checkpointer"]
     CHECKPOINT --> PG
+    MCPCLIENT["官方 MCP Client：本机 stdio"] --> MCP["独立 MCP Server：JWT / 参数 / 超时"]
+    MCP --> TOOLS
 ```
 
 业务事实与可执行政策由 Service 和 PostgreSQL 决定；检索文档不能替换身份或直接批准退款。模型只能准备服务器生成的审批摘要，人工确认后 Service 重查并创建待审核申请。审批准备绑定任务、确认使用服务端幂等键，业务提交后丢失 Checkpoint 可显式恢复。索引发布使用尝试代数与 job ID；当前没有独立 Worker 或自动领取任务。详见 [架构](docs/architecture.md)。
@@ -68,6 +71,7 @@ EnterpriseAgent/
 │  ├─ models/ schemas/ repositories/ services/
 │  ├─ agents/                    # LangGraph / Chat协议 / PostgreSQL Checkpoint
 │  ├─ tools/                     # Pydantic工具与业务Service复用
+│  ├─ mcp/                       # 官方 stdio Server、Client 与只读业务适配
 │  ├─ rag/                       # parsing/chunking/ranking/backends/runtime/store
 │  ├─ knowledge_cli.py           # 复用 Service 索引已登记文档
 │  ├─ evaluation.py              # 真实检索对照
@@ -75,7 +79,7 @@ EnterpriseAgent/
 ├─ alembic/                      # 0001_ecommerce → 0002_knowledge → 0003_agent → 0004_agent_role
 ├─ data/knowledge/               # 5 篇模拟政策
 ├─ evals/datasets/rag.json
-├─ scripts/                      # bootstrap/init/migrate/seed/prepare/index/eval/check/run
+├─ scripts/                      # bootstrap/init/migrate/seed/prepare/index/eval/check/run/mcp-demo
 ├─ tests/                        # 单元、真实 PostgreSQL、真实模型、HTTP
 ├─ deploy/compose.yaml           # 当前为基础设施容器
 ├─ docs/
@@ -135,6 +139,16 @@ Authorization: Bearer <token>
 
 Agent Demo：`POST /api/v1/agent/sessions` 创建会话 → 向 `/sessions/{id}/messages` 发送 `{"message":"查询订单 10086 的物流状态"}`。退款请求得到 `waiting_approval` 后，在返回的 `result.approval` 核对订单、金额、原因与政策，再向 `/tasks/{id}/resume` 提交 `approval_id` 和明确的 `confirmed`。客户端不能提供 graph 配置、thread、用户、角色或金额；执行中断时使用 `/tasks/{id}/recover` 核对持久状态。
 
+MCP Demo 在 API、数据库、Chroma 和已索引知识库就绪后执行：
+
+```powershell
+.\scripts\mcp-demo.ps1
+# 或选择另一条当前模拟客户拥有的订单
+.\scripts\mcp-demo.ps1 -OrderNo '10086'
+```
+
+脚本使用公开模拟客户在 loopback API 登录，官方 Client 启动独立 stdio 子进程，发现并调用 `query_order`、`query_logistics`、`query_refund_policy`；JWT 只经子进程环境传递，不作为命令行参数或输出。已有 Token 的集成可设置进程环境 `EA_MCP_ACCESS_TOKEN` 后运行 `python -m enterprise_agent.mcp.client`，具体运行环境与参数见[部署](docs/deployment.md)。每个 Server 进程对应一名用户；Token 过期需重新登录并重启，不提供 HTTP/OAuth 服务。退款仍由现有人工确认工作流创建。
+
 退款 Demo：查询订单 → `refund-preview` → 人工核对 → `POST /refunds` 明确确认与幂等键 → 客服审核 → 模拟完成。仅创建和管理模拟记录，不调用支付平台。订单 `10086` 属于 demo_customer，商品实付 12900 分、运费 800 分；标准政策不退运费。
 
 seed 默认当天 UTC 基准、随机种子 42、500 订单；本工作区使用 2026-10-12 的固定数据。API 用当前 UTC 判断期限，数据会随时间超期；重复 seed 不覆盖已有数据。业务测试注入固定时钟。
@@ -149,6 +163,8 @@ seed 默认当天 UTC 基准、随机种子 42、500 订单；本工作区使用
 ```
 
 check默认传`--require-postgres --require-rag`，执行Ruff、格式、pytest与pip check。Phase 4初验**511项通过、0失败/错误/跳过**，JUnit524.068秒、81条Chroma弃用警告保留；真实Uvicorn重启后仅创建一条退款和工单。初验主服务五项健康通过，尚未配置模型时503且零任务。[验证摘要](evals/results/phase4/verification.json)、[重启](evals/results/phase4/http-restart.json)和[主HTTP](evals/results/phase4/demo-http.json)保留原始`online_deepseek_tested=false`。在线修复后110项核心测试通过，[517项完整复验通过](evals/results/phase4-live/verification.json)；历史初验不冒称最新代码验收。
+
+Phase 5 新增官方 MCP 工具发现、严格参数、逐次 SQL 认证、越权/撤销/角色变化、错误脱敏及真实 stdio 子进程测试。真实 PostgreSQL、CPU 模型和 Chroma 用于政策检索；检查退款、工单和审批数量不变，stdout 仅含 JSON-RPC，SDK 退出后实际子进程结束。[实际 Client Demo](evals/results/phase5/mcp-demo.json)完成三工具读取；[主服务 HTTP](evals/results/phase5/demo-http.json)为 0.5.0 / phase=5、五项就绪通过。完整检查 **614 项通过、0 失败/错误/跳过**，JUnit 548.312 秒，85 条 Chroma 弃用警告保留，Ruff / 格式 / pip check 通过。本阶段未调用云模型，不能据此推导模型意图或任务完成率。[完整摘要](evals/results/phase5/verification.json)、[实际协议证据](evals/results/phase5/mcp-stdio.json)与[可读报告](evals/results/phase5/report.md)已归档，详见[Phase 5](docs/phase-5.md)。
 
 真实在线补充见[烟测报告](evals/results/phase4-live/report.md)与[最终JSON](evals/results/phase4-live/results.json)：手选5场景最终检查5/5通过（其中越权场景按预期失败），12次模型调用、12190个已知Token。首探针与三轮失败也完整保留，所有在线轮次累计45443个已知Token、46次调用。样本用于开发修复，不是盲评、完整模型质量或性能基准；详见[阶段记录](docs/phase-4.md)。
 
@@ -167,12 +183,12 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 - Agent 身份通过可信 Context 注入；模型只能计划，Service 始终检查归属与业务规则。
 - 任务关联审批、服务端幂等确认、线程 advisory lock 与显式恢复共同处理跨库提交边界。
 - 原文抽取校验与确定性业务报告，记录工具步骤、实际报告的 Token 和未知使用量。
+- MCP 只适配协议入口，严格参数、实时身份和业务归属复用现有 Tools / Service；通过实际子进程验证协议与退出。
 
 ## 后续阶段
 
 | 阶段 | 内容 |
 | --- | --- |
-| Phase 5 | 官方 MCP Server / Client 与 Service 复用 |
 | Phase 6 | NL SQL、授权视图、只读账号、AST、超时与结果限制 |
 | Phase 7 | Vue 3 / TypeScript / Element Plus 五个业务页面 |
 | Phase 8 | 扩展 Agent、工具、SQL 与回答忠实度评估；可选追踪 |
@@ -187,7 +203,8 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 - PDF 只读已有文本层，无 OCR；DOCX 覆盖正文与表格，不包含页眉页脚、修订文本及文本框；TXT/MD 仅 UTF-8。
 - 默认 Chunk 为 500 **字符**、重叠 80；模型输入上限 512 Token，字符不等于 Token，较长内容会被模型截断。
 - 本地 CPU 推理、同步请求/CLI 索引，不是独立持久队列或高吞吐生产服务；向量清理失败可能留下旧条目，未知数据库提交结果可能留下未登记原件，没有自动清理工具。
-- DeepSeek仅有5个手选在线烟测，尚无独立、完整的模型质量或负载评估；没有MCP、NL SQL、Vue或Langfuse。
+- DeepSeek仅有5个手选在线烟测，尚无独立、完整的模型质量或负载评估；没有 NL SQL、Vue 或 Langfuse。
+- MCP 仅本机 stdio、每进程一个 JWT 身份、三个只读工具；没有网络 MCP/OAuth、Token 自动续期或 Agent 图内 MCP 调用分支。stdin 来自可信本机 Client，尚未提供恶意大帧内存隔离或生产负载评估。
 - 知识回答为可追溯原文抽取，能限制文字编造，但不能证明选段语义足够或已识别所有政策冲突。
 - Agent 通过请求同步执行、人工等待持久化，不提供流式 UI、独立 Worker、自动任务重领或自动恢复调度。
 - 当前 Compose 是基础设施，Windows 应用与 ONNX 推理已验证；Linux 应用镜像和全栈部署尚未验证。
@@ -196,6 +213,6 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 
 ## 文档与许可证
 
-[架构](docs/architecture.md) · [API](docs/api.md) · [Agent 工作流](docs/agent-workflow.md) · [Evaluation](docs/evaluation.md) · [部署](docs/deployment.md) · [技术决策](docs/technical-decisions.md) · [Phase 1](docs/phase-1.md) · [Phase 2](docs/phase-2.md) · [Phase 3](docs/phase-3.md) · [Phase 4](docs/phase-4.md)
+[架构](docs/architecture.md) · [API](docs/api.md) · [Agent 工作流](docs/agent-workflow.md) · [Evaluation](docs/evaluation.md) · [部署](docs/deployment.md) · [技术决策](docs/technical-decisions.md) · [Phase 1](docs/phase-1.md) · [Phase 2](docs/phase-2.md) · [Phase 3](docs/phase-3.md) · [Phase 4](docs/phase-4.md) · [Phase 5](docs/phase-5.md)
 
 代码采用 [MIT License](LICENSE)。

@@ -8,7 +8,7 @@ import sys
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 from pydantic import SecretBytes, SecretStr
 
@@ -106,8 +106,10 @@ class JsonFormatter(logging.Formatter):
         )
 
 
-def configure_logging(level: str = "INFO", *, secret_values: Iterable[str] = ()) -> None:
-    handler = logging.StreamHandler(sys.stdout)
+def configure_logging(
+    level: str = "INFO", *, secret_values: Iterable[str] = (), stream: TextIO | None = None
+) -> None:
+    handler = logging.StreamHandler(sys.stdout if stream is None else stream)
     handler.setFormatter(JsonFormatter(secret_values=secret_values))
     for name in ("enterprise_agent", "uvicorn"):
         configured = logging.getLogger(name)

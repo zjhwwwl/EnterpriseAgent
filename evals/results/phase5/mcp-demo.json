@@ -1,0 +1,162 @@
+{
+  "transport": "stdio",
+  "server_name": "EnterpriseAgent",
+  "server_version": "0.5.0",
+  "order_no": "10086",
+  "tools_discovered": [
+    "query_logistics",
+    "query_order",
+    "query_refund_policy"
+  ],
+  "success": true,
+  "results": [
+    {
+      "tool": "query_order",
+      "is_error": false,
+      "data": {
+        "id": 1,
+        "order_no": "10086",
+        "user_id": 1,
+        "status": "delivered",
+        "goods_paid_cents": 12900,
+        "shipping_paid_cents": 800,
+        "paid_total_cents": 13700,
+        "created_at": "2026-10-07T00:00:00Z",
+        "paid_at": "2026-10-07T01:00:00Z",
+        "delivered_at": "2026-10-10T00:00:00Z"
+      }
+    },
+    {
+      "tool": "query_logistics",
+      "is_error": false,
+      "data": {
+        "order_no": "10086",
+        "tracking_no": "SIM-10086",
+        "status": "delivered",
+        "events": [
+          {
+            "at": "2026-10-07T01:00:00+00:00",
+            "note": "模拟仓库已接单",
+            "status": "pending_dispatch"
+          },
+          {
+            "at": "2026-10-07T03:00:00+00:00",
+            "note": "模拟包裹运输中",
+            "status": "in_transit"
+          },
+          {
+            "at": "2026-10-10T00:00:00+00:00",
+            "note": "模拟签收",
+            "status": "delivered"
+          }
+        ]
+      }
+    },
+    {
+      "tool": "query_refund_policy",
+      "is_error": false,
+      "data": {
+        "eligibility": {
+          "order_no": "10086",
+          "eligible": true,
+          "code": "eligible",
+          "message": "可提交待审核退款申请，实际处理需客服审核。",
+          "amount_cents": 12900,
+          "policy": {
+            "id": 1,
+            "policy_code": "STANDARD_RETURN",
+            "version": 1,
+            "document_id": "b30803e5-1f7e-5192-8018-a4128857a6b5",
+            "document_title": "退款与退货规则",
+            "document_version": 1,
+            "valid_from": "2025-10-12T00:00:00Z",
+            "valid_until": null,
+            "refund_window_days": 7,
+            "refund_shipping": false,
+            "allow_before_delivery": true,
+            "excluded_categories": [
+              "food"
+            ]
+          }
+        },
+        "knowledge": {
+          "status": "evidence_found",
+          "message": "找到相关企业资料，请结合引用原文核对",
+          "answer_mode": "evidence_only",
+          "mode": "hybrid_rerank",
+          "citations": [
+            {
+              "document_id": "b30803e5-1f7e-5192-8018-a4128857a6b5",
+              "document_title": "退款与退货规则",
+              "document_version": 1,
+              "index_generation": 1,
+              "chunk_id": "9d6547df-5cee-5032-ab6e-5c58928e4d6b",
+              "chunk_index": 3,
+              "text": "1. 订单已经支付，且存在可退商品实付金额；未支付或已取消订单不能申请。\n2. 尚未签收的已支付订单允许申请退款。\n3. 已签收订单须在签收后 7 日内申请；系统以签收时间起连续 7 × 24 小时为期限，期限边界包含在内。\n4. 食品类（商品类目 `food`）不支持非质量问题的无理由退款。质量问题可以提交待审核申请，客服核查原因；系统不会自动判断质量责任。",
+              "source_location": {
+                "char_end": 181,
+                "line_end": 10,
+                "char_start": 0,
+                "line_start": 7
+              },
+              "citation_url": "/api/v1/knowledge/citations/9d6547df-5cee-5032-ab6e-5c58928e4d6b",
+              "vector_similarity": 0.57760775,
+              "bm25_score": 15.48797538127972,
+              "rerank_score": 0.9309814536163893
+            },
+            {
+              "document_id": "b30803e5-1f7e-5192-8018-a4128857a6b5",
+              "document_title": "退款与退货规则",
+              "document_version": 1,
+              "index_generation": 1,
+              "chunk_id": "e09e0a7e-ea13-5238-a540-f282175498ac",
+              "chunk_index": 1,
+              "text": "政策编号：STANDARD_RETURN；版本：1。本文是对应结构化退款规则的解释文档，不接入真实支付或退款服务。",
+              "source_location": {
+                "char_end": 57,
+                "line_end": 3,
+                "char_start": 0,
+                "line_start": 3
+              },
+              "citation_url": "/api/v1/knowledge/citations/e09e0a7e-ea13-5238-a540-f282175498ac",
+              "vector_similarity": 0.63539946,
+              "bm25_score": 11.646316987045648,
+              "rerank_score": 0.8908656467461802
+            },
+            {
+              "document_id": "b30803e5-1f7e-5192-8018-a4128857a6b5",
+              "document_title": "退款与退货规则",
+              "document_version": 1,
+              "index_generation": 1,
+              "chunk_id": "74326b80-c7f4-5466-90c5-73d200d8f595",
+              "chunk_index": 9,
+              "text": "退款判断采用订单支付时适用的已发布结构化政策版本，申请记录保存版本及事实快照。同一政策编号以支付时间之前最近生效的版本为准；新版本生效后，旧版本不再适用于新支付订单。上传知识文档不会自动发布或替换可执行规则。需要调整规则时发布新版本，不修改历史版本。",
+              "source_location": {
+                "char_end": 125,
+                "line_end": 22,
+                "char_start": 0,
+                "line_start": 22
+              },
+              "citation_url": "/api/v1/knowledge/citations/74326b80-c7f4-5466-90c5-73d200d8f595",
+              "vector_similarity": 0.67174792,
+              "bm25_score": 6.1920127821139435,
+              "rerank_score": 0.7752768078011151
+            }
+          ],
+          "elapsed_ms": 1690.195,
+          "stage_ms": {
+            "vector_ms": 1144.648,
+            "bm25_rrf_ms": 2.318,
+            "rerank_ms": 526.992
+          },
+          "model_fingerprint": "c98c8620a14f55d237d1a80f6da1bf61eaeaafa8c9e848043e52c29759599853",
+          "llm_calls": 0,
+          "llm_input_tokens": 0,
+          "llm_output_tokens": 0
+        }
+      }
+    }
+  ],
+  "provider_calls": 0,
+  "token_usage": null
+}

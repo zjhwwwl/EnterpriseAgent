@@ -1,0 +1,97 @@
+[
+    {
+        "file":  "src/enterprise_agent/mcp/server.py",
+        "sha256":  "041d33c9385c8b66aa561a12e4cf4896f22c957729edfac8b76a2864c77c52f9",
+        "modified_at_utc":  "2026-10-13T15:24:37.8056841Z"
+    },
+    {
+        "file":  "src/enterprise_agent/mcp/client.py",
+        "sha256":  "a752f20397cf5bb9ae2e9e49b03d07535f16b2f239622599c73c57cc6eac060a",
+        "modified_at_utc":  "2026-10-13T15:36:44.5688521Z"
+    },
+    {
+        "file":  "src/enterprise_agent/config.py",
+        "sha256":  "9232f7053cb23a7d4ee4dcbfcf6b9470f5f42967c52f4c00369d772fa26266d3",
+        "modified_at_utc":  "2026-10-13T15:31:33.5385776Z"
+    },
+    {
+        "file":  "src/enterprise_agent/services/auth.py",
+        "sha256":  "4af404c2cd097df2f8cc5e69930001a2c38e717948a84a64fd7ad3c0c935c62f",
+        "modified_at_utc":  "2026-10-13T15:17:01.1928300Z"
+    },
+    {
+        "file":  "src/enterprise_agent/api/dependencies.py",
+        "sha256":  "c11690519b3888354d5ece1638150608e1b2f051abd252bda9dd733e93888759",
+        "modified_at_utc":  "2026-10-13T15:17:01.1933546Z"
+    },
+    {
+        "file":  "src/enterprise_agent/logging_config.py",
+        "sha256":  "36f68139a486455d5017951f1340366cb75c0b4c46cf6193a6b5e78ae74a590a",
+        "modified_at_utc":  "2026-10-13T15:31:33.5385776Z"
+    },
+    {
+        "file":  "src/enterprise_agent/application.py",
+        "sha256":  "090d4a23d84b7dc88d5f424bd934da93951912dae5668a12e4d24ae01d8a155c",
+        "modified_at_utc":  "2026-10-13T15:31:33.5400867Z"
+    },
+    {
+        "file":  "src/enterprise_agent/__init__.py",
+        "sha256":  "97db4956ed9359578e612d367e39fad5a8f38beea0749ba253c506e695b03d02",
+        "modified_at_utc":  "2026-10-13T15:17:01.1912542Z"
+    },
+    {
+        "file":  "tests/unit/test_mcp_server.py",
+        "sha256":  "6f20774966fe0a1efd2854c471e80c17662fc5734aee47920f666e67557072d6",
+        "modified_at_utc":  "2026-10-13T15:25:43.9091263Z"
+    },
+    {
+        "file":  "tests/unit/test_mcp_client.py",
+        "sha256":  "8d7173c1c2d810e3bfab2e1bebb15cfadc525a8377b8f1724e98f7958d8ad3ce",
+        "modified_at_utc":  "2026-10-13T15:36:44.5693769Z"
+    },
+    {
+        "file":  "tests/unit/test_config.py",
+        "sha256":  "b03f3d3f0c16d228907f749db044759ce896857c604f43d7d5edfda5083a1646",
+        "modified_at_utc":  "2026-10-13T15:37:27.6134177Z"
+    },
+    {
+        "file":  "tests/integration/test_api.py",
+        "sha256":  "18cf8364f22603a5e5307120a7a066fe78bbb0353975b929e509641a283ee63e",
+        "modified_at_utc":  "2026-10-13T15:26:04.0986599Z"
+    },
+    {
+        "file":  "tests/integration/test_mcp_authorization.py",
+        "sha256":  "67e652d881ee20aa4db636d4c68c8d54a5b3f798ac1c1e2d573a4fadbad2910f",
+        "modified_at_utc":  "2026-10-13T15:27:21.8220261Z"
+    },
+    {
+        "file":  "tests/e2e/test_mcp_stdio.py",
+        "sha256":  "0ac0b36e11735c35d2f2e84093fa00c8a5c7441c53eca370040d841d4a101366",
+        "modified_at_utc":  "2026-10-13T15:24:28.3085144Z"
+    },
+    {
+        "file":  "scripts/check.ps1",
+        "sha256":  "595eaf4a4fbcd9e20046820cb1667bc937dad80598e879aa41963cb70fac64a2",
+        "modified_at_utc":  "2026-10-13T15:17:01.1949291Z"
+    },
+    {
+        "file":  "scripts/mcp-demo.ps1",
+        "sha256":  "65ce6e6cd5884b7802a0fecd631da93354f9ff7b732f09978283ab0140e2e776",
+        "modified_at_utc":  "2026-10-13T15:31:37.2387698Z"
+    },
+    {
+        "file":  "pyproject.toml",
+        "sha256":  "11ee5564c7e58a3fc70842250b3f117a47c3544b28dfb70d99be8d9f0517dfc5",
+        "modified_at_utc":  "2026-10-13T15:17:01.1907434Z"
+    },
+    {
+        "file":  "requirements/base.lock",
+        "sha256":  "b7cda6ce5a1ffcad5c6cf81c38a4e875106eada069187b6f6569309aa2889683",
+        "modified_at_utc":  "2026-10-13T15:18:29.3594284Z"
+    },
+    {
+        "file":  "requirements/dev.lock",
+        "sha256":  "77c1456c6e08244ce725ecb17a26099b23dede12be45d84d764a175865cde0b2",
+        "modified_at_utc":  "2026-10-13T15:19:33.3216761Z"
+    }
+]

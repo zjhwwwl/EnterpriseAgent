@@ -1,12 +1,12 @@
 # 技术决策
 
-当前Phase 4加入LangGraph单Agent、业务Tool Calling、Agentic RAG、官方Checkpoint与人工审批。初验511项工程测试与真实TCP重启通过，另有5手选场景真实在线烟测；完整模型质量未评估，在线修复后[517项完整复验通过](../evals/results/phase4-live/verification.json)；下面描述实际代码取舍，设计和受控模型测试不当作在线模型成绩，证据见[阶段记录](phase-4.md)。
+当前 Phase 5 / 0.5.0 在既有 LangGraph 单 Agent、Agentic RAG、官方 Checkpoint 与人工审批外增加独立 stdio MCP Server / Client。三个只读工具复用相同业务规则，协议逐次认证和严格参数校验见[Phase 5](phase-5.md)。此前[517 项完整复验](../evals/results/phase4-live/verification.json)及真实 DeepSeek 5 场景烟测保留为历史证据；完整模型质量未评估，不把协议或受控流程检查当作在线模型成绩。
 
 ## 模块化单体，单 Agent 多工具
 
-API、Service、Repository、Schemas、RAG、Agents、Tools 和 CLI 在同一包内维护。索引与图通过请求/CLI执行，人工等待持久化；不增加独立 Worker 框架、微服务、Kubernetes 或通用规则引擎。
+API、Service、Repository、Schemas、RAG、Agents、Tools、MCP 和 CLI 在同一包内维护。索引与图通过请求/CLI执行，人工等待持久化；MCP 为独立协议进程但复用同包 Service，不增加独立 Worker 框架、微服务、Kubernetes 或通用规则引擎。
 
-当前一张 LangGraph 图按任务分支编排，复用现有 Service。没有多 Agent 协商、自动任务调度或 tracing；MCP 与分析只在后续有实际业务实现时加入。
+当前一张 LangGraph 图按任务分支编排，复用现有 Service。MCP Client / Server 直接调用同一 BusinessTools，不额外设计 Agent 或图分支；没有多 Agent 协商、自动任务调度或 tracing，分析尚未实现。
 
 ## Python 3.13 与哈希锁
 
@@ -84,9 +84,20 @@ Principal从HTTP认证/数据库取得，放在可信AgentContext，不从State�
 
 订单报告依据结构化事实，不采用模型最终自由文本；知识答案采用验证原文抽取。敏感操作提前保留后续步数，提交后陈旧引用只作为warning并保留真实申请结果。这里没有自动任务重领或后台维护系统，这一取舍使个人项目的失败边界明确且可测试。
 
+## 官方 MCP 维护版本与协议边界
+
+固定 `mcp==1.30.0` 并更新两份哈希锁。官方说明 v1.x 仍接受关键错误与安全修复，2.x 为当前主线；本阶段选择已有稳定 Server / ClientSession 接口的维护版本，不声称它是最新主线。1.30.0 支持 Python 3.13，且修复客户端 outputSchema 外部引用读取、OAuth issuer/凭据绑定和跨源重定向问题，见[维护说明](https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/v1.x/README.md)、[固定版本](https://pypi.org/project/mcp/1.30.0/)与[发布记录](https://github.com/modelcontextprotocol/python-sdk/releases/tag/v1.30.0)。
+
+使用官方低层 Server，工具 manifest 从共享 Pydantic schema 产生；关闭 SDK 的默认输入错误回显，在 raw arguments 入口由 BusinessTools 进行 strict / extra forbid 校验，再返回安全错误。FastMCP 的默认动态参数模型不自动提供同样的严格边界；SDK 未捕获异常可能返回 str(e)，因此在业务 handler 内处理异常和序列化错误，不把数据库或 ValidationError 细节传到客户端。实际代码无需依赖或修改 FastMCP 私有注册对象。[官方低层源码](https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/v1.30.0/src/mcp/server/lowlevel/server.py)是协议错误行为的来源。
+
+stdio 面向可信本机 Client，每个 Server 进程绑定一个现有 JWT，每次调用仍由 AuthService 重查数据库角色、启用状态和 token_version。Client 不向工具参数或 `_meta` 填身份，启动配置不传给模型。仅暴露三个读取工具，退款写入继续经过 HTTP / LangGraph 的人工确认规则；没有 HTTP MCP、OAuth 或动态多用户会话。MCP 沿用普通业务数据库账号，未新建 SQL 只读角色，不能把工具只读声明等同数据库权限隔离。
+
+Client / Server 不读取 `.env`，子进程配置白名单排除 DeepSeek、迁移/测试连接与 Redis；每次服务端预算默认 15 秒，示例客户端总预算 60 秒。stdout 仅协议、日志到 stderr，SDK 原始请求日志被隔离，业务日志只记安全工具名/错误码/耗时。Windows Client 的 Proactor 支持异步 subprocess，Server 的 Selector 兼容 psycopg；官方上下文负责退出实际子进程。[官方 stdio 源码](https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/v1.30.0/src/mcp/client/stdio/__init__.py)与真实退出测试同时保留。
+
+当前 Windows lock 含 `pywin32==312` 且没有平台 marker，不能直接用于 Linux 应用镜像。Phase 9 要为目标平台重新解析并验证依赖；本阶段不把本机锁安装通过当作跨平台部署证明。
+
 ## 后续边界
 
-- Phase5：官方MCP协议适配，真实Client发现/调用，复用Service。
 - Phase6：授权视图、独立只读连接池/账号、SQL AST、超时和结果上限。
 - Phase7：Vue五页、真实浏览器流程、引用和确认。
 - Phase8：生成忠实度/任务/工具/SQL评估与可选Langfuse；目前没有tracing集成。

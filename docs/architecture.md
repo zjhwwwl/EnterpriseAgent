@@ -2,7 +2,7 @@
 
 ## 当前实现
 
-Phase 4 在 FastAPI、PostgreSQL、订单售后及真实本地 RAG 上加入 LangGraph 单 Agent、DeepSeek Tool Calling 兼容适配、官方 PostgreSQL Checkpoint、会话任务 API、有限执行与人工审批。直接知识接口仍返回 evidence_only；Agent 通过原文抽取回答知识问题、通过 Service 事实报告订单结果。初验511项工程检查与真实TCP重启通过；真实在线手选烟测最终5/5检查通过，但不代表完整模型质量。在线修复后110项核心回归通过，冻结源码[517项完整复验通过](../evals/results/phase4-live/verification.json)。MCP、NL SQL、Vue、独立Worker与Langfuse尚未实现，实测边界见[Phase 4](phase-4.md)。
+Phase 5 / 0.5.0 在既有 FastAPI、PostgreSQL、真实本地 RAG 与 LangGraph 工作流外增加独立 stdio MCP Server / Client。官方 SDK 1.30.0 负责协议、发现与进程生命周期，三个只读入口复用现有 BusinessTools 与 Service，并逐次重新认证 JWT。直接知识接口仍返回 evidence_only；Agent 通过原文抽取回答知识问题、通过 Service 事实报告订单结果。Phase 4 [517 项完整复验](../evals/results/phase4-live/verification.json)与真实 DeepSeek 5 场景烟测保留原始证据；Phase 5 不发送云模型请求，当前验收见[阶段记录](phase-5.md)。NL SQL、Vue、独立 Worker 与 Langfuse 尚未实现。
 
 采用模块化单体：API、Service、Repository、Schemas、Agents、Tools 分工明确，模型和前端不能自行修改订单状态或替换当前用户身份。图随请求执行，人工等待写入 Checkpoint；没有任务队列 Worker。
 
@@ -35,6 +35,9 @@ flowchart TD
     TOOLS --> KNOW
     GRAPH --> CHECKPOINT["官方 AsyncPostgresSaver"]
     CHECKPOINT --> DB
+    MCPCLIENT["官方 ClientSession / 本机 stdio"] --> MCP["独立 MCP Server"]
+    MCP --> MAUTH["每次调用 JWT / 当前数据库身份"]
+    MAUTH --> TOOLS
 ```
 
 ## 代码分层
@@ -53,6 +56,7 @@ flowchart TD
 | Agents llm | OpenAI 兼容 HTTP 协议、有限响应与超时、严格 Tool Call / usage 校验 |
 | Agents checkpoint | 官方 PostgreSQL saver、私有 thread advisory lock、安全序列化 |
 | Tools | 参数白名单、可信身份注入、复用业务 Service，模型不能确认写入 |
+| MCP | 官方低层协议适配、三个只读工具发现、每次调用认证与共享参数校验、stdio 生命周期 |
 
 `application.create_app` 为可注入工厂；导入不会创建运行实例或提前读取用户环境。生命周期按配置建立数据库、Redis、RAG、Checkpoint 与可选模型 Client，关闭时释放 HTTP/数据库连接并等待实际推理线程。根目录 `main.py` 使用项目 CLI、JSON 日志及 Windows Selector 事件循环。
 
@@ -148,6 +152,16 @@ Principal 放在可信 `AgentContext`，不从模型参数、图 State 或 resum
 
 业务事务与 Checkpoint 没有共同事务。取消请求可能发生在真实审批或退款提交之后，通过 recover 重跑未完成节点，审批唯一绑定和确认幂等保护原记录。需要用户显式恢复，没有后台自动重领。业务提交后的显示引用若失效，仅移除引用并添加 warning_codes，保留数据库已提交结果；敏感操作开始前预留后续执行与验证步数。
 
+## MCP 协议入口
+
+`mcp/server.py` 注册 `query_order`、`query_logistics`、`query_refund_policy`，分别映射现有 BusinessTools 的 get_order、get_logistics 和 get_refund_policy。独立进程使用官方低层 Server 和 stdio transport；ClientSession 初始化、发现并调用这些工具，不经过模型或 LangGraph。协议注解 readOnlyHint 是能力说明，实际限制来自三工具白名单、共享参数校验与现有 Service，而不是注解本身。
+
+每个 Server 进程从 `EA_MCP_ACCESS_TOKEN` 获取一名用户的 JWT。每次工具调用都由 AuthService 校验签名、期限和数据库当前启用状态、token_version、角色，再把 Principal 交给 BusinessTools；arguments 和 `_meta` 不能授予身份。客户只能查所属订单，客服/管理员按现有 Service 权限查询，分析员不能读取订单明细。政策查询限定订单适用政策文档，返回真实资格和检索证据；存在适用政策但 RAG 未启用时返回 rag_not_enabled，不假造引用。
+
+Client/Server 均不读取 `.env`，示例白名单仅向子进程传递必要普通数据库、JWT、用户 Token 和 RAG 配置。MCP 使用已有受限业务数据库账号，没有新建数据库只读账号或迁移；该账号仍保有其他业务流程所需 DML，MCP 的三个入口不暴露写操作。stdout 只用于 JSON-RPC，业务日志写 stderr，仅保存安全工具名、结果、错误码和耗时。
+
+每次认证及业务执行默认总预算 15 秒，客户端示例默认总预算 60 秒。官方异步上下文负责关闭 Session、stdin 与实际子进程；Windows Client 使用 Proactor，数据库 Server 使用 Selector。没有 MCP HTTP/OAuth、Token 自动续期、写入工具或 Agent 图内 MCP 分支。完整协议与运行命令见[API](api.md)、[部署](deployment.md)和[Phase 5](phase-5.md)。
+
 ## 后续架构
 
-Phase 5 的 MCP 只作为协议入口并复用当前 Service；Phase 6 的分析使用独立只读账号/视图/AST；Phase 7 实现五页 Vue 后台。任务调度、应用镜像、CI 和 tracing 在确有实现及验证后加入文档，不把目标图当作当前运行能力。
+Phase 6 的分析使用独立只读账号/视图/AST；Phase 7 实现五页 Vue 后台。任务调度、应用镜像、CI 和 tracing 在确有实现及验证后加入文档，不把目标图当作当前运行能力。

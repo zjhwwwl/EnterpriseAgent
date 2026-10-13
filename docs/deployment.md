@@ -2,7 +2,7 @@
 
 ## 实际支持范围
 
-Phase 4 支持 **Windows本机FastAPI / LangGraph / CPU ONNX + Linux PostgreSQL / Redis / Chroma容器**。初验本地工程和真实HTTP重启通过，后续真实在线5场景烟测通过；在线修复后[517项完整复验通过](../evals/results/phase4-live/verification.json)，仍无完整模型质量评估。当前Compose为基础设施，没有应用Dockerfile、全栈前端镜像、GitHub Actions执行、公网发布或生产部署证明。
+Phase 5 / 0.5.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio + Linux PostgreSQL / Redis / Chroma 容器**。当前 MCP 验证与边界见[Phase 5](phase-5.md)。Phase 4 [517 项完整复验](../evals/results/phase4-live/verification.json)与真实 DeepSeek 5 场景烟测保留历史结果，仍无完整模型质量评估。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
 
 默认仅绑定 loopback，使用虚构数据与公开演示账号。没有真实支付、退款或付费云资源。
 
@@ -21,6 +21,8 @@ Phase 4 支持 **Windows本机FastAPI / LangGraph / CPU ONNX + Linux PostgreSQL 
 Docker 程序与实际数据盘分别配置，少量 Windows 用户配置仍可能在 C 盘；本项目不另装 Ubuntu。基础设施镜像为 PostgreSQL 17.11-bookworm、Redis 8.4-alpine、Chroma 1.5.9，API 和本地模型运行在 Windows，不把容器运行当作 Linux 应用安装证明。
 
 Python 3.13 项目虚拟环境须先可用。bootstrap 按 requirements/dev.lock 的哈希安装依赖，再以 --no-deps --no-build-isolation 可编辑安装并运行 pip check，不安装 Python 或 Docker、不覆盖已有 .env。当前锁文件已在 Windows 验证，Linux 应用依赖尚待交付阶段验证。
+
+Phase 5 固定官方 mcp 1.30.0，并安装 Windows stdio 子进程所需 pywin32。两份 lock 是本机 Windows 解析结果，其中 pywin32 没有平台 marker；不能直接拿该 lock 安装 Linux 应用镜像，Phase 9 需重新解析并验证目标平台依赖。
 
 ## 首次启动
 
@@ -49,6 +51,7 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 | evaluate-rag | 普通应用连接+模拟 customer，固定 corpus 的真实检索对照 |
 | check | 默认 require-postgres / require-rag，Ruff、pytest、pip check、JSON/JUnit |
 | run | 注入应用配置、显式启用 RAG、移除迁移/测试 URL，再运行 main.py |
+| mcp-demo | 注入普通业务配置，在 loopback API 登录公开模拟客户，经官方 stdio Client 调用三个只读工具 |
 
 当前索引脚本没有选择单文档参数，处理所有未删除的登记文档；要强制重索引某篇已兼容文档，可用 admin 的 reindex API。
 
@@ -135,6 +138,53 @@ HTTPX发送OpenAI兼容Chat Completions，Thinking disabled、非流式、temper
 迁移包括 0003_agent 的官方 Checkpoint 与 0004_agent_role 的不可变会话创建角色。角色变化需新会话，恢复原相同角色后可访问原合法会话；服务端私有 thread 不能通过 HTTP 指定。Agent 随请求运行，无后台 Worker 或自动任务重领；中断后显式调用 recover 核对已提交业务。
 
 Chroma SDK 1.5.9 使用窄适配桥，将实际 HTTP session timeout 在初始网络调用前设置；connect/pool 最多3秒，read/write 使用配置秒数。它是各阶段超时，不是整次多请求操作总耗时保证；外层还有 RAG 时间预算。客户端升级需要复查适配和真实 HTTP 测试，不用不存在的 SDK 配置键假装限制请求。
+
+## MCP Server 与 Client
+
+MCP 采用本机 stdio，不开放端口。独立入口使用官方 mcp 1.30.0，三个工具查询普通业务数据库及已有政策知识；不发送 DeepSeek 请求。Python 模块与安装入口分别为：
+
+| 入口 | 模块 / 安装命令 |
+| --- | --- |
+| Server | `python -m enterprise_agent.mcp.server` / `enterprise-agent-mcp` |
+| Client | `python -m enterprise_agent.mcp.client` / `enterprise-agent-mcp-client` |
+
+最简 Demo 在另一窗口先启动 API，再在项目根目录执行：
+
+```powershell
+.\scripts\mcp-demo.ps1
+.\scripts\mcp-demo.ps1 -OrderNo '10086'
+```
+
+脚本加载本项目普通业务基础设施配置、显式启用已准备 RAG，并移除迁移/测试 URL、Redis、模型 Key 及旧 MCP Token。Client 使用公开 demo_customer 登录 loopback API，再启动独立 Server、发现三个工具、调用所选订单并检查 isError。使用虚构公开账号，不创建退款或付费资源；API 的登录仍受已有 Redis 限流控制。
+
+同一 PowerShell 中已经通过脚本准备运行环境后，可以直接使用模块并保存 JSON：
+
+```powershell
+.\.venv\Scripts\python.exe -m enterprise_agent.mcp.client --demo-login --order-no '10086' --output 'var/test-results/mcp-client.json'
+```
+
+| Client 参数 | 默认 / 约束 |
+| --- | --- |
+| --demo-login | 默认不登录；启用时调用本机 API 的公开模拟客户登录 |
+| --api-url | http://127.0.0.1:8000；仅接受无路径/查询/凭据的 HTTP loopback origin，不跟随重定向或环境代理 |
+| --order-no | 10086；5–30 位 ASCII 数字字符串 |
+| --output | 可选 .json 路径，写入脱敏结果；优先项目 D 盘 var 下 |
+
+已有 JWT 的集成应在调用进程环境设置 `EA_MCP_ACCESS_TOKEN`，并省略 --demo-login。普通 `EA_DATABASE_URL`、`EA_JWT_SECRET` 和 RAG 配置也必须已经在环境中；Client 和 Server 都不读取 `.env`。不要把 Token 作为 CLI 参数、写入 .env.example 或打印到日志。脚本模式每次重新登录；Token 模式的到期/撤销不会自动刷新，重新取得凭证并启动进程。
+
+| 配置 | 实际用途 |
+| --- | --- |
+| EA_MCP_ACCESS_TOKEN | 必需的现有用户 JWT，每个 Server 进程一个身份 |
+| EA_MCP_REQUEST_TIMEOUT_SECONDS | 默认 15 秒，范围 1–120；覆盖单次认证和业务查询 |
+| EA_RAG_ENABLED | 政策有来源文档时需要 true，且模型、Chroma 与政策索引就绪 |
+
+Server 每次调用重新验证 JWT、启用状态、token_version 和当前角色；工具参数与 `_meta` 不授予身份。无权订单返回安全 404，新增写入工具名被拒绝。成功 data 由现有 BusinessTools / Service 产生；政策证据缺失仍显示 insufficient_evidence，存在适用政策但未启用 RAG 时返回 rag_not_enabled。
+
+Client 子进程环境白名单仅包含必要普通数据库、JWT、用户 Token、RAG、D 盘临时目录与 SDK 精选系统变量，不继承模型 Key、管理员/测试连接或 Redis。Server 显式禁用聊天模型、Agent Checkpoint 与上述非必要连接。MCP 使用已有受限业务账号，没有新增数据库角色或迁移；三工具只读并不表示该业务账号整体只有 SELECT 权限。
+
+Client 默认整体预算 60 秒，内部 ClientSession 也配置有限读取超时。Windows Client 使用 Proactor 支持异步 subprocess，Server 使用 Selector 支持 psycopg。嵌套异步上下文先关闭 Session，再由官方 stdio transport 关闭 stdin、等待或终止实际子进程；服务日志写 stderr，stdout 只含 JSON-RPC。Demo 报告包含工具结果、成功状态及 provider_calls=0 / token_usage=null，不冒称线上 Token 用量。
+
+当前没有 HTTP/SSE MCP、OAuth、共享多用户 MCP 进程、Token 自动续期、Agent 图内 MCP 路由或写入工具。stdio 为可信本机 Client 使用，尚无生产负载验收。运行证据与限制见[Phase 5](phase-5.md)，协议字段见[API](api.md)。
 
 ## 数据和政策
 

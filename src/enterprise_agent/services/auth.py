@@ -10,13 +10,28 @@ from enterprise_agent.domain_errors import BusinessError
 from enterprise_agent.models import AuditLog, User
 from enterprise_agent.request_context import get_request_id
 from enterprise_agent.schemas.auth import TokenResponse, UserResponse
-from enterprise_agent.security import create_access_token, dummy_password_hash, verify_password
+from enterprise_agent.security import (
+    Principal,
+    create_access_token,
+    decode_access_token,
+    dummy_password_hash,
+    verify_password,
+)
 
 
 class AuthService:
     def __init__(self, factory: async_sessionmaker[AsyncSession], settings: Settings) -> None:
         self.factory = factory
         self.settings = settings
+
+    async def authenticate(self, token: str) -> Principal:
+        """API and MCP resolve current permissions from the same SQL facts."""
+        user_id, version = decode_access_token(token, self.settings)
+        async with self.factory() as session:
+            user = await session.scalar(select(User).where(User.id == user_id))
+            if user is None or not user.is_active or user.token_version != version:
+                raise BusinessError("unauthenticated", "登录已失效，请重新登录", 401)
+            return Principal(user_id=user.id, role=user.role)
 
     async def login(self, username: str, password: str) -> TokenResponse:
         async with self.factory() as session, session.begin():

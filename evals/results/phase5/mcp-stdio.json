@@ -1,0 +1,64 @@
+{
+  "checked_at_utc": "2026-10-13T15:38:15.487301+00:00",
+  "sdk_version": "1.30.0",
+  "protocol_version": "2025-11-25",
+  "server_version": "0.5.0",
+  "database": "enterprise_agent_test",
+  "real_dependencies": [
+    "Official MCP ClientSession and stdio transport",
+    "Production MCP server child process",
+    "PostgreSQL ordinary account",
+    "Chroma HTTP",
+    "Verified local CPU embedding and reranker"
+  ],
+  "online_deepseek_tested": false,
+  "model_calls": 0,
+  "provider_token_usage": null,
+  "events": [
+    {
+      "event": "sdk_initialization_and_discovery",
+      "tools": [
+        "query_logistics",
+        "query_order",
+        "query_refund_policy"
+      ]
+    },
+    {
+      "event": "three_real_business_reads"
+    },
+    {
+      "event": "foreign_order_refused",
+      "tools_tested": 3
+    },
+    {
+      "event": "strict_arguments_and_write_tool_refusal"
+    },
+    {
+      "event": "stdout_contains_only_jsonrpc_frames",
+      "frames": 15
+    },
+    {
+      "event": "sdk_shutdown_actual_child_exited",
+      "pid": 33740,
+      "returncode": 0,
+      "windows_job_object_assigned": true
+    },
+    {
+      "event": "read_only_business_counts_unchanged",
+      "before": {
+        "refund_requests": 19,
+        "support_tickets": 19,
+        "approval_requests": 0
+      },
+      "after": {
+        "refund_requests": 19,
+        "support_tickets": 19,
+        "approval_requests": 0
+      }
+    },
+    {
+      "event": "stderr_secret_scan_passed"
+    }
+  ],
+  "passed": true
+}

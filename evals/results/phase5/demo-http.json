@@ -1,0 +1,20 @@
+{
+    "checked_at_utc":  "2026-10-13T15:34:43.9939562Z",
+    "endpoint":  "http://127.0.0.1:8000/health/ready",
+    "response":  {
+                     "status":  "ok",
+                     "service":  "EnterpriseAgent",
+                     "version":  "0.5.0",
+                     "phase":  5,
+                     "checks":  {
+                                    "application":  "ok",
+                                    "database":  "ok",
+                                    "redis":  "ok",
+                                    "knowledge":  "ok",
+                                    "agent_checkpoint":  "ok"
+                                }
+                 },
+    "online_deepseek_tested":  false,
+    "model_calls":  0,
+    "provider_token_usage":  null
+}

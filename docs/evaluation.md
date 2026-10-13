@@ -2,14 +2,14 @@
 
 ## 真实结果的边界
 
-Phase 4 在真实检索与业务测试上增加LangGraph、Tool Calling协议、人工中断、官方持久化、重启恢复与故障边界测试。[Phase 4](phase-4.md)初验511项通过、零失败/错误/跳过，后续真实在线手选烟测最终5/5检查通过；这不是完整模型质量评估，在线修复后[517项完整复验通过](../evals/results/phase4-live/verification.json)。历史检索对照保留于[Phase 3](phase-3.md)，不当作Phase 4 Agent完整效果分数，Phase 1/2历史验收保留原文件。
+Phase 5 新增官方 MCP 协议、严格参数、实时身份与真实 stdio 子进程验收，复用真实数据库及本地政策检索，阶段结果见[Phase 5](phase-5.md)。本阶段不调用云模型；工程测试不能提供模型意图、工具选择或语义质量分数。[Phase 4](phase-4.md)初验 511 项和在线修复后[517 项完整复验](../evals/results/phase4-live/verification.json)，以及真实 DeepSeek 手选 5 场景烟测保持历史记录。历史检索对照保留于[Phase 3](phase-3.md)，不改写为当前 Agent 效果分数。
 
 ```powershell
 .\scripts\check.ps1
 .\scripts\evaluate-rag.ps1
 ```
 
-check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，保存 `var/test-results/phase4.xml`、`phase4.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。
+check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，当前保存 `var/test-results/phase5.xml`、`phase5.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。
 
 ## 测试分层
 
@@ -25,6 +25,9 @@ check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgr
 | Chat HTTP 协议 | 受控 HTTP 响应验证 Tool Call、usage、非法 JSON、未知工具、响应上限和超时，不调用线上模型 |
 | 官方 Checkpoint | 实际 PostgreSQL saver、runtime 重启、interrupt/resume、普通账号无 DDL、advisory lock 与取消释放 |
 | 真实 Agent 流程 | ScriptedChatModel 只控制路线；业务数据库、CPU Embedding/Reranker、Chroma 与官方图状态实际执行 |
+| MCP 单元协议 | 官方内存 transport 与受控 auth/tools 验证发现、strict 参数、错误脱敏、超时、日志隔离；不冒称数据库查询 |
+| MCP SQL/RAG 集成 | 官方 SDK 请求、真实 AuthService / Service，实时角色/撤销/禁用、订单归属和限定政策文档 |
+| MCP 实际 stdio | 生产 Server 子进程、官方 ClientSession、真实普通 PostgreSQL / CPU 模型 / Chroma、协议 stdout、秘密扫描与实际进程退出 |
 
 控制流程测试可以注入明确测试替身来隔离故障，但不能用这些结果冒充真实模型或向量库成绩。事务/锁/权限测试使用 PostgreSQL，不使用 SQLite 替代。解析测试使用实际 PDF/DOCX bytes，不用粘贴文本充当 PDF 解析证明。
 
@@ -76,7 +79,7 @@ Reranker 返回 logit 经 sigmoid 得到的0–1未校准分数，不是概率�
 
 文件 SHA256 记录运行时的原始字节；Git 换行归一化可能使检出文件的 SHA 不同。复现时同时核对 Git 版本、平台、模型与配置。
 
-检查通过及引用合法不能替代开放式语义正确性。已有真实DeepSeek手选5场景烟测，但没有独立的完整在线任务/意图/参数/语义质量分数，不能将5/5检查通过称模型任务完成率100%；NL SQL与MCP端到端分数也尚未提供。
+检查通过及引用合法不能替代开放式语义正确性。已有真实 DeepSeek 手选 5 场景烟测，但没有独立的完整在线任务/意图/参数/语义质量分数，不能将 5/5 检查通过称模型任务完成率 100%。MCP 已有实际协议与业务验收，未引入模型或生成 MCP 意图效果分数；NL SQL 尚未提供。
 
 ## Phase 4 受控图验收
 
@@ -90,13 +93,23 @@ tests/integration/test_agent_workflow.py 使用固定 seed UTC 2026-10-12、真�
 
 Phase 4公共证据已归档到evals/results/phase4/：[verification.json](../evals/results/phase4/verification.json)、[http-restart.json](../evals/results/phase4/http-restart.json)、[demo-http.json](../evals/results/phase4/demo-http.json)、[report.md](../evals/results/phase4/report.md)。历史Phase3原始报告保持不变，最终图测试与HTTP证据不替代在线模型语义评估。
 
+## Phase 5 MCP 验收
+
+`tests/unit/test_mcp_server.py` 使用官方 SDK 内存 transport，对 auth/tools 使用明确单元控制对象，验证 manifest、严格类型/额外字段、身份不来自参数、逐次认证、未知/写入工具拒绝、超时、取消、序列化错误及安全日志。客户端单元测试验证本机登录边界、配置白名单、工具发现/结果处理和有限生命周期；这些分组结果不冒充真实数据库或 subprocess 证明。
+
+`tests/integration/test_mcp_authorization.py` 使用真实 PostgreSQL、AuthService 和 BusinessTools。覆盖客户归属、客服读取、分析员拒绝、角色变化、Token 撤销/用户禁用，以及真实 CPU 模型和 Chroma 的限定政策文档引用。官方内存 transport 只替换 OS 管道，没有替换认证或业务事实；管理员用于准备政策索引，不冒称另有管理员 MCP 读取验收。
+
+`tests/e2e/test_mcp_stdio.py` 通过官方 stdio ClientSession 启动生产 Server 子进程，使用专用 enterprise_agent_test 和普通 ea_test_app、真实 CPU 模型/Chroma。验证三个真实读取、他人订单拒绝、参数/身份/写入工具拒绝、引用有效、stdout 只有 JSON-RPC、stderr 无秘密、退款/工单/审批数量不变，以及官方上下文退出后实际子进程返回 0。该测试不调用聊天模型，provider_token_usage=null，不能把本地模型推理或协议耗时改称模型调用/性能成绩。
+
+本阶段原始结果使用 `var/test-results/phase5.json`、`phase5.xml`、`phase5-mcp-stdio.json`；[614 项完整测试通过](../evals/results/phase5/verification.json)，0 失败/错误/跳过、JUnit 548.312 秒、85 条 Chroma 弃用警告保留。[实际协议证据](../evals/results/phase5/mcp-stdio.json)与[报告](../evals/results/phase5/report.md)独立归档。[实际 Client Demo](../evals/results/phase5/mcp-demo.json)完成三个工具读取，政策 hybrid_rerank 返回三个引用，provider_calls=0 / token_usage=null；[主服务 HTTP](../evals/results/phase5/demo-http.json)记录 0.5.0 / phase=5 与五项就绪检查。不累计分组子集成新的测试总数。旧 Phase 3 检索对照与 Phase 4 在线轮次保持原 JSON，不作为本阶段新的质量指标。
+
 ## 后续评估
 
 真实在线烟测独立归档于[phase4-live报告](../evals/results/phase4-live/report.md)、[最终JSON](../evals/results/phase4-live/results.json)与[CSV](../evals/results/phase4-live/results.csv)。最终5场景检查5/5通过，其中越权按预期任务failed；12次调用、prompt11315/completion875/total12190 Token，无未知消费。首探针和4/5、3/5、4/5失败轮均保留，已知累计45443 Token/46次调用；不得仅列最终消费。模型标签为操作者提供，非供应商响应版本名。
 
 5个问题手选用于开发修复，所有轮次均非盲评，不能推导统计提升或泛化质量。检查器新增区分检索不足与候选拒答，旧三轮仍有真实失败；RAG阈值未变。实际源引用用HTTP验证，耗时仅本次观察，不是性能基准，Token是供应商实际报告的已知用量。在线运行需脚本显式--allow-live；当前天气问题拒答、七天政策等少样本观察不替代独立领域集。
 
-Phase 5–8 在已有真实图与业务一致性测试之上扩展 MCP、SQL 和在线任务/工具/回答语义数据集。只读 SQL 绕过、工具意图和参数效果、引文语义充分性、政策冲突及领域外问题需要独立标注，不能仅靠 schema 通过或 substring 匹配证明。
+Phase 6–8 在已有真实图、MCP 协议与业务一致性测试之上扩展 SQL 和在线任务/工具/回答语义数据集。只读 SQL 绕过、工具意图和参数效果、引文语义充分性、政策冲突及领域外问题需要独立标注，不能仅靠 schema 通过或 substring 匹配证明。
 
 线上模型缺 Key 或未经实际调用时明确标记未运行；Token 从实际 API usage 获取。优化没有改善也保留原始结果，不预填分数、伪造压测或部署成绩。
 

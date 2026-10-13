@@ -85,7 +85,9 @@ def test_cors_requires_explicit_http_origins(origin):
         Settings(_env_file=None, cors_origins=[origin])
 
 
-@pytest.mark.parametrize("name", ["deepseek_api_key", "database_url", "redis_url"])
+@pytest.mark.parametrize(
+    "name", ["deepseek_api_key", "database_url", "redis_url", "mcp_access_token"]
+)
 def test_blank_optional_credentials_are_unset(name):
     assert getattr(Settings(_env_file=None, **{name: ""}), name) is None
 
@@ -168,3 +170,20 @@ def test_settings_cache_is_stable_until_explicitly_cleared(monkeypatch):
 def test_business_configuration_fails_closed(overrides):
     with pytest.raises(ValidationError):
         Settings(_env_file=None, **overrides)
+
+
+def test_mcp_token_is_hidden_and_registered_for_message_redaction():
+    credential = "test-mcp-credential-not-a-real-token"
+    settings = Settings(_env_file=None, mcp_access_token=credential)
+    assert credential in settings.secret_values()
+    assert credential not in repr(settings)
+    assert credential not in settings.model_dump_json()
+    with pytest.raises(ValidationError) as error:
+        Settings(_env_file=None, mcp_access_token=credential * 300)
+    assert credential not in str(error.value)
+
+
+@pytest.mark.parametrize("timeout", [0, 121])
+def test_mcp_timeout_is_bounded(timeout):
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, mcp_request_timeout_seconds=timeout)

@@ -23,6 +23,7 @@ evals/results/*
 !evals/results/phase3-initial/
 !evals/results/phase4/
 !evals/results/phase4-live/
+!evals/results/phase5/
 node_modules/
 frontend/dist/
 .DS_Store

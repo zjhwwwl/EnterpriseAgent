@@ -88,7 +88,7 @@ def create_app(
 
     application = FastAPI(
         title="EnterpriseAgent",
-        description="Phase 4：LangGraph 企业知识与订单助手、持久化会话及人工退款确认。",
+        description="Phase 5：企业知识与订单 Agent、人工退款确认；另提供独立 stdio MCP 服务。",
         version=__version__,
         lifespan=lifespan,
         docs_url="/docs" if resolved.docs_enabled else None,
