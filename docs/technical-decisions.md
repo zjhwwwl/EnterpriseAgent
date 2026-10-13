@@ -1,6 +1,6 @@
 # 技术决策
 
-当前Phase 4加入LangGraph单Agent、业务Tool Calling、Agentic RAG、官方Checkpoint与人工审批。511项工程测试与真实TCP重启通过，DeepSeek在线效果尚未验收；下面描述实际代码取舍，设计和受控模型测试不当作在线模型成绩，证据见[阶段记录](phase-4.md)。
+当前Phase 4加入LangGraph单Agent、业务Tool Calling、Agentic RAG、官方Checkpoint与人工审批。初验511项工程测试与真实TCP重启通过，另有5手选场景真实在线烟测；完整模型质量未评估，在线修复后[517项完整复验通过](../evals/results/phase4-live/verification.json)；下面描述实际代码取舍，设计和受控模型测试不当作在线模型成绩，证据见[阶段记录](phase-4.md)。
 
 ## 模块化单体，单 Agent 多工具
 
@@ -72,7 +72,7 @@ Vector与真实BM25各最多30候选，中文字符/二元组兼顾短词、业�
 
 LangGraph 固定1.2.14、Checkpoint固定4.2.0、PostgreSQL Saver固定3.1.2，通过哈希锁安装；官方schema的迁移序列与版本检查需要同步审阅。无需引入LangChain的通用Agent或OpenAI SDK，使用HTTPX发送兼容Chat Completions协议，严格校验请求、tool白名单、JSON参数、finish_reason和usage。
 
-默认deepseek-flash，thinking.type=disabled，不强制named/required工具选项。请求和响应有限字节数，每次模型30秒、主动图执行90秒、步数24、工具8、临时错误最多2次重试。缺Key默认禁用，不以内置脚本替代生产模型。协议来源为[DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)；当前没有在线效果结论。
+默认deepseek-flash、thinking.type=disabled。真实烟测暴露控制节点漏工具调用，改为仅route_task/rewrite_query/select_knowledge_quotes使用named tool_choice，业务工具auto。请求/响应、30秒模型、90秒主动执行、24步、8工具、2次重试预算保持。缺Key仍禁用，不用脚本替代生产模型；协议见[DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)，[5场景烟测](../evals/results/phase4-live/report.md)不能支持泛化质量结论。
 
 ## 可信身份、会话角色与可恢复审批
 

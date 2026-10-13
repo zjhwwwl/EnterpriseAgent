@@ -1,6 +1,6 @@
 # LangGraph 工作流
 
-Phase 4 已实现一张LangGraph图，复用真实OrderService、RefundService与KnowledgeService。模型负责路由、选择工具、有限查询改写和引用原文选择；后端决定权限、金额、政策、确认与写入。511项工程检查和真实TCP重启结果见[Phase 4](phase-4.md)，受控模型流程测试不能证明DeepSeek在线效果。
+Phase 4 已实现一张LangGraph图，复用真实OrderService、RefundService与KnowledgeService。模型负责路由、选择工具、有限查询改写和引用原文选择；后端决定权限、金额、政策、确认与写入。初验511项工程检查、真实TCP重启与后续真实在线补充见[Phase 4](phase-4.md)。受控模型不代表在线效果；5手选场景也不是完整质量评估，冻结代码[517项完整复验通过](../evals/results/phase4-live/verification.json)。
 
 ## 当前图
 
@@ -55,9 +55,9 @@ prepare_refund 的 task_id 由服务端可信上下文提供；同任务同参�
 
 ## 知识与业务回答
 
-知识分支先检索，证据不足只允许改写一次查询；仍不足直接说明不能确认政策。证据存在时模型调用 select_knowledge_quotes 选择 1–3 个连续原文，服务器确认选段来自已返回 Chunk，引用仍可访问、文本相同且索引代数当前，随后构造带来源链接的回答。它是原文抽取，不是自由生成政策，也不是完整语义蕴含或政策冲突检测。
+知识分支先检索，证据不足只允许改写一次；仍不足直接说明不能确认。回答候选排除只含标题的Chunk，模型调用select_knowledge_quotes返回0–3段连续原文；候选不能回答原始问题时允许空列表拒答。选段仍须来自有效Chunk，权限、文本和当前代数通过校验后才构造回答。它不是完整语义蕴含或政策冲突检测，也没有调整RAG分数门槛。
 
-订单分支仅采纳 Service 返回的结构化事实，用确定性报告展示订单、商品、物流、资格和申请状态。planner 最终自由文本不成为业务结论；业务变化原因没有事实支持时不能推断。退款准备必须同时满足数据库资格和对应政策文档证据，不以模型判断替代后端规则。
+订单分支仅采纳Service结构化事实，确定性报告展示订单、商品、物流、资格和申请状态。Router结合完整历史解析本轮query；业务planner仅接收original_request、resolved_query与本轮工具消息，旧答案不进入planner，避免复用历史回答跳过本轮事实查询。最终自由文本不成为业务结论；退款准备仍需数据库资格和对应政策文档证据。
 
 ## 人工确认与恢复
 
@@ -91,8 +91,8 @@ steps 记录节点、业务工具名、耗时和安全错误；usage 累计实�
 
 ## 模型配置与边界
 
-HTTPX 发送 OpenAI 兼容 Chat Completions JSON，校验 assistant/tool 消息、工具白名单、JSON 参数、finish_reason 与 usage；不安装 OpenAI SDK，不自动跟随重定向。默认模型 deepseek-flash，明确 thinking.type=disabled，temperature=0，非流式请求，不强制 required/named tool_choice。[DeepSeek API 契约](https://api-docs.deepseek.com/api/create-chat-completion/) 是协议来源，具体任务效果仍需真实在线验收。
+HTTPX发送OpenAI兼容Chat Completions，校验消息、工具白名单、JSON参数、finish_reason和usage，不安装OpenAI SDK或跟随重定向。默认deepseek-flash，thinking.type=disabled、temperature=0、非流式。route_task、rewrite_query、select_knowledge_quotes这三个控制节点使用named tool_choice确保返回结构化选择；业务工具仍为auto。[DeepSeek API契约](https://api-docs.deepseek.com/api/create-chat-completion/)为协议来源。
 
-EA_LLM_ENABLED 默认 false；本机没有 Key 时不创建真实聊天 Client，发消息返回明确 503。图测试使用标注清楚的 ScriptedChatModel 驱动，而数据库、检索模型、Chroma 和 Checkpoint 实际运行。没有在线结果时不声称 DeepSeek 意图、参数或回答质量已经验证。
+EA_LLM_ENABLED模板默认false；未配置时不创建真实聊天Client，发消息503。图回归测试中的ScriptedChatModel与[真实在线补充](../evals/results/phase4-live/report.md)分开记录。5个手选烟测用于发现和修复问题，不证明开放式意图、参数与语义质量。
 
 下一阶段 MCP 只作为只读协议入口，复用这些 Service；分析分支要另加只读账号、授权视图、SQL AST 和执行限额，当前不执行模型 SQL。

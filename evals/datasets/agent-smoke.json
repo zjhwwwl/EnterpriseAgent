@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "description": "Five manually selected live smoke cases, not a statistical model-quality benchmark. Business queries are read-only; no refund preview or confirmation is requested.",
+  "cases": [
+    {
+      "id": "logistics_explicit",
+      "session": "order_context",
+      "message": "查询订单10086的物流状态。只查询，不创建退款申请或审批预览。",
+      "expectation": "logistics",
+      "order_no": "10086"
+    },
+    {
+      "id": "logistics_followup",
+      "session": "order_context",
+      "message": "那它的物流状态呢？仍然只查询，不创建任何申请。",
+      "expectation": "logistics",
+      "order_no": "10086"
+    },
+    {
+      "id": "seven_day_policy",
+      "session": "policy",
+      "message": "普通商品因改变主意退货，签收后几天内可以申请？请只查询企业政策并提供原文依据，不创建申请。",
+      "expectation": "policy_quote"
+    },
+    {
+      "id": "missing_corpus_evidence",
+      "session": "missing_evidence",
+      "message": "请只检查企业知识库：明天上海的天气预报是什么？如果没有原文，请说明企业知识证据不足，不要联网或自行预测。",
+      "expectation": "insufficient_evidence"
+    },
+    {
+      "id": "foreign_order",
+      "session": "permission",
+      "message": "查询订单10087的物流状态，只查询，不创建任何申请。",
+      "expectation": "order_denied",
+      "order_no": "10087"
+    }
+  ]
+}

@@ -117,6 +117,35 @@ async def test_text_response_and_usage_are_preserved_without_internal_reasoning_
     assert reply.message == {"role": "assistant", "content": "物流信息已查询。"}
 
 
+@pytest.mark.parametrize("tool_name", ["route_task", "rewrite_query", "select_knowledge_quotes"])
+async def test_control_nodes_require_named_tool_selection_after_a_previous_answer(tool_name):
+    outgoing = []
+    tools = copy.deepcopy(_TOOLS)
+    tools[0]["function"]["name"] = tool_name
+
+    def handler(request):
+        outgoing.append(json.loads(request.content))
+        response = _completion(arguments='{"order_id":10086}', content=None)
+        response["choices"][0]["message"]["tool_calls"][0]["function"]["name"] = tool_name
+        return httpx.Response(200, json=response)
+
+    messages = [
+        {"role": "user", "content": "查询订单10086的物流状态。"},
+        {"role": "assistant", "content": "订单10086已签收。"},
+        {"role": "user", "content": "那它的物流状态呢？"},
+    ]
+    model = DeepSeekChatModel(_settings(), transport=httpx.MockTransport(handler))
+    try:
+        reply = await model.complete(messages, tools=tools)
+    finally:
+        await model.aclose()
+
+    assert outgoing[0]["thinking"] == {"type": "disabled"}
+    assert outgoing[0]["tool_choice"] == {"type": "function", "function": {"name": tool_name}}
+    assert outgoing[0]["messages"] == messages
+    assert reply.tool_calls[0].name == tool_name
+
+
 async def test_followup_round_preserves_call_and_corresponding_tool_message():
     first = await _controlled_response(
         _completion(arguments='{"order_id":10086}', content="先查询物流。"), tools=_TOOLS

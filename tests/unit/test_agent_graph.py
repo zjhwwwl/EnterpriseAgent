@@ -327,7 +327,10 @@ async def test_successful_response_usage_survives_invalid_workflow_arguments(sta
             planned("rewrite_query", {"query": "退货政策", "approved": True}),
         ]
     else:
-        replies = [route("knowledge"), planned("select_knowledge_quotes", {"quotes": []})]
+        replies = [
+            route("knowledge"),
+            planned("select_knowledge_quotes", {"quotes": [], "approved": True}),
+        ]
     control = ControlTools([source] if stage == "quote" else [])
     graph, ctx, config, state = graph_case(replies, tools=control)
     result = await graph.ainvoke(state, config, context=ctx)
@@ -691,3 +694,49 @@ async def test_sensitive_write_cannot_be_mixed_with_other_tools_in_the_same_mode
     assert result["status"] == "failed"
     assert result["error_code"] == "invalid_model_plan"
     assert ctx.tools.effects == [] and ctx.tools.preparations == [] and ctx.tools.commits == []
+
+
+async def test_retrieved_candidates_can_be_declined_without_publishing_a_policy_quote():
+    graph, ctx, config, state = graph_case(
+        [route("knowledge"), planned("select_knowledge_quotes", {"quotes": []})],
+        tools=ControlTools([evidence()]),
+    )
+    result = await graph.ainvoke(state, config, context=ctx)
+    assert result["status"] == "completed"
+    assert result["citations"] == [] and result["quotes"] == []
+    assert "无法确认" in result["answer"]
+    assert result["token_usage"]["total_tokens"] == 16
+    assert not ctx.tools.preparations and not ctx.tools.commits
+
+
+async def test_markdown_heading_alone_cannot_be_published_as_answer_evidence():
+    source = evidence().model_copy(update={"text": "## 时间与证据"})
+    graph, ctx, config, state = graph_case([route("knowledge")], tools=ControlTools([source]))
+    result = await graph.ainvoke(state, config, context=ctx)
+    assert result["status"] == "completed"
+    assert result["citations"] == [] and "无法确认" in result["answer"]
+    assert "## 时间与证据" not in result["answer"]
+    assert len(ctx.model.requests) == 1
+
+
+async def test_followup_planner_receives_resolved_query_and_reports_new_tool_facts():
+    query = "查询订单10086的物流状态"
+    graph, ctx, config, state = graph_case(
+        [
+            planned("route_task", {"intent": "order", "query": query}),
+            planned("get_logistics", {"order_no": "10086"}),
+            stopped(),
+        ]
+    )
+    state["input"] = "那它的物流状态呢？"
+    state["history"] = [
+        {"role": "user", "content": "查询订单10086"},
+        {"role": "assistant", "content": "订单10086已签收，delivered"},
+    ]
+    result = await graph.ainvoke(state, config, context=ctx)
+    current_request = json.loads(ctx.model.requests[1]["messages"][-1]["content"])
+    assert current_request == {"original_request": state["input"], "resolved_query": query}
+    assert len(ctx.model.requests[1]["messages"]) == 2
+    assert "delivered" not in ctx.model.requests[1]["messages"][0]["content"]
+    assert result["status"] == "completed" and len(ctx.tools.effects) == 1
+    assert "in_transit" in result["answer"] and "delivered" not in result["answer"]

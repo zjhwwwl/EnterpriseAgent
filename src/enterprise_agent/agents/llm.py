@@ -20,6 +20,7 @@ from enterprise_agent.domain_errors import BusinessError
 _MAX_BODY_BYTES = 256 * 1024
 _MAX_ARGUMENT_BYTES = 16 * 1024
 _MAX_TOOL_CALLS = 4
+_WORKFLOW_TOOL_NAMES = frozenset({"route_task", "rewrite_query", "select_knowledge_quotes"})
 
 
 @dataclass(frozen=True)
@@ -229,6 +230,14 @@ class DeepSeekChatModel:
             }
             if definitions:
                 payload["tools"] = [tool.model_dump() for tool in definitions]
+                if len(definitions) == 1 and definitions[0].function.name in _WORKFLOW_TOOL_NAMES:
+                    # These control nodes require a structured selection even
+                    # when history already contains a human-readable answer.
+                    # Named choices are supported because Thinking is disabled.
+                    payload["tool_choice"] = {
+                        "type": "function",
+                        "function": {"name": definitions[0].function.name},
+                    }
             encoded = json.dumps(payload, ensure_ascii=False, allow_nan=False)
             if len(encoded.encode("utf-8")) > _MAX_BODY_BYTES:
                 raise ValueError("Conversation exceeds the request budget")

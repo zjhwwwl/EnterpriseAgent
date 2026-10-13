@@ -2,7 +2,7 @@
 
 基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手，面向中国大陆 AI Agent 开发工程师求职展示。项目使用虚构电商数据，以业务规则、权限、事务、可追溯检索和真实验证为重点，分阶段交付。
 
-**当前版本 0.4.0 / Phase 4：LangGraph 单 Agent、知识问答与人工确认退款。** 在真实订单售后和本地混合检索之上加入模型路由、Tool Calling、一次查询改写、多轮会话、官方 PostgreSQL Checkpoint 和中断恢复。知识回答选择并验证引用原文；订单报告根据 Service 事实构造。511项工程测试与真实TCP重启验收通过，DeepSeek在线效果尚未验收；MCP、NL SQL和Vue后台属于后续阶段。
+**当前版本0.4.0 / Phase 4：LangGraph单Agent、知识问答与人工确认退款。** 已有模型路由、Tool Calling、一次查询改写、多轮、PostgreSQL Checkpoint和中断恢复。初验511项工程测试及真实TCP重启通过；随后真实DeepSeek手选烟测最终5/5检查通过，修复后110项核心测试通过，[517项完整复验通过](evals/results/phase4-live/verification.json)。小样本不代表完整模型质量，MCP、NL SQL和Vue仍属后续阶段。
 
 ## 功能与技术栈
 
@@ -148,7 +148,9 @@ seed 默认当天 UTC 基准、随机种子 42、500 订单；本工作区使用
 .\scripts\evaluate-rag.ps1
 ```
 
-check 默认传 `--require-postgres --require-rag`，执行 Ruff、格式、pytest 与 pip check，保存本阶段 JSON/JUnit。Phase 4 最终 **511项通过，0失败/错误/跳过**，JUnit套件524.068秒，Ruff114文件与pip check通过；81条Chroma第三方legacy embedding弃用警告未屏蔽。真实Uvicorn在待确认阶段停止/重启后仅创建一条退款和工单，重复确认不增记录、越权404；主服务五项健康通过，缺模型Key时503且零任务。查看[验证摘要](evals/results/phase4/verification.json)、[重启证据](evals/results/phase4/http-restart.json)、[主服务HTTP](evals/results/phase4/demo-http.json)与[阶段记录](docs/phase-4.md)。套件耗时不是API性能；受控模型不能证明DeepSeek在线效果。`-SkipPostgres` / `-SkipRag`仅用于局部检查，不能作为完整验收。
+check默认传`--require-postgres --require-rag`，执行Ruff、格式、pytest与pip check。Phase 4初验**511项通过、0失败/错误/跳过**，JUnit524.068秒、81条Chroma弃用警告保留；真实Uvicorn重启后仅创建一条退款和工单。初验主服务五项健康通过，尚未配置模型时503且零任务。[验证摘要](evals/results/phase4/verification.json)、[重启](evals/results/phase4/http-restart.json)和[主HTTP](evals/results/phase4/demo-http.json)保留原始`online_deepseek_tested=false`。在线修复后110项核心测试通过，[517项完整复验通过](evals/results/phase4-live/verification.json)；历史初验不冒称最新代码验收。
+
+真实在线补充见[烟测报告](evals/results/phase4-live/report.md)与[最终JSON](evals/results/phase4-live/results.json)：手选5场景最终检查5/5通过（其中越权场景按预期失败），12次模型调用、12190个已知Token。首探针与三轮失败也完整保留，所有在线轮次累计45443个已知Token、46次调用。样本用于开发修复，不是盲评、完整模型质量或性能基准；详见[阶段记录](docs/phase-4.md)。
 
 Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格式 89 文件与 pip check 通过；真实 TCP 知识库流程 15 项通过。测试套件 327.041 秒，不是 API 性能。官方 SDK 的 51 条 DeprecationWarning 未屏蔽，已归档 [检查摘要](evals/results/phase3/verification.json) 和 [HTTP 验收](evals/results/phase3/http.json)，限制见 [Phase 3 验收](docs/phase-3.md)。Phase 1 的 75 项与 Phase 2 的 191 项保留历史记录，不累计成新指标。
 
@@ -185,7 +187,7 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 - PDF 只读已有文本层，无 OCR；DOCX 覆盖正文与表格，不包含页眉页脚、修订文本及文本框；TXT/MD 仅 UTF-8。
 - 默认 Chunk 为 500 **字符**、重叠 80；模型输入上限 512 Token，字符不等于 Token，较长内容会被模型截断。
 - 本地 CPU 推理、同步请求/CLI 索引，不是独立持久队列或高吞吐生产服务；向量清理失败可能留下旧条目，未知数据库提交结果可能留下未登记原件，没有自动清理工具。
-- DeepSeek 在线意图、工具参数与回答质量尚未验收；没有 MCP、NL SQL、Vue 或 Langfuse。
+- DeepSeek仅有5个手选在线烟测，尚无独立、完整的模型质量或负载评估；没有MCP、NL SQL、Vue或Langfuse。
 - 知识回答为可追溯原文抽取，能限制文字编造，但不能证明选段语义足够或已识别所有政策冲突。
 - Agent 通过请求同步执行、人工等待持久化，不提供流式 UI、独立 Worker、自动任务重领或自动恢复调度。
 - 当前 Compose 是基础设施，Windows 应用与 ONNX 推理已验证；Linux 应用镜像和全栈部署尚未验证。

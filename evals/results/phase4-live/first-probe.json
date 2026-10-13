@@ -1,0 +1,145 @@
+{
+  "checked_at_utc": "2026-10-13T10:00:27.670851+00:00",
+  "http_status": 200,
+  "client_elapsed_ms": 2937.708,
+  "online_deepseek": true,
+  "model": "deepseek-flash",
+  "session_id": "4b47e3ad-abe4-4f15-bc7a-4eb20b86a94b",
+  "task": {
+    "id": "0df30126-a03e-42a8-8999-ed10005c806b",
+    "session_id": "4b47e3ad-abe4-4f15-bc7a-4eb20b86a94b",
+    "task_type": "order",
+    "status": "completed",
+    "message": "查询订单10086的物流状态。",
+    "result": {
+      "answer": "订单 10086：物流 delivered，运单 SIM-10086。\n- 2026-10-07T01:00:00+00:00 pending_dispatch 模拟仓库已接单\n- 2026-10-07T03:00:00+00:00 in_transit 模拟包裹运输中\n- 2026-10-10T00:00:00+00:00 delivered 模拟签收",
+      "approval": null,
+      "refund_result": null,
+      "citations": [],
+      "facts": [
+        {
+          "name": "get_logistics",
+          "arguments": {
+            "order_no": "10086"
+          },
+          "result": {
+            "order_no": "10086",
+            "tracking_no": "SIM-10086",
+            "status": "delivered",
+            "events": [
+              {
+                "at": "2026-10-07T01:00:00+00:00",
+                "note": "模拟仓库已接单",
+                "status": "pending_dispatch"
+              },
+              {
+                "at": "2026-10-07T03:00:00+00:00",
+                "note": "模拟包裹运输中",
+                "status": "in_transit"
+              },
+              {
+                "at": "2026-10-10T00:00:00+00:00",
+                "note": "模拟签收",
+                "status": "delivered"
+              }
+            ]
+          }
+        }
+      ],
+      "warning_codes": []
+    },
+    "steps": [
+      {
+        "node": "model_call",
+        "attempt": 1,
+        "elapsed_ms": 749.249,
+        "error_code": null
+      },
+      {
+        "node": "intent_router",
+        "elapsed_ms": 749.882,
+        "error_code": null
+      },
+      {
+        "node": "model_call",
+        "attempt": 1,
+        "elapsed_ms": 904.261,
+        "error_code": null
+      },
+      {
+        "node": "planner",
+        "elapsed_ms": 905.885,
+        "error_code": null
+      },
+      {
+        "node": "business_tool",
+        "tool": "get_logistics",
+        "elapsed_ms": 4.597,
+        "error_code": null
+      },
+      {
+        "node": "tool_execution",
+        "elapsed_ms": 4.604,
+        "error_code": null
+      },
+      {
+        "node": "model_call",
+        "attempt": 1,
+        "elapsed_ms": 1053.093,
+        "error_code": null
+      },
+      {
+        "node": "planner",
+        "elapsed_ms": 1054.539,
+        "error_code": null
+      },
+      {
+        "node": "response_generation",
+        "elapsed_ms": 0.012,
+        "error_code": null
+      },
+      {
+        "node": "validation",
+        "elapsed_ms": 0.008,
+        "error_code": null
+      }
+    ],
+    "token_usage": {
+      "model_calls": 3,
+      "prompt_tokens": 3412,
+      "completion_tokens": 260,
+      "total_tokens": 3672,
+      "unknown_usage_calls": 0,
+      "usage_complete": true,
+      "interrupted_usage_unknown": false
+    },
+    "error_code": null,
+    "elapsed_ms": 2838,
+    "created_at": "2026-10-13T10:00:24.804333Z",
+    "updated_at": "2026-10-13T10:00:27.661346Z",
+    "completed_at": "2026-10-13T10:00:27.661350Z"
+  },
+  "expected_logistics": {
+    "order_no": "10086",
+    "tracking_no": "SIM-10086",
+    "status": "delivered",
+    "events": [
+      {
+        "at": "2026-10-07T01:00:00+00:00",
+        "note": "模拟仓库已接单",
+        "status": "pending_dispatch"
+      },
+      {
+        "at": "2026-10-07T03:00:00+00:00",
+        "note": "模拟包裹运输中",
+        "status": "in_transit"
+      },
+      {
+        "at": "2026-10-10T00:00:00+00:00",
+        "note": "模拟签收",
+        "status": "delivered"
+      }
+    ]
+  },
+  "passed": true
+}

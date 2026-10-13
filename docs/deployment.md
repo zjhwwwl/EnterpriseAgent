@@ -2,7 +2,7 @@
 
 ## 实际支持范围
 
-Phase 4 支持 **Windows本机FastAPI / LangGraph / CPU ONNX + Linux PostgreSQL / Redis / Chroma容器**。本地工程及真实HTTP重启验收已完成，DeepSeek在线效果尚未验收。当前Compose为基础设施，没有应用Dockerfile、全栈前端镜像、GitHub Actions执行、公网发布或生产部署证明。
+Phase 4 支持 **Windows本机FastAPI / LangGraph / CPU ONNX + Linux PostgreSQL / Redis / Chroma容器**。初验本地工程和真实HTTP重启通过，后续真实在线5场景烟测通过；在线修复后[517项完整复验通过](../evals/results/phase4-live/verification.json)，仍无完整模型质量评估。当前Compose为基础设施，没有应用Dockerfile、全栈前端镜像、GitHub Actions执行、公网发布或生产部署证明。
 
 默认仅绑定 loopback，使用虚构数据与公开演示账号。没有真实支付、退款或付费云资源。
 
@@ -130,7 +130,7 @@ Redis 与 Chroma 当前没有公网认证方案，仅 loopback 隔离。需要�
 | EA_AGENT_MAX_RETRIES | 2，范围0–2，明确临时失败的有限重试 |
 | EA_AGENT_MAX_HISTORY_MESSAGES | 12，范围2–24，完整问答对 |
 
-HTTPX 发送 OpenAI 兼容 Chat Completions，显式 Thinking disabled、非流式、temperature=0；不装 OpenAI SDK，不强制 tool_choice。协议参考 [DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)。模型选择与工具效果需要在线实际调用验证，当前缺 Key，不能把受控图测试当作 DeepSeek 在线结果。
+HTTPX发送OpenAI兼容Chat Completions，Thinking disabled、非流式、temperature=0；三个控制工具使用named tool_choice，业务工具auto，不装OpenAI SDK。[DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)是协议来源。本机已用忽略的本地配置启用模型，真实有限烟测见[在线报告](../evals/results/phase4-live/report.md)；模板仍默认禁用，受控图测试不冒称在线结果。
 
 迁移包括 0003_agent 的官方 Checkpoint 与 0004_agent_role 的不可变会话创建角色。角色变化需新会话，恢复原相同角色后可访问原合法会话；服务端私有 thread 不能通过 HTTP 指定。Agent 随请求运行，无后台 Worker 或自动任务重领；中断后显式调用 recover 核对已提交业务。
 
@@ -154,9 +154,9 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/ready'
 
 ready 要求 application、database、已配置 Redis、已启用 knowledge 和已建立 agent_checkpoint 通过。数据库验证当前迁移 head、必需权限及账号边界；knowledge 校验本地模型与 Chroma 心跳，checkpoint 检查官方 SDK 版本和运行账号权限。健康不验证每个语料活动索引、模型配置或 DeepSeek 在线状态。
 
-完整检查结果保存本阶段var/test-results JSON/JUnit；Phase 4最终511项通过，零失败/错误/跳过，Ruff与pip check通过，公共证据见[验收记录](phase-4.md)及[验证摘要](../evals/results/phase4/verification.json)。检索评估输出路径仍由evaluate-rag配置，历史Phase 3原始JSON/CSV/报告保留，不作为Phase 4 Agent效果分数。依赖缺失的跳过不属于通过，SkipPostgres/SkipRag只用于局部开发。
+完整检查结果保存本阶段var/test-results JSON/JUnit；Phase 4初验511项通过，零失败/错误/跳过，Ruff与pip check通过，公共证据见[验收记录](phase-4.md)及[验证摘要](../evals/results/phase4/verification.json)。检索评估输出路径仍由evaluate-rag配置，历史Phase 3原始JSON/CSV/报告保留，不作为Phase 4 Agent效果分数。依赖缺失的跳过不属于通过，SkipPostgres/SkipRag只用于局部开发。
 
-应用代码升级后必须重启，并实际检查版本、phase、ready和知识接口，不能将旧进程当作最新服务。[最新主服务HTTP](../evals/results/phase4/demo-http.json)确认0.4.0、五项健康、所属会话201、越权404、非法角色422、缺模型503且零新增任务；健康通过不代表DeepSeek在线成功。
+应用升级后必须重启。[初验主服务HTTP](../evals/results/phase4/demo-http.json)保留启用模型前的五项健康、会话201、越权404、非法角色422、缺模型503/零任务；其onlinefalse历史不改。后来真实在线结果独立归档于[phase4-live](../evals/results/phase4-live/report.md)，健康仍不发送模型请求。
 
 ## 关闭与后续交付
 

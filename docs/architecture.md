@@ -2,7 +2,7 @@
 
 ## 当前实现
 
-Phase 4 在 FastAPI、PostgreSQL、订单售后及真实本地 RAG 上加入 LangGraph 单 Agent、DeepSeek Tool Calling 兼容适配、官方 PostgreSQL Checkpoint、会话任务 API、有限执行与人工审批。直接知识接口仍返回 evidence_only；Agent 通过原文抽取回答知识问题、通过 Service 事实报告订单结果。511项工程检查与真实TCP重启验收通过，DeepSeek在线效果尚未验收。MCP、NL SQL、Vue、独立Worker与Langfuse尚未实现，实测边界见[Phase 4](phase-4.md)。
+Phase 4 在 FastAPI、PostgreSQL、订单售后及真实本地 RAG 上加入 LangGraph 单 Agent、DeepSeek Tool Calling 兼容适配、官方 PostgreSQL Checkpoint、会话任务 API、有限执行与人工审批。直接知识接口仍返回 evidence_only；Agent 通过原文抽取回答知识问题、通过 Service 事实报告订单结果。初验511项工程检查与真实TCP重启通过；真实在线手选烟测最终5/5检查通过，但不代表完整模型质量。在线修复后110项核心回归通过，冻结源码[517项完整复验通过](../evals/results/phase4-live/verification.json)。MCP、NL SQL、Vue、独立Worker与Langfuse尚未实现，实测边界见[Phase 4](phase-4.md)。
 
 采用模块化单体：API、Service、Repository、Schemas、Agents、Tools 分工明确，模型和前端不能自行修改订单状态或替换当前用户身份。图随请求执行，人工等待写入 Checkpoint；没有任务队列 Worker。
 

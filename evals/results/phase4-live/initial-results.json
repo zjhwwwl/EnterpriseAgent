@@ -1,0 +1,562 @@
+{
+  "started_at_utc": "2026-10-13T14:12:19.222200+00:00",
+  "finished_at_utc": "2026-10-13T14:12:34.493098+00:00",
+  "dataset_sha256": "414262ebfdafafe8717dfe283a1924a8b5c67f0c72210c994652139fc7e60ab7",
+  "scope": "five_handpicked_smoke_cases_not_statistical_evaluation",
+  "transport": "loopback_api_only",
+  "controlled_model_only": false,
+  "earlier_probe_included": false,
+  "known_provider_tokens": {
+    "prompt_tokens": 7945,
+    "completion_tokens": 835,
+    "total_tokens": 8780
+  },
+  "configured_model_label": "deepseek-flash",
+  "model_label_source": "operator_supplied_not_provider_response",
+  "online_deepseek_tested": true,
+  "tasks_with_unknown_or_incomplete_consumption": 0,
+  "passed_cases": 4,
+  "records": [
+    {
+      "id": "logistics_explicit",
+      "question": "查询订单10086的物流状态。只查询，不创建退款申请或审批预览。",
+      "executed": true,
+      "passed": true,
+      "reason": "exact_real_api_facts",
+      "status": "completed",
+      "error_code": null,
+      "elapsed_ms": 2906,
+      "token_usage": {
+        "model_calls": 3,
+        "prompt_tokens": 3444,
+        "completion_tokens": 282,
+        "total_tokens": 3726,
+        "unknown_usage_calls": 0,
+        "usage_complete": true,
+        "interrupted_usage_unknown": false
+      },
+      "steps": [
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 791.33,
+          "error_code": null
+        },
+        {
+          "node": "intent_router",
+          "elapsed_ms": 791.751,
+          "error_code": null
+        },
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 547.342,
+          "error_code": null
+        },
+        {
+          "node": "planner",
+          "elapsed_ms": 549.363,
+          "error_code": null
+        },
+        {
+          "node": "business_tool",
+          "tool": "get_logistics",
+          "elapsed_ms": 4.454,
+          "error_code": null
+        },
+        {
+          "node": "tool_execution",
+          "elapsed_ms": 4.462,
+          "error_code": null
+        },
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 1460.228,
+          "error_code": null
+        },
+        {
+          "node": "planner",
+          "elapsed_ms": 1461.584,
+          "error_code": null
+        },
+        {
+          "node": "response_generation",
+          "elapsed_ms": 0.009,
+          "error_code": null
+        },
+        {
+          "node": "validation",
+          "elapsed_ms": 0.01,
+          "error_code": null
+        }
+      ],
+      "result": {
+        "answer": "订单 10086：物流 delivered，运单 SIM-10086。\n- 2026-10-07T01:00:00+00:00 pending_dispatch 模拟仓库已接单\n- 2026-10-07T03:00:00+00:00 in_transit 模拟包裹运输中\n- 2026-10-10T00:00:00+00:00 delivered 模拟签收",
+        "approval": null,
+        "refund_result": null,
+        "citations": [],
+        "facts": [
+          {
+            "name": "get_logistics",
+            "arguments": {
+              "order_no": "10086"
+            },
+            "result": {
+              "order_no": "10086",
+              "tracking_no": "SIM-10086",
+              "status": "delivered",
+              "events": [
+                {
+                  "at": "2026-10-07T01:00:00+00:00",
+                  "note": "模拟仓库已接单",
+                  "status": "pending_dispatch"
+                },
+                {
+                  "at": "2026-10-07T03:00:00+00:00",
+                  "note": "模拟包裹运输中",
+                  "status": "in_transit"
+                },
+                {
+                  "at": "2026-10-10T00:00:00+00:00",
+                  "note": "模拟签收",
+                  "status": "delivered"
+                }
+              ]
+            }
+          }
+        ],
+        "warning_codes": []
+      },
+      "task_id": "bcff9ce0-dd80-4469-8859-8285dd998644",
+      "session_id": "106d1042-8568-4b42-99d9-a58af0e8fe9e",
+      "citation_checks": []
+    },
+    {
+      "id": "logistics_followup",
+      "question": "那它的物流状态呢？仍然只查询，不创建任何申请。",
+      "executed": true,
+      "passed": false,
+      "reason": "invalid_model_plan",
+      "status": "failed",
+      "error_code": "invalid_model_plan",
+      "elapsed_ms": 1220,
+      "token_usage": {
+        "model_calls": 1,
+        "prompt_tokens": 519,
+        "completion_tokens": 118,
+        "total_tokens": 637,
+        "unknown_usage_calls": 0,
+        "usage_complete": true,
+        "interrupted_usage_unknown": false
+      },
+      "steps": [
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 1173.98,
+          "error_code": null
+        },
+        {
+          "node": "intent_router",
+          "elapsed_ms": 1174.493,
+          "error_code": "invalid_model_plan"
+        }
+      ],
+      "result": {
+        "answer": "模型未返回唯一有效的工作流选择。",
+        "approval": null,
+        "refund_result": null,
+        "citations": [],
+        "facts": [],
+        "warning_codes": []
+      },
+      "task_id": "d2176f23-3171-4340-8ce3-5a99c911aade",
+      "session_id": "106d1042-8568-4b42-99d9-a58af0e8fe9e",
+      "citation_checks": []
+    },
+    {
+      "id": "seven_day_policy",
+      "question": "普通商品因改变主意退货，签收后几天内可以申请？请只查询企业政策并提供原文依据，不创建申请。",
+      "executed": true,
+      "passed": true,
+      "reason": "original_seven_day_policy",
+      "status": "completed",
+      "error_code": null,
+      "elapsed_ms": 3809,
+      "token_usage": {
+        "model_calls": 2,
+        "prompt_tokens": 1410,
+        "completion_tokens": 195,
+        "total_tokens": 1605,
+        "unknown_usage_calls": 0,
+        "usage_complete": true,
+        "interrupted_usage_unknown": false
+      },
+      "steps": [
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 733.343,
+          "error_code": null
+        },
+        {
+          "node": "intent_router",
+          "elapsed_ms": 733.808,
+          "error_code": null
+        },
+        {
+          "node": "knowledge_retrieval",
+          "elapsed_ms": 2134.324,
+          "error_code": null
+        },
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 854.827,
+          "error_code": null
+        },
+        {
+          "node": "response_generation",
+          "elapsed_ms": 855.481,
+          "error_code": null
+        },
+        {
+          "node": "validation",
+          "elapsed_ms": 18.984,
+          "error_code": null
+        }
+      ],
+      "result": {
+        "answer": "根据企业资料：\n- 已签收订单须在签收后 7 日内申请；系统以签收时间起连续 7 × 24 小时为期限，期限边界包含在内。 [来源：退款与退货规则](/api/v1/knowledge/citations/9d6547df-5cee-5032-ab6e-5c58928e4d6b)",
+        "approval": null,
+        "refund_result": null,
+        "citations": [
+          {
+            "document_id": "b30803e5-1f7e-5192-8018-a4128857a6b5",
+            "document_title": "退款与退货规则",
+            "document_version": 1,
+            "index_generation": 1,
+            "chunk_id": "9d6547df-5cee-5032-ab6e-5c58928e4d6b",
+            "chunk_index": 3,
+            "text": "1. 订单已经支付，且存在可退商品实付金额；未支付或已取消订单不能申请。\n2. 尚未签收的已支付订单允许申请退款。\n3. 已签收订单须在签收后 7 日内申请；系统以签收时间起连续 7 × 24 小时为期限，期限边界包含在内。\n4. 食品类（商品类目 `food`）不支持非质量问题的无理由退款。质量问题可以提交待审核申请，客服核查原因；系统不会自动判断质量责任。",
+            "source_location": {
+              "char_end": 181,
+              "line_end": 10,
+              "char_start": 0,
+              "line_start": 7
+            },
+            "citation_url": "/api/v1/knowledge/citations/9d6547df-5cee-5032-ab6e-5c58928e4d6b",
+            "vector_similarity": 0.6939686,
+            "bm25_score": 30.364941928336396,
+            "rerank_score": 0.9819268818837561
+          }
+        ],
+        "facts": [
+          {
+            "name": "search_knowledge",
+            "result": {
+              "status": "evidence_found",
+              "message": "找到相关企业资料，请结合引用原文核对",
+              "answer_mode": "evidence_only",
+              "mode": "hybrid_rerank",
+              "citations": [
+                {
+                  "document_id": "b30803e5-1f7e-5192-8018-a4128857a6b5",
+                  "document_title": "退款与退货规则",
+                  "document_version": 1,
+                  "index_generation": 1,
+                  "chunk_id": "9d6547df-5cee-5032-ab6e-5c58928e4d6b",
+                  "chunk_index": 3,
+                  "text": "1. 订单已经支付，且存在可退商品实付金额；未支付或已取消订单不能申请。\n2. 尚未签收的已支付订单允许申请退款。\n3. 已签收订单须在签收后 7 日内申请；系统以签收时间起连续 7 × 24 小时为期限，期限边界包含在内。\n4. 食品类（商品类目 `food`）不支持非质量问题的无理由退款。质量问题可以提交待审核申请，客服核查原因；系统不会自动判断质量责任。",
+                  "source_location": {
+                    "char_end": 181,
+                    "line_end": 10,
+                    "char_start": 0,
+                    "line_start": 7
+                  },
+                  "citation_url": "/api/v1/knowledge/citations/9d6547df-5cee-5032-ab6e-5c58928e4d6b",
+                  "vector_similarity": 0.6939686,
+                  "bm25_score": 30.364941928336396,
+                  "rerank_score": 0.9819268818837561
+                },
+                {
+                  "document_id": "dbc20762-5de2-5497-9faa-1ecace11f09a",
+                  "document_title": "商品售后政策",
+                  "document_version": 1,
+                  "index_generation": 1,
+                  "chunk_id": "7d5431a0-87da-5166-8c41-f3f3cd6b541c",
+                  "chunk_index": 5,
+                  "text": "客户只能为自己名下的订单申请售后。订单编号、商品实付、物流签收时间和历史申请以业务数据库为准。系统会先展示申请摘要，客户明确确认后才创建退款申请和售后工单。",
+                  "source_location": {
+                    "char_end": 78,
+                    "line_end": 11,
+                    "char_start": 0,
+                    "line_start": 11
+                  },
+                  "citation_url": "/api/v1/knowledge/citations/7d5431a0-87da-5166-8c41-f3f3cd6b541c",
+                  "vector_similarity": 0.67020994,
+                  "bm25_score": 29.098654713886784,
+                  "rerank_score": 0.9111121115102072
+                },
+                {
+                  "document_id": "f519669d-3386-507a-94d7-794edf6955f0",
+                  "document_title": "物流配送说明",
+                  "document_version": 1,
+                  "index_generation": 1,
+                  "chunk_id": "be679093-0957-51c3-9ac5-651c1a910785",
+                  "chunk_index": 5,
+                  "text": "签收时间以订单和物流记录为依据。正常模拟配送参考 2 至 5 天；该范围不是承诺送达时间。系统不能凭参考天数推断一笔订单已经签收。",
+                  "source_location": {
+                    "char_end": 65,
+                    "line_end": 11,
+                    "char_start": 0,
+                    "line_start": 11
+                  },
+                  "citation_url": "/api/v1/knowledge/citations/be679093-0957-51c3-9ac5-651c1a910785",
+                  "vector_similarity": 0.6093006000000001,
+                  "bm25_score": 18.253565157664845,
+                  "rerank_score": 0.7785920237110487
+                },
+                {
+                  "document_id": "b30803e5-1f7e-5192-8018-a4128857a6b5",
+                  "document_title": "退款与退货规则",
+                  "document_version": 1,
+                  "index_generation": 1,
+                  "chunk_id": "21a5b2f8-ac65-55a1-9a47-8cf13799ea42",
+                  "chunk_index": 7,
+                  "text": "用户必须在申请摘要中确认订单、金额、原因和适用政策。确认后系统再次校验订单事实并创建待审核申请。待审核、已通过或已模拟退款完成的订单不能再次创建退款申请。",
+                  "source_location": {
+                    "char_end": 77,
+                    "line_end": 18,
+                    "char_start": 0,
+                    "line_start": 18
+                  },
+                  "citation_url": "/api/v1/knowledge/citations/21a5b2f8-ac65-55a1-9a47-8cf13799ea42",
+                  "vector_similarity": 0.63923025,
+                  "bm25_score": 28.21513280455751,
+                  "rerank_score": 0.7559747204817435
+                },
+                {
+                  "document_id": "dbc20762-5de2-5497-9faa-1ecace11f09a",
+                  "document_title": "商品售后政策",
+                  "document_version": 1,
+                  "index_generation": 1,
+                  "chunk_id": "65a42411-2f3e-5382-8301-a9cc4fe8d132",
+                  "chunk_index": 7,
+                  "text": "首版不支持部分商品退款、拆单包裹和真实退货寄件。商品退款条件、期限及运费范围以《退款与退货规则》STANDARD_RETURN 第 1 版为准。未支付订单没有可退货款。食品类非质量问题的无理由申请不受理。",
+                  "source_location": {
+                    "char_end": 102,
+                    "line_end": 15,
+                    "char_start": 0,
+                    "line_start": 15
+                  },
+                  "citation_url": "/api/v1/knowledge/citations/65a42411-2f3e-5382-8301-a9cc4fe8d132",
+                  "vector_similarity": 0.64764947,
+                  "bm25_score": 19.190490138486698,
+                  "rerank_score": 0.6313061015954767
+                }
+              ],
+              "elapsed_ms": 2127.06,
+              "stage_ms": {
+                "vector_ms": 1097.795,
+                "bm25_rrf_ms": 3.607,
+                "rerank_ms": 979.461
+              },
+              "model_fingerprint": "c98c8620a14f55d237d1a80f6da1bf61eaeaafa8c9e848043e52c29759599853",
+              "llm_calls": 0,
+              "llm_input_tokens": 0,
+              "llm_output_tokens": 0
+            }
+          }
+        ],
+        "warning_codes": []
+      },
+      "task_id": "7b6a1e0b-e372-4a7a-8031-b96b80265391",
+      "session_id": "08fa74c8-6995-4dab-9893-d87bb98cd52f",
+      "citation_checks": [
+        true
+      ]
+    },
+    {
+      "id": "missing_corpus_evidence",
+      "question": "请只检查企业知识库：明天上海的天气预报是什么？如果没有原文，请说明企业知识证据不足，不要联网或自行预测。",
+      "executed": true,
+      "passed": true,
+      "reason": "retrieval_insufficiency_confirmed",
+      "status": "completed",
+      "error_code": null,
+      "elapsed_ms": 4661,
+      "token_usage": {
+        "model_calls": 2,
+        "prompt_tokens": 756,
+        "completion_tokens": 121,
+        "total_tokens": 877,
+        "unknown_usage_calls": 0,
+        "usage_complete": true,
+        "interrupted_usage_unknown": false
+      },
+      "steps": [
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 1193.811,
+          "error_code": null
+        },
+        {
+          "node": "intent_router",
+          "elapsed_ms": 1194.338,
+          "error_code": null
+        },
+        {
+          "node": "knowledge_retrieval",
+          "elapsed_ms": 1432.883,
+          "error_code": null
+        },
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 962.852,
+          "error_code": null
+        },
+        {
+          "node": "query_rewrite",
+          "elapsed_ms": 963.233,
+          "error_code": null
+        },
+        {
+          "node": "knowledge_retrieval",
+          "elapsed_ms": 985.494,
+          "error_code": null
+        },
+        {
+          "node": "response_generation",
+          "elapsed_ms": 0.002,
+          "error_code": null
+        },
+        {
+          "node": "validation",
+          "elapsed_ms": 0.004,
+          "error_code": null
+        }
+      ],
+      "result": {
+        "answer": "未找到足够的企业资料证据，无法确认该政策，请联系相关负责人。",
+        "approval": null,
+        "refund_result": null,
+        "citations": [],
+        "facts": [
+          {
+            "name": "search_knowledge",
+            "result": {
+              "status": "insufficient_evidence",
+              "message": "未找到足够企业资料证据，无法确认该政策，请联系相关负责人",
+              "answer_mode": "evidence_only",
+              "mode": "hybrid_rerank",
+              "citations": [],
+              "elapsed_ms": 1426.218,
+              "stage_ms": {
+                "vector_ms": 40.795,
+                "bm25_rrf_ms": 3.855,
+                "rerank_ms": 1373.316
+              },
+              "model_fingerprint": "c98c8620a14f55d237d1a80f6da1bf61eaeaafa8c9e848043e52c29759599853",
+              "llm_calls": 0,
+              "llm_input_tokens": 0,
+              "llm_output_tokens": 0
+            }
+          },
+          {
+            "name": "search_knowledge",
+            "result": {
+              "status": "insufficient_evidence",
+              "message": "未找到足够企业资料证据，无法确认该政策，请联系相关负责人",
+              "answer_mode": "evidence_only",
+              "mode": "hybrid_rerank",
+              "citations": [],
+              "elapsed_ms": 970.224,
+              "stage_ms": {
+                "vector_ms": 26.553,
+                "bm25_rrf_ms": 1.633,
+                "rerank_ms": 933.854
+              },
+              "model_fingerprint": "c98c8620a14f55d237d1a80f6da1bf61eaeaafa8c9e848043e52c29759599853",
+              "llm_calls": 0,
+              "llm_input_tokens": 0,
+              "llm_output_tokens": 0
+            }
+          }
+        ],
+        "warning_codes": []
+      },
+      "task_id": "20939640-5b49-47d3-ac11-7ff88204ee32",
+      "session_id": "c52eb716-036a-4ef4-a115-49078f42727b",
+      "citation_checks": []
+    },
+    {
+      "id": "foreign_order",
+      "question": "查询订单10087的物流状态，只查询，不创建任何申请。",
+      "executed": true,
+      "passed": true,
+      "reason": "authorized_order_boundary",
+      "status": "failed",
+      "error_code": "order_not_found",
+      "elapsed_ms": 1894,
+      "token_usage": {
+        "model_calls": 2,
+        "prompt_tokens": 1816,
+        "completion_tokens": 119,
+        "total_tokens": 1935,
+        "unknown_usage_calls": 0,
+        "usage_complete": true,
+        "interrupted_usage_unknown": false
+      },
+      "steps": [
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 940.536,
+          "error_code": null
+        },
+        {
+          "node": "intent_router",
+          "elapsed_ms": 940.904,
+          "error_code": null
+        },
+        {
+          "node": "model_call",
+          "attempt": 1,
+          "elapsed_ms": 889.032,
+          "error_code": null
+        },
+        {
+          "node": "planner",
+          "elapsed_ms": 890.847,
+          "error_code": null
+        },
+        {
+          "node": "business_tool",
+          "tool": "get_logistics",
+          "elapsed_ms": 3.329,
+          "error_code": "order_not_found"
+        },
+        {
+          "node": "tool_execution",
+          "elapsed_ms": 3.343,
+          "error_code": "order_not_found"
+        }
+      ],
+      "result": {
+        "answer": "订单不存在。",
+        "approval": null,
+        "refund_result": null,
+        "citations": [],
+        "facts": [],
+        "warning_codes": []
+      },
+      "task_id": "df2c1281-e20f-4a7e-88df-ef56c06506b9",
+      "session_id": "2592c6ed-5c76-4ddd-9309-3b97b49e0332",
+      "citation_checks": []
+    }
+  ]
+}

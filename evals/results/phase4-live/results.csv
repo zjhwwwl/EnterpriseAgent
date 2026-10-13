@@ -1,0 +1,6 @@
+﻿id,executed,passed,reason,status,elapsed_ms,prompt_tokens,completion_tokens,total_tokens,unknown_usage_calls
+logistics_explicit,True,True,exact_real_api_facts,completed,3299,3552,240,3792,0
+logistics_followup,True,True,exact_real_api_facts,completed,3026,3654,237,3891,0
+seven_day_policy,True,True,original_seven_day_policy,completed,4188,1469,185,1654,0
+missing_corpus_evidence,True,True,retrieval_insufficiency_confirmed,completed,4128,765,110,875,0
+foreign_order,True,True,authorized_order_boundary,failed,1407,1875,103,1978,0
