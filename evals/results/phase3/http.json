@@ -1,0 +1,74 @@
+{
+  "utc": "2026-10-13T02:21:19.871313+00:00",
+  "checks": [
+    {
+      "check": "phase3_readiness",
+      "passed": true,
+      "checks": {
+        "application": "ok",
+        "database": "ok",
+        "redis": "ok",
+        "knowledge": "ok"
+      }
+    },
+    {
+      "check": "openapi_knowledge_routes",
+      "passed": true
+    },
+    {
+      "check": "three_role_authentication",
+      "passed": true
+    },
+    {
+      "check": "unauthenticated_and_nonadmin_writes_refused",
+      "passed": true
+    },
+    {
+      "check": "published_refund_source_protected",
+      "passed": true
+    },
+    {
+      "check": "multipart_upload_and_real_index_public",
+      "passed": true,
+      "generation": 1
+    },
+    {
+      "check": "real_search_download_citation_public",
+      "passed": true
+    },
+    {
+      "check": "reindex_retires_old_citation_public",
+      "passed": true
+    },
+    {
+      "check": "delete_hides_document_public",
+      "passed": true
+    },
+    {
+      "check": "multipart_upload_and_real_index_internal",
+      "passed": true,
+      "generation": 1
+    },
+    {
+      "check": "real_search_download_citation_internal",
+      "passed": true
+    },
+    {
+      "check": "internal_scope_enforced_for_all_read_paths",
+      "passed": true
+    },
+    {
+      "check": "reindex_retires_old_citation_internal",
+      "passed": true
+    },
+    {
+      "check": "delete_hides_document_internal",
+      "passed": true
+    },
+    {
+      "check": "off_topic_evidence_refused_without_generation",
+      "passed": true
+    }
+  ],
+  "passed": 15
+}

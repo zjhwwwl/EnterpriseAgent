@@ -1,6 +1,16 @@
 name: enterpriseagent
 
 services:
+  chroma:
+    image: chromadb/chroma:1.5.9
+    environment:
+      ANONYMIZED_TELEMETRY: "False"
+    ports:
+      - "127.0.0.1:58000:8000"
+    volumes:
+      - ${EA_CHROMA_DATA_DIR:-../var/chroma-data}:/data
+    restart: unless-stopped
+
   postgres:
     image: postgres:17.11-bookworm
     environment:

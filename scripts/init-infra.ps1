@@ -1,6 +1,7 @@
 param(
     [string]$PostgresDataDir = 'D:\DockerData\enterpriseagent\postgres',
-    [string]$RedisDataDir = 'D:\DockerData\enterpriseagent\redis'
+    [string]$RedisDataDir = 'D:\DockerData\enterpriseagent\redis',
+    [string]$ChromaDataDir = 'D:\DockerData\enterpriseagent\chroma'
 )
 . (Join-Path $PSScriptRoot 'common.ps1')
 $dockerPath = Get-ProjectDocker
@@ -33,10 +34,12 @@ if (-not (Test-Path -LiteralPath $credentialsPath)) {
         'EA_REDIS_URL=redis://127.0.0.1:56379/0'
         "EA_POSTGRES_DATA_DIR=$($PostgresDataDir.Replace('\', '/'))"
         "EA_REDIS_DATA_DIR=$($RedisDataDir.Replace('\', '/'))"
+        "EA_CHROMA_DATA_DIR=$($ChromaDataDir.Replace('\', '/'))"
     )
     [IO.File]::WriteAllLines($credentialsPath, $lines, $utf8)
 }
 Import-LocalInfra
+if (-not $env:EA_CHROMA_DATA_DIR) { $env:EA_CHROMA_DATA_DIR = $ChromaDataDir.Replace('\', '/') }
 Push-Location $projectPath
 try {
     & $dockerPath compose --env-file var/infra-secrets.env -f deploy/compose.yaml up -d --wait

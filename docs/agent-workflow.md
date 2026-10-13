@@ -1,6 +1,6 @@
 # LangGraph 工作流设计
 
-**当前 Phase 2 尚未实现 LangGraph、Tool Calling、Checkpoint 或 RAG。** 已实现后端业务确认、确定性退款 Service 和订单 API，可供后续工具复用；业务确认尚不是 LangGraph interrupt。本文件记录 Phase 4 合同，以及 Phase 3 / 5 / 6 对接边界。
+**当前 Phase 3 尚未实现 LangGraph、Tool Calling、Checkpoint 或生成模型回答。** 已实现后端确认、确定性退款 Service、订单 API 和真实知识检索，可供后续工具复用；知识响应为 evidence_only，业务确认尚不是 LangGraph interrupt。本文件记录 Phase 4 合同和 Phase 5/6 对接边界。
 
 ## 单 Agent 多工具
 
@@ -48,7 +48,7 @@ flowchart TD
 
 `agent_sessions` 与 `agent_tasks` 的模型和迁移已存在，但当前没有会话/任务 API 或图执行。Phase 4 会以会话所有者绑定 thread，并由 LangGraph PostgreSQL Checkpointer 保存恢复状态。HTTP 客户端不能指定另一用户身份或自由访问他人 thread ID。
 
-初期同一线程串行执行。Worker 用租约领取任务，超时租约可恢复。等待用户确认时持久化中断并释放 Worker，不占用 30 分钟的运行资源。
+Phase 4 计划同一 thread 串行执行，确认等待以持久化中断保存，避免占用整个等待期的执行资源。当前没有独立 Worker、任务租约或自动领取/恢复机制，数据库任务表不代替这些实现。
 
 ## 工具合同
 
@@ -79,7 +79,7 @@ LangGraph 恢复时可能重新执行中断所在节点，因此副作用放在�
 
 ## 有限执行
 
-初始限制在配置中暴露，对应测试必须验证终止分支：
+以下是 Phase 4 初始设计值，届时在配置中实现并测试终止分支；当前尚未生效：
 
 | 限制 | 初始值 |
 | --- | --- |
@@ -106,10 +106,21 @@ Validation 计划检查引用是否存在、文档版本是否有效、用户是
 
 接口地址、模型和 Thinking 选项配置化，通过 OpenAI 兼容接口接入。先验证非 Thinking 工具调用路径，不依赖 Thinking 模式中不受支持的强制工具选项。具体限制以实现时的 [DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/) 和实际调用为准。
 
-Phase 2 仍只预留模型安全配置，没有模型 Client，不发出模型请求。后续在线测试必须使用实际 API 返回的耗时和 Token；测试替身仅证明流程，不证明模型效果。
+Phase 3 只预留聊天模型安全配置，没有 DeepSeek Client 或生成请求；本地 Embedding/Reranker 已真实执行。后续在线测试必须使用实际 API 返回的耗时和 Token；测试替身仅证明流程，不证明模型效果。
 
 ## MCP 和分析分支
 
 MCP 首版提供 stdio Server，封装 `query_order`、`query_logistics`、`query_refund_policy`。真实 Client 子进程演示工具发现、参数校验与错误。至少接入一条 Agent 的只读 MCP 路径，退款写入继续经过本地确认与 Service。
 
 分析分支仅在角色授权后提供白名单视图 Schema，由独立只读 Service 执行。SQL 失败允许一次修复，每次均重新做 AST、视图、列和函数校验。报告明确指标口径，只解释结果所能支持的结论。
+
+
+## 已实现的 RAG 对接合同
+
+Phase 3 的 KnowledgeService.search 接受可信 Principal 和 SearchInput，支持 vector/hybrid/hybrid_rerank。返回 evidence_found 或 insufficient_evidence、固定 evidence_only、文档/版本/Chunk/位置、阶段耗时及真实模型指纹；没有自然语言生成结论。
+
+角色过滤与活动代数检查在SQL执行，模型推理后再校验，旧引用通过citation详情拒绝。未来图的Knowledge Retrieval节点直接复用该Service，不在图内复制权限，也不将检索文本直接变成可执行退款政策。
+
+分数门槛只是相关性启发式。Phase4需要明确如何判断具体问题的证据支持、政策版本和业务事实；不能因为evidence_found就跳过工具事实或宣称答案语义充分。有限查询改写、Response Generation及Validation当前均是后续设计。
+
+RAG线程超时后仍占用实际容量到结束，这与Agent最大步数/有限重试是不同边界。未来图的重试不能绕过RAG预算或创建无限模型工作线程。当前30条检索对照也不等同于Agent任务完成率评估。

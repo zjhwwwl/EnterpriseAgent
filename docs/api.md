@@ -1,6 +1,6 @@
 # API 契约
 
-**当前版本 0.2.0 / Phase 2。** 已实现基础健康、认证、订单和退款接口。RAG、Agent、任务、MCP、知识库管理和分析 API 尚未提供。OpenAPI 与实际代码是当前契约来源。
+**当前版本 0.3.0 / Phase 3。** 已实现健康、认证、订单、退款、知识库管理和证据检索接口。LangGraph、聊天生成、任务、MCP 和分析 API 尚未提供。OpenAPI 与实际代码是当前契约来源。
 
 ## 基础接口与认证
 
@@ -8,13 +8,13 @@
 
 | 方法 | 路径 | 成功码 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/` | 200 | 名称、版本、phase=2、文档及健康入口 |
+| GET | `/` | 200 | 名称、版本、phase=3、文档及健康入口 |
 | GET | `/health/live` | 200 | HTTP 进程存活 |
 | GET | `/health/ready` | 200 / 503 | 实际数据库与已配置 Redis 的就绪检查 |
 | POST | `/api/v1/auth/login` | 200 | JSON 账号密码，返回 JWT |
 | GET | `/api/v1/auth/me` | 200 | 需要 Bearer Token，返回当前用户 |
 
-就绪响应的 `checks` 包含 application、database；配置 Redis 时包含 redis。数据库检查连通、Alembic head、业务所需读取/写入权限和普通运行账号。数据库 owner、表 owner、超级用户、public CREATE、订单状态 UPDATE 或审计 UPDATE / DELETE 等超额权限会被拒绝，缺少业务必需权限也返回 503。未配置、未迁移或依赖故障不算就绪，不暴露连接信息，也不检查尚未实现的 Chroma / 模型。
+就绪响应的 `checks` 包含 application、database；配置 Redis 时包含 redis，启用 RAG 时包含 knowledge。数据库检查 Alembic `0002_knowledge`、业务必需权限和普通运行账号；库/表 owner、超级用户、public CREATE、订单状态 UPDATE 或审计 UPDATE/DELETE 等超额权限被拒绝。knowledge 检查固定本地模型文件及 Chroma 心跳。未配置、未迁移或依赖故障不算就绪，健康通过也不证明所有文档已索引或每个问题都有答案。
 
 登录请求：
 
@@ -142,4 +142,87 @@ $result | Select-Object status, replayed, refund
 
 ## 后续接口
 
-知识库上传/删除/重新索引、Agent 会话与执行步骤、LangGraph 中断恢复、MCP 和自然语言分析在对应阶段实现。本阶段的业务确认尚不是 LangGraph interrupt，也不提供可任意提交 resume 命令的 HTTP 接口。
+Agent 会话与执行步骤、LangGraph 中断恢复、MCP 和自然语言分析在后续阶段实现。本阶段的业务确认尚不是 LangGraph interrupt，也不提供可任意提交 resume 命令的 HTTP 接口。知识库接口如下。
+
+
+## 知识库管理
+
+所有接口需要 Bearer Token。customer、analyst 仅可访问公开文档，support、admin 可访问公开及内部文档；写入只允许 admin。不存在和不可访问的文档/引用使用 404，客户端不能通过填写 user_id 或 role 改变权限。
+
+| 方法 | 路径 | 成功码 | 权限与用途 |
+| --- | --- | --- | --- |
+| GET | `/api/v1/knowledge/documents` | 200 | 可见文档分页列表 |
+| POST | `/api/v1/knowledge/documents` | 201 | admin 上传并尝试索引 |
+| GET | `/api/v1/knowledge/documents/{document_id}` | 200 | 当前文档登记及索引状态 |
+| GET | `/api/v1/knowledge/documents/{document_id}/download` | 200 | 受授权原件下载，attachment / nosniff |
+| POST | `/api/v1/knowledge/documents/{document_id}/reindex` | 200 | admin 重新索引，同步等待 |
+| DELETE | `/api/v1/knowledge/documents/{document_id}` | 204 | admin 软删除，退出检索 |
+| POST | `/api/v1/knowledge/search` | 200 | 真实检索与证据门槛 |
+| GET | `/api/v1/knowledge/citations/{chunk_id}` | 200 | 验证并取得当前合法 Chunk 引用 |
+
+上传为 multipart/form-data：
+
+| 字段 | 约束 |
+| --- | --- |
+| file | PDF、DOCX、TXT、.md 或 .markdown；普通文件名，拒绝路径字符 |
+| title | 1–200 字符，不能全为空白 |
+| visibility | public / internal，默认 public |
+
+默认文件上限 8 MiB，入口另有请求体限制。内容必须真实符合声明格式；TXT/Markdown 仅严格 UTF-8，支持 BOM。损坏、空、加密 PDF、无可提取文本 PDF、非法 DOCX ZIP/XML 会拒绝，不执行 OCR。上传过程调用真实解析、Embedding 与索引，没有隐式模型下载。
+
+201 表示原件已接受并登记；**不能仅根据 HTTP 成功码判断索引完成**。响应包含 id、title、file_type、checksum、version、visibility、status、index_generation、index_attempt_generation、chunk_count、index_error_code、indexed_at、created_at。上传后索引失败可以留下可重试的 failed 文档；重索引失败且已有发布代数时保留旧活动索引，并记录错误。路径及私有配置不会返回。
+
+重索引有进行中冲突与有限执行预算。它不是后台任务提交接口，不返回可轮询 Agent Task，也没有独立 Worker 队列。更新原件要上传新文档，重索引不替换原件/checksum。
+
+退款政策引用的来源文档不能删除，也不能替换标题、类型、路径、checksum、版本、可见性或删除状态；**允许重新索引**。Service 返回 policy_source_protected，数据库还通过独立 trigger 防止直接绕过。上传新政策文档不会改变现有结构化退款规则，也没有自动政策发布 API。
+
+## 检索与引用
+
+请求：
+
+```json
+{"query":"签收后的退款期限如何计算？","mode":"hybrid_rerank","top_k":5}
+```
+
+query 经清理后为 2–500 字符；拒绝额外字段与不合法控制字符。mode 支持 vector、hybrid、hybrid_rerank，默认 hybrid_rerank；top_k 取 1–10，默认 5，表示 Chunk 数量。
+
+| 返回字段 | 含义 |
+| --- | --- |
+| status | evidence_found / insufficient_evidence |
+| message | 证据可核对提示或无法确认说明，不是模型生成的政策答案 |
+| answer_mode | 固定 evidence_only |
+| citations | 通过当前权限、版本和相关性门槛的引用 |
+| elapsed_ms / stage_ms | 实际 Service 耗时、向量/混合/重排阶段 |
+| model_fingerprint | 当前索引与模型/分块兼容标识 |
+| llm_calls / llm_input_tokens / llm_output_tokens | 当前路径为零，未调用生成模型 |
+
+Citation 包含 document_id、document_title、document_version、index_generation、chunk_id、chunk_index、text、source_location、citation_url，以及实际可用的 vector_similarity、bm25_score、rerank_score。缺少某阶段的分数为 null，不填造结果。
+
+source_location 保留一基页码、段落、表格位置或行号；char_start 为解析 section 内零基字符起点，char_end 为不包含的终点。TXT/Markdown Chunk 行号按实际范围细化。
+
+Reranker 输出为 logit 经 sigmoid 得到的 0–1 未校准分数，不能当作概率。所有模式需通过向量相似度门槛；hybrid_rerank 还需同时通过重排分数门槛。evidence_found 只表示有候选通过相关性启发式，不能证明语义足够、政策无冲突或生成答案正确。当前没有查询改写、LLM 回答或 LangGraph 校验节点。
+
+检索前后都用 SQL 权限和活动代数约束，引用详情再次校验。删除文档或发布新代数后，旧 chunk_id 返回 citation_not_found；无法访问的内部文档也不会通过引用路径泄露。
+
+PowerShell 使用前文登录后的 customerHeaders：
+
+```powershell
+$searchBody = @{query='签收后的退款期限如何计算？'; mode='hybrid_rerank'; top_k=5} | ConvertTo-Json
+$evidence = Invoke-RestMethod -Method Post -Uri "$apiBase/knowledge/search" -Headers $customerHeaders -ContentType 'application/json' -Body $searchBody
+$evidence | Select-Object status, answer_mode, elapsed_ms, citations
+```
+
+Swagger 可用 admin 账号执行文件上传。生成真实文件并检查返回 status 与 chunk_count；不要将模拟文本粘贴后改扩展名当作 PDF/DOCX。
+
+## 知识库错误
+
+| 状态 | 示例 code | 含义 |
+| --- | --- | --- |
+| 403 | forbidden | 非 admin 执行维护 |
+| 404 | document_not_found / citation_not_found | 不存在、不可访问或引用失效 |
+| 409 | policy_source_protected / index_in_progress / document_source_changed | 政策来源、并发或原件冲突 |
+| 413 | document_too_large | 上传/原件大小超过接口预算 |
+| 422 | document_parse_failed / unsupported_document_type / document_chunk_limit | 格式、编码、内容或分块不合法 |
+| 503 | rag_not_enabled / rag_models_unavailable / rag_timeout / vector_store_unavailable | 配置或真实依赖/执行不可用 |
+
+底层解析错误不回显上传内容；上传、删除、索引开始、发布及失败记录必要审计。Chroma 客户端版本/距离配置不匹配时也会拒绝使用，不默默切到其他向量实现。

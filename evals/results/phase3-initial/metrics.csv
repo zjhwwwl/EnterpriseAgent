@@ -1,0 +1,5 @@
+﻿split,mode,queries,answerable_queries,off_topic_queries,recall_at_1,recall_at_3,recall_at_5,mrr,ndcg_at_5,execution_success_rate,answerable_gate_accept_rate,off_topic_rejection_rate,gate_accuracy,citation_validity_rate,checked_citations,errors,mean_latency_ms,p95_latency_ms,llm_calls,llm_input_tokens,llm_output_tokens,embedding_provider_token_usage,reranker_provider_token_usage
+dev,vector,10,8,2,0.8125,1.0,1.0,0.9375,0.9538662191964322,1,1,1,1,1,50,0,35.6151600019075,39.95910001685843,0,0,0,,
+dev,hybrid_rerank,10,8,2,0.8125,1.0,1.0,0.9375,0.9538662191964322,1,1,1,1,1,50,0,795.5462900048587,887.6731000491418,0,0,0,,
+test,vector,20,17,3,0.9411764705882353,1.0,1.0,1.0,1.0,1,1,1,1,1,100,0,35.584170001675375,36.871800024528056,0,0,0,,
+test,hybrid_rerank,20,17,3,0.9411764705882353,1.0,1.0,1.0,1.0,1,1,0.6666666666666666,0.95,1,100,0,794.2211100133136,854.6456000185572,0,0,0,,

@@ -179,6 +179,10 @@ class KnowledgeDocument(Base):
     __table_args__ = (
         CheckConstraint("version > 0", name="version_positive"),
         CheckConstraint("index_generation >= 0", name="index_generation_nonnegative"),
+        CheckConstraint(
+            "index_attempt_generation >= index_generation",
+            name="index_attempt_generation_ordered",
+        ),
         CheckConstraint("visibility IN ('public', 'internal')", name="visibility_allowed"),
         Index("ix_knowledge_documents_status", "status"),
     )
@@ -192,6 +196,13 @@ class KnowledgeDocument(Base):
     visibility: Mapped[str] = mapped_column(String(16), default="public", server_default="public")
     status: Mapped[str] = mapped_column(String(32), default="uploaded", server_default="uploaded")
     index_generation: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    index_attempt_generation: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    active_index_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True))
+    indexing_job_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True))
+    index_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    index_fingerprint: Mapped[str | None] = mapped_column(String(128))
+    index_error_code: Mapped[str | None] = mapped_column(String(64))
+    indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

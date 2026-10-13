@@ -1,4 +1,6 @@
-"""Liveness and dependency readiness; never disclose connection credentials."""
+"""Liveness and configured dependency readiness; never disclose credentials."""
+
+import asyncio
 
 from fastapi import APIRouter, Request, Response
 from redis.exceptions import RedisError
@@ -51,6 +53,13 @@ async def readiness(request: Request, response: Response) -> HealthResponse:
             checks["redis"] = "ok" if await redis.ping() else "not_ready"
         except RedisError:
             checks["redis"] = "not_ready"
+    rag = request.app.state.rag
+    if rag is not None:
+        try:
+            async with asyncio.timeout(3):
+                checks["knowledge"] = "ok" if await rag.ready() else "not_ready"
+        except Exception:
+            checks["knowledge"] = "not_ready"
     ready = all(value == "ok" for value in checks.values())
     if not ready:
         response.status_code = 503

@@ -6,7 +6,7 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-EXPECTED_SCHEMA_REVISION = "0001_ecommerce"
+EXPECTED_SCHEMA_REVISION = "0002_knowledge"
 logger = logging.getLogger("enterprise_agent.database")
 
 
@@ -63,6 +63,10 @@ class Database:
                          'support_tickets', 'idempotency_records']) AS t(name)
                        CROSS JOIN unnest(ARRAY['INSERT', 'UPDATE']) AS p(privilege))
                       AND has_table_privilege(current_user, 'audit_logs', 'INSERT')
+                      AND has_table_privilege(current_user, 'knowledge_documents', 'INSERT')
+                      AND has_table_privilege(current_user, 'knowledge_documents', 'UPDATE')
+                      AND has_table_privilege(current_user, 'knowledge_chunks', 'INSERT')
+                      AND has_table_privilege(current_user, 'knowledge_chunks', 'DELETE')
                       AND has_column_privilege(current_user, 'orders', 'id', 'UPDATE')
                       AND has_sequence_privilege(current_user,
                         pg_get_serial_sequence('audit_logs', 'id'), 'USAGE')

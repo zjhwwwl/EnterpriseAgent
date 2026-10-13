@@ -19,6 +19,8 @@ var/
 *.log
 evals/results/*
 !evals/results/.gitkeep
+!evals/results/phase3/
+!evals/results/phase3-initial/
 node_modules/
 frontend/dist/
 .DS_Store

@@ -1,0 +1,408 @@
+{
+  "schema_version": 1,
+  "dataset_id": "enterprise-agent-rag-policies-v1",
+  "description": "人工依据固定五篇模拟政策标注文档级相关性；dev用于调参，test为保留集。知识检索评估，不代表生成答案质量或真实企业政策。",
+  "seed_as_of_utc": "2026-10-12T00:00:00+00:00",
+  "corpus": [
+    {
+      "file": "after-sales.md",
+      "title": "商品售后政策",
+      "sha256": "1cfb43442e98542a1bda1460eeed8d3c1c857d92eb369405db65c02b2724708c"
+    },
+    {
+      "file": "refund-and-return.md",
+      "title": "退款与退货规则",
+      "sha256": "7282b3b479488fed9a03416c84028066add521cd66fc67e2538f23e9b4b23b99"
+    },
+    {
+      "file": "logistics.md",
+      "title": "物流配送说明",
+      "sha256": "9b2d4286b7b6bc21aa887f1607cb8519f0e575259e9d6f02b0eba11f3ac7ea06"
+    },
+    {
+      "file": "membership.md",
+      "title": "会员权益",
+      "sha256": "37261daac2bffa52651065288ff866a29e2db29b7bd6ed7f49187e369d575afe"
+    },
+    {
+      "file": "coupons.md",
+      "title": "平台优惠券规则",
+      "sha256": "b3794ed501a2b0bf240ad0f6e3aa1bddcfc257a245e3b547b41df7f69c852a2a"
+    }
+  ],
+  "cases": [
+    {
+      "id": "dev-01",
+      "split": "dev",
+      "query": "创建退款申请之前要先让我确认哪些事情？",
+      "answerable": true,
+      "relevant_files": [
+        "after-sales.md",
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "展示申请摘要，确认订单、金额、原因及适用政策；确认后才创建待审核申请。"
+      ]
+    },
+    {
+      "id": "dev-02",
+      "split": "dev",
+      "query": "七天退款期限从支付时间还是签收时间开始？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "已签收订单以签收时间起连续7×24小时为期限，包含期限边界。"
+      ]
+    },
+    {
+      "id": "dev-03",
+      "split": "dev",
+      "query": "整单退款会把已付的配送运费一起退给我吗？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "当前规则不退已支付配送运费。"
+      ]
+    },
+    {
+      "id": "dev-04",
+      "split": "dev",
+      "query": "正常配送参考多久，是否保证在这个时间送达？",
+      "answerable": true,
+      "relevant_files": [
+        "logistics.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "参考2至5天，不构成承诺送达时间。"
+      ]
+    },
+    {
+      "id": "dev-05",
+      "split": "dev",
+      "query": "示例会员积分按多少商品实付金额换算？",
+      "answerable": true,
+      "relevant_files": [
+        "membership.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "完成订单后每实付1元商品金额对应1积分；退款商品金额不累计。"
+      ]
+    },
+    {
+      "id": "dev-06",
+      "split": "dev",
+      "query": "一笔订单能否叠加使用两张同类优惠券？",
+      "answerable": true,
+      "relevant_files": [
+        "coupons.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "单笔订单不能叠加同类优惠券。"
+      ]
+    },
+    {
+      "id": "dev-07",
+      "split": "dev",
+      "query": "会员是否能延长退款期限并免除已付运费限制？",
+      "answerable": true,
+      "relevant_files": [
+        "membership.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "会员身份不改变退款期限及配送运费规则。"
+      ]
+    },
+    {
+      "id": "dev-08",
+      "split": "dev",
+      "query": "食品存在质量问题时能提交退款申请吗？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "质量问题可提交待审核申请，客服核查原因，系统不自动判断责任。"
+      ]
+    },
+    {
+      "id": "dev-09",
+      "split": "dev",
+      "query": "黑洞事件视界是什么？",
+      "answerable": false,
+      "relevant_files": [],
+      "expected_status": "insufficient_evidence",
+      "expected_answer_points": []
+    },
+    {
+      "id": "dev-10",
+      "split": "dev",
+      "query": "请讲解如何配置 Kubernetes 集群网络。",
+      "answerable": false,
+      "relevant_files": [],
+      "expected_status": "insufficient_evidence",
+      "expected_answer_points": []
+    },
+    {
+      "id": "test-01",
+      "split": "test",
+      "query": "买了三件商品可以只退其中一件吗？",
+      "answerable": true,
+      "relevant_files": [
+        "after-sales.md",
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "首版只支持整单商品退款，不支持部分商品退款。"
+      ]
+    },
+    {
+      "id": "test-02",
+      "split": "test",
+      "query": "客服批准退款以后系统会真的向银行账户打款吗？",
+      "answerable": true,
+      "relevant_files": [
+        "after-sales.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "仅记录模拟退款完成，不调用支付平台也不转移真实资金。"
+      ]
+    },
+    {
+      "id": "test-03",
+      "split": "test",
+      "query": "我可以拿朋友的订单编号直接申请售后吗？",
+      "answerable": true,
+      "relevant_files": [
+        "after-sales.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "客户只能为自己名下订单申请售后，订单事实以数据库为准。"
+      ]
+    },
+    {
+      "id": "test-04",
+      "split": "test",
+      "query": "退款审核拒绝或者申请撤销后还能再次申请吗？",
+      "answerable": true,
+      "relevant_files": [
+        "after-sales.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "拒绝或撤销后可按规则重新申请，有效退款状态阻止重复申请。"
+      ]
+    },
+    {
+      "id": "test-05",
+      "split": "test",
+      "query": "尚未付款或已取消订单可以申请退款吗？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "未支付或已取消订单不能申请退款。"
+      ]
+    },
+    {
+      "id": "test-06",
+      "split": "test",
+      "query": "已经支付但包裹还没签收的订单能申请退款吗？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "尚未签收的已支付订单允许申请退款。"
+      ]
+    },
+    {
+      "id": "test-07",
+      "split": "test",
+      "query": "退款金额按商品原价还是优惠后的实付计算，用什么单位？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "按订单商品优惠后实付金额计算，金额使用整数分。"
+      ]
+    },
+    {
+      "id": "test-08",
+      "split": "test",
+      "query": "使用优惠券抵扣的部分会作为现金退回来吗？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md",
+        "coupons.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "整单退款按优惠后商品实付计算，不退优惠券抵扣对应的现金。"
+      ]
+    },
+    {
+      "id": "test-09",
+      "split": "test",
+      "query": "退款采用最新上传的政策还是支付时生效的政策？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "采用订单支付时适用的已发布结构化政策版本，并保存版本及事实快照。"
+      ]
+    },
+    {
+      "id": "test-10",
+      "split": "test",
+      "query": "上传一份新的退货规则文档能自动改变后台退款条件吗？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "上传知识文档不会自动发布或替换可执行规则，需要发布新政策版本。"
+      ]
+    },
+    {
+      "id": "test-11",
+      "split": "test",
+      "query": "签收后的退款窗口是七个自然日还是连续168小时，边界能申请吗？",
+      "answerable": true,
+      "relevant_files": [
+        "refund-and-return.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "连续7×24小时，期限边界包含在内。"
+      ]
+    },
+    {
+      "id": "test-12",
+      "split": "test",
+      "query": "模拟运单号码可以拿到快递公司官网查询吗？",
+      "answerable": true,
+      "relevant_files": [
+        "logistics.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "模拟运单号仅供演示，无法在快递公司官网查询。"
+      ]
+    },
+    {
+      "id": "test-13",
+      "split": "test",
+      "query": "配送超过参考天数是不是就可以认定订单已经签收？",
+      "answerable": true,
+      "relevant_files": [
+        "logistics.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "不能依据参考天数推断签收，必须以订单和物流记录为依据。"
+      ]
+    },
+    {
+      "id": "test-14",
+      "split": "test",
+      "query": "退款的商品实付金额还会计入会员积分吗？",
+      "answerable": true,
+      "relevant_files": [
+        "membership.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "退款商品金额不累计积分。"
+      ]
+    },
+    {
+      "id": "test-15",
+      "split": "test",
+      "query": "目前系统能直接兑换积分或者调整会员等级吗？",
+      "answerable": true,
+      "relevant_files": [
+        "membership.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "没有积分账户、兑换或会员等级结算功能，也不能承诺这些业务操作。"
+      ]
+    },
+    {
+      "id": "test-16",
+      "split": "test",
+      "query": "退款之后平台一定会自动返还优惠券吗？",
+      "answerable": true,
+      "relevant_files": [
+        "coupons.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "未实现优惠券重新发放，不能承诺退款一定自动返券。"
+      ]
+    },
+    {
+      "id": "test-17",
+      "split": "test",
+      "query": "优惠券的使用需要检查哪些限制条件？",
+      "answerable": true,
+      "relevant_files": [
+        "coupons.md"
+      ],
+      "expected_status": "evidence_found",
+      "expected_answer_points": [
+        "优惠券存在有效期、门槛及适用商品范围，不能折现。"
+      ]
+    },
+    {
+      "id": "test-18",
+      "split": "test",
+      "query": "给儿童接种疫苗的具体剂量是多少？",
+      "answerable": false,
+      "relevant_files": [],
+      "expected_status": "insufficient_evidence",
+      "expected_answer_points": []
+    },
+    {
+      "id": "test-19",
+      "split": "test",
+      "query": "明天上海的天气预报是什么？",
+      "answerable": false,
+      "relevant_files": [],
+      "expected_status": "insufficient_evidence",
+      "expected_answer_points": []
+    },
+    {
+      "id": "test-20",
+      "split": "test",
+      "query": "请预测下个月黄金价格会涨到多少。",
+      "answerable": false,
+      "relevant_files": [],
+      "expected_status": "insufficient_evidence",
+      "expected_answer_points": []
+    }
+  ]
+}

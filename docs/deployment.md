@@ -1,29 +1,28 @@
-# 本地开发与部署
+# 本地运行与部署
 
-## 当前支持范围
+## 实际支持范围
 
-Phase 2 支持 **Windows 本机 FastAPI + Docker 中 PostgreSQL / Redis**。基础设施已实际运行，API 仍用项目 Python 虚拟环境；没有应用 Dockerfile、全栈 Compose、CI 运行、公网发布或生产部署证明。
+Phase 3 支持 **Windows 本机 FastAPI / CPU ONNX + Linux PostgreSQL / Redis / Chroma 容器**。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
 
-默认监听 127.0.0.1。公开 seed 账号只适合本地模拟演示。不会连接真实支付或退款，也不会自动创建付费云资源。
+默认仅绑定 loopback，使用虚构数据与公开演示账号。没有真实支付、退款或付费云资源。
 
-## 开发环境与 D 盘
+## D 盘与依赖
 
-本机已安装 Docker Desktop 4.95.0，Engine 29.8.2、Compose 5.6.0；Linux 容器为 PostgreSQL 17.11-bookworm 和 Redis 8.4.7。
-
-| 资源 | 位置 |
+| 内容 | 本工作区位置 |
 | --- | --- |
-| 项目、Python 虚拟环境 | D:\Python\PycharmProjects\EnterpriseAgent |
+| 项目、.venv | D:\Python\PycharmProjects\EnterpriseAgent |
 | Docker Desktop 程序 | D:\tools\DockerDesktop |
 | 实际 Docker / WSL 数据盘 | D:\DockerData |
-| pip 缓存、TEMP / TMP | 项目 var/cache 与 var/tmp |
-| 本地秘密、测试报告 | 项目 var，Git 忽略 |
-| 后续模型 / npm 共享缓存 | 优先 D:\dev-cache 下分目录 |
+| PostgreSQL / Redis / Chroma 数据 | D:\DockerData\enterpriseagent 下分目录 |
+| 模型 | 项目 var/models |
+| pip/HF 缓存、TEMP/TMP | 项目 var/cache、var/tmp |
+| 原件、秘密、报告 | 项目 var，Git 忽略 |
 
-程序目录和实际 WSL 数据盘已分别检查，避免仅移动程序而镜像仍占 C 盘。Windows 组件和少量用户配置仍可能位于 C 盘。Docker Desktop 管理自身 WSL 后端，没有为本项目另外安装 Ubuntu。安装源及配置依据为 [Docker Windows 官方说明](https://docs.docker.com/desktop/setup/install/windows-install/)。
+Docker 程序与实际数据盘分别配置，少量 Windows 用户配置仍可能在 C 盘；本项目不另装 Ubuntu。基础设施镜像为 PostgreSQL 17.11-bookworm、Redis 8.4-alpine、Chroma 1.5.9，API 和本地模型运行在 Windows，不把容器运行当作 Linux 应用安装证明。
+
+Python 3.13 项目虚拟环境须先可用。bootstrap 按 requirements/dev.lock 的哈希安装依赖，再以 --no-deps --no-build-isolation 可编辑安装并运行 pip check，不安装 Python 或 Docker、不覆盖已有 .env。当前锁文件已在 Windows 验证，Linux 应用依赖尚待交付阶段验证。
 
 ## 首次启动
-
-需要可执行的 Python 3.13 与运行中的 Docker Desktop。已有项目 .venv；首次克隆先在 PyCharm 配置 Python 3.13 虚拟环境。已有 Windows Python Launcher 时也可执行 `py -3.13 -m venv .venv`。bootstrap 不下载 Python 或安装 Docker。
 
 ```powershell
 Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
@@ -32,82 +31,97 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 .\scripts\migrate.ps1
 .\scripts\migrate.ps1 -TestDatabase
 .\scripts\seed.ps1
+.\scripts\prepare-rag.ps1
+.\scripts\index-knowledge.ps1
+.\scripts\evaluate-rag.ps1
 .\scripts\check.ps1
 .\scripts\run.ps1
 ```
 
-| 步骤 | 行为 |
+| 脚本 | 实际行为 |
 | --- | --- |
-| bootstrap | 检查 Python 3.13，按哈希安装依赖，可编辑安装项目；已有 .env 不覆盖 |
-| init-infra | 生成 PostgreSQL / JWT 随机秘密，不覆盖已有文件；调用 Compose 并等待健康 |
-| Compose | 仅 PostgreSQL / Redis，D 盘持久化目录和健康检查 |
-| migrate | 默认迁移开发库；-TestDatabase 迁移独立测试库；-Check 检查模型差异 |
-| seed | 默认本机当天日期，以 UTC 零点为锚；可 -AsOf / -Seed / -Orders |
-| check | 导入本地配置，强制真实 PostgreSQL，Ruff、pytest、pip check、JSON / JUnit |
-| run | 注入应用配置，移除迁移与测试 URL，运行 main.py，不自动迁移 / seed |
+| bootstrap | 校验 Python 3.13、哈希安装、可编辑安装、pip check |
+| init-infra | 创建未存在的本地随机秘密，启动基础设施；保留已有配置 |
+| migrate | 开发库升级 head；-TestDatabase 处理专用测试库；-Check 检查模型差异 |
+| seed | 虚构业务数据、默认当天 UTC/seed42/500订单；不覆盖已 seed 库 |
+| prepare-rag | 显式准备固定模型文件与 manifest，首次可联网下载公开文件 |
+| index-knowledge | 普通应用连接+模拟 admin，复用 Service 索引已登记文档；兼容活动索引跳过 |
+| evaluate-rag | 普通应用连接+模拟 customer，固定 corpus 的真实检索对照 |
+| check | 默认 require-postgres / require-rag，Ruff、pytest、pip check、JSON/JUnit |
+| run | 注入应用配置、显式启用 RAG、移除迁移/测试 URL，再运行 main.py |
 
-安装与检查脚本将 pip 缓存和临时目录放 D 盘项目 var。依赖使用 requirements 锁文件与 --require-hashes；可编辑安装使用 --no-deps --no-build-isolation，避免再次解析未锁定依赖。锁文件的 Windows Python 3.13 安装已按本阶段检查执行；Linux 应用依赖仍待全栈阶段验证。
+当前索引脚本没有选择单文档参数，处理所有未删除的登记文档；要强制重索引某篇已兼容文档，可用 admin 的 reindex API。
 
-运行依赖及 JWT 配置错误在启动时暴露；database / Redis 的暂时故障以就绪检查或 API 安全错误报告，不把未配置业务数据库默认为就绪。
+## 模型准备与离线使用
 
-## 数据库角色、连接与秘密
+资产由 backends.py 固定：
 
-基础设施只绑定 loopback：
+| 组件 | 仓库 | revision |
+| --- | --- | --- |
+| 中文 Embedding | Qdrant/bge-small-zh-v1.5 | 46fbe35fd4374a00fee7de77dfddaeb6dd6a2c59 |
+| 量化 Reranker | Xenova/bge-reranker-base | 280bcc27a84e0b898c251e06fddb25171bd9b101 |
 
-| 服务 | 本机连接 |
+模型文件与 tokenizer 等资产合计 396,800,683 字节，manifest 另外保存准备时间及推理参数。目录包含 embedding/、reranker/ 和 manifest.json，每项大小与 SHA256 必须符合源码固定值。没有把完整 Hugging Face 缓存或真实 Key 提交到仓库。
+
+```powershell
+# 只检查已准备文件，不下载
+.\.venv\Scripts\python.exe scripts\prepare-rag-models.py --verify-only
+
+# 从可信已下载目录复制并校验
+.\.venv\Scripts\python.exe scripts\prepare-rag-models.py --offline-source 'D:\dev-cache\enterpriseagent-models'
+```
+
+默认目的地读取 EA_RAG_MODEL_DIR 或项目 var/models，可用 --destination 显式指定。prepare-rag.ps1 设置本项目 HF_HOME；直接运行 prepare Python 脚本仍使用指定本地目录。
+
+查询/启动不下载模型。准备后通过 FastEmbed / ONNX Runtime 的 CPU provider、本地文件模式加载；第一次推理包含模型载入成本。评估每模式 warmup 单独记录，不能把 warmup 时间藏进“零冷启动”。
+
+## 服务与秘密
+
+| 服务 | loopback 地址 |
 | --- | --- |
+| API | 127.0.0.1:8000 |
 | PostgreSQL | 127.0.0.1:55432 |
 | Redis | 127.0.0.1:56379 |
-| API | 127.0.0.1:8000 |
+| Chroma | 127.0.0.1:58000 |
 
-本地密码、JWT Secret 和完整 URL 位于 **var/infra/**、**var/infra-secrets.env**，均被 Git 忽略；.env 也被忽略。init-infra 不覆盖已有文件，run / migrate / seed / check 会导入该私有文件。run 另外清除 API 不需要的迁移与测试 URL。空示例 .env 不包含业务数据库，直接 python main.py 此时 readiness=503；自行管理配置时可以直接启动，但须注入正确普通应用账号。
+秘密保存在被 Git 忽略的 var/infra/、var/infra-secrets.env；.env 也不提交。初始化脚本不覆盖既有秘密。运行账号 ea_app 非 owner/超级用户，ea_test_app 只能连接独立测试库；初始化账号仅用于迁移/seed。不要把测试 URL 指向开发库，测试夹具会重置专用测试记录。
 
-Redis 当前只绑定本机 loopback，不配置 Redis AUTH，适合本机隔离演示；不能把此配置直接暴露公网。示例不含实际数据库或 JWT 凭据，不打印 Compose 渲染配置、完整环境、秘密文件或驱动连接错误；命令使用文件 / 环境，秘密不放参数。
+API 没有订单状态/金额写权限，政策只能读，审计仅追加。确认、退款、工单、幂等、agent_tasks/agent_sessions 具有迁移明确授予的 DML；后两者尚无业务接口。Phase 3 另授权知识登记 INSERT/UPDATE 和 Chunk INSERT/DELETE，政策来源仍被独立 trigger 保护。
 
-| 角色 | 用途 | 权限 |
-| --- | --- | --- |
-| ea_local_admin | 本地迁移、seed、角色初始化 | 初始化账号，不作为 API 连接 |
-| ea_app | 开发 API | 普通非 owner，无建表和政策修改权限 |
-| ea_test_app | 独立测试库 API / Service | 普通非 owner，不能 CONNECT 开发库 |
+Redis 与 Chroma 当前没有公网认证方案，仅 loopback 隔离。需要公网部署时必须另行完成生产配置与验证，不能直接使用公开模拟账号。文档、脚本及日志不打印真实 URL、JWT Secret、模型 Key 或完整环境。
 
-开发与测试使用独立数据库和角色，撤销公共 CONNECT 后分别授权。初始化账号权限不可作为业务 API 的权限证明。政策发布版本不可修改、审计只追加，以及退款唯一约束均由真实 PostgreSQL 验证。
+## Phase 3 配置
 
-测试只能针对显式测试库。不要将 EA_TEST_DATABASE_URL 指向开发库或任何已有业务库；测试事务和夹具会在测试库创建其专用记录。
+操作系统环境覆盖 .env。完整模板为 [.env.example](../.env.example)，包括数据库、Redis、JWT 和预留聊天模型字段。EA_RAG_ENABLED 在 Settings/模板中默认 false；run、索引和评估脚本显式启用，直接 main.py 时需自行启用。
 
-## 配置说明
-
-配置前缀 EA_，.env 用于本地开发；操作系统环境变量优先。敏感字段使用 SecretStr，数据库引擎关闭参数日志，日志保护已知秘密值。
-
-| 配置 | 用途 |
+| 变量 | 默认值与含义 |
 | --- | --- |
-| EA_APP_ENV | development / test / production |
-| EA_HOST / EA_PORT | main.py 监听 |
-| EA_LOG_LEVEL | 合法日志等级 |
-| EA_DOCS_ENABLED | Swagger / OpenAPI 开关 |
-| EA_CORS_ORIGINS | 精确 Origin JSON 数组 |
-| EA_DATA_DIR | 文件目录，默认 var |
-| EA_DATABASE_URL | API 普通账号，postgresql+psycopg |
-| EA_MIGRATION_DATABASE_URL | 迁移与 seed 账号 |
-| EA_TEST_DATABASE_URL | 独立测试库普通账号 |
-| EA_TEST_MIGRATION_DATABASE_URL | 独立测试库迁移账号 |
-| EA_REDIS_URL | 登录限流；配置后依赖不可用则登录 503 |
-| EA_JWT_SECRET | 至少 32 字符，配置业务数据库时必须填写 |
-| EA_JWT_EXPIRE_MINUTES | 默认 30 分钟 |
-| EA_LOGIN_MAX_ATTEMPTS / EA_LOGIN_WINDOW_SECONDS | 默认单 IP 10 次 / 60 秒 |
-| EA_DEMO_PASSWORD | 仅模拟 seed，公开默认 DemoOnly!2026 |
-| EA_LLM_ENABLED / EA_DEEPSEEK_API_KEY | 预留，Phase 2 无模型 Client 或在线请求 |
+| EA_RAG_ENABLED | false；是否建立 RAG runtime |
+| EA_RAG_MODEL_DIR | var/models，相对项目根解析，优先 D 盘 |
+| EA_RAG_MODEL_THREADS | 2，配置范围1–8，runtime最多使用4 |
+| EA_CHROMA_HOST / PORT | 127.0.0.1 / 58000 |
+| EA_CHROMA_TIMEOUT_SECONDS | 10，范围0.1–30；SDK各传输阶段有限超时 |
+| EA_RAG_COLLECTION_PREFIX | ea_knowledge，和模型 fingerprint 组成集合名 |
+| EA_RAG_CHUNK_SIZE / OVERLAP | 500 / 80，单位为字符；overlap < size |
+| EA_RAG_TIMEOUT_SECONDS | 120，模型等待及执行预算 |
+| EA_RAG_UPLOAD_MAX_BYTES | 8388608，8 MiB，配置最多16 MiB |
+| EA_RAG_MAX_CHUNKS | 1000，单文档预算 |
+| EA_RAG_MIN_VECTOR_SIMILARITY | 0.45，相关性启发式 |
+| EA_RAG_MIN_RERANK_SCORE | 0.05，sigmoid 后的未校准分数门槛，不是概率 |
 
-production 字样不会自动提供生产认证方案或公网保护。模拟 seed 在 production 环境拒绝运行。Redis 未配置时登录仍可用于本机演示，但没有登录限流，不应在文档中把此时测试算作 Redis 边界已成立。
+EA_LLM_ENABLED、EA_DEEPSEEK_BASE_URL、EA_DEEPSEEK_API_KEY 仍为 Phase 4 预留。当前检索和评估不发送生成模型请求。
 
-## 种子与时间
+Chroma SDK 1.5.9 使用窄适配桥，将实际 HTTP session timeout 在初始网络调用前设置；connect/pool 最多3秒，read/write 使用配置秒数。它是各阶段超时，不是整次多请求操作总耗时保证；外层还有 RAG 时间预算。客户端升级需要复查适配和真实 HTTP 测试，不用不存在的 SDK 配置键假装限制请求。
 
-seed.ps1 默认使用本机当天日期、seed=42、500 订单，该日期以 UTC 零点为数据锚。本阶段实际使用 -AsOf 2026-10-12，得到 25 用户、30 商品、500 订单、1016 明细、456 物流、19 退款及工单、5 文档、41 审计。首笔 seed 在事务中执行并用 advisory lock 串行，已有 demo_customer 时返回现有统计，不覆盖或清空。
+## 数据和政策
 
-可通过 seed.ps1 的参数指定新的 UTC 基准日。业务事实在相同日期、随机种子和空库上可复现，密码 salt 和数据库序列值不属于业务事实比较目标。种子时间锚为 UTC 当日零点，不是本机本地时区零点。
+seed 默认取当天日期作为 UTC 零点，seed=42、500订单；已有 demo_customer 时返回现有统计，不覆盖或清空。固定基准能复现业务事实，密码 salt 不属于相同字节要求。
 
-API 退款资格使用当前 UTC 时间，固定数据会随日期超期；测试用注入时钟固定基准。对已 seed 数据改参数不会重新生成，如需另一批基准日，应创建新的本地库并显式迁移，不自动销毁现有卷。
+本工作区原有业务基准是 2026-10-12，五篇 Markdown 政策已索引为44个Chunk、活动代数1。API 退款使用当前 UTC，固定种子订单会逐渐超期。不同日期需要新的显式本地数据库，不自动删除已有卷重建。
 
-## 健康、验证和关闭
+知识原件按 checksum 保持版本一致。更新资料应上传新文档；重索引保留原件。已发布退款政策来源不能删、改或变成内部文档；新知识文档不自动替换可执行政策。
+
+## 健康与运行验证
 
 ```powershell
 docker compose --env-file var/infra-secrets.env -f deploy/compose.yaml ps
@@ -115,32 +129,21 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/live'
 Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/ready'
 ```
 
-ready=200 要求 application、database、已配置 Redis 全部通过。数据库检查迁移版本、业务所需权限和运行角色；未配置、未迁移、缺少必要权限或含库/表 owner、超级用户、订单状态/审计超额写权限时均为 503。结果不包含连接信息，模型 / Chroma 不在当前范围。
+ready 要求 application、database、已配置 Redis 和已启用 knowledge 通过。数据库验证 head=0002_knowledge、必需权限及账号边界；knowledge 校验本地模型与 Chroma 心跳。没有模型/RAG 时不能据业务健康通过声称知识功能可用。健康不验证每个语料的活动索引。
 
-完整检查执行 `scripts/check.ps1`，默认导入本地配置并传 --require-postgres，JUnit / JSON 保存为 var/test-results/phase2.xml 与 phase2.json。缺少测试库时不能伪报完整通过。`check.ps1 -SkipPostgres` 显式排除 PostgreSQL；直接 pytest 未配置测试库时会跳过对应项，两者均不能替代完整阶段验收。见 [阶段记录](phase-2.md)。
+完整检查结果写 var/test-results/phase3.xml/json；评估写 var/evaluation/phase3/results.json、metrics.csv、queries.csv、report.md。依赖未配置导致的跳过不属于通过，SkipPostgres/SkipRag 只用于局部开发。实际阶段记录见 [Phase 3](phase-3.md)。
 
-交互式 API 用 Ctrl+C 关闭。本次工作区已在 8000 保留后台 Demo API，启动另一个实例前可执行以下脚本；它根据 var/runtime/api.pid 校验仍是当前项目虚拟环境的 main.py，再停止该进程树，不按端口杀任意程序：
+应用代码升级后必须重启，并实际检查版本、phase、ready 和知识接口，不能将旧进程当作最新服务。当前最终实例的 HTTP 证据按阶段记录填写。
+
+## 关闭与后续交付
+
+交互式进程用 Ctrl+C；登记的项目后台服务可用 scripts/stop.ps1 检查 PID/项目身份并结束对应树，不能按8000端口终止未知程序。
 
 ```powershell
 .\scripts\stop.ps1
-```
-
-首次克隆没有这个 PID 文件时不会存在本次后台进程。重启使用 run.ps1。
-
-本轮 stop.ps1 只完成静态解析和实际登记 PID 身份检查，保留的 Demo API 没有被该脚本停止；真实测试服务器进程树清理与停止监听由独立 e2e 用例验证，不能混为 stop.ps1 的执行记录。
-
-暂时停止基础设施使用：
-
-```powershell
 docker compose --env-file var/infra-secrets.env -f deploy/compose.yaml stop
 ```
 
-该命令保留卷与数据。不自动使用 down -v、drop database、prune 或清理不属于项目的文件。卷删除和已有库重置会丢数据，需要明确目标和确认。
+stop 保留数据。不自动使用 down -v、drop database、prune 或删除其他项目文件。
 
-## 后续交付
-
-Phase 3 增加 Chroma、本地模型和索引；模型缓存放 D 盘，真实检查兼容、内存和预热时间。Phase 4 接入 DeepSeek，实际 usage 由 API 响应取得；密钥不传浏览器。Langfuse 可选、关闭，接入前裁剪 trace 内容。
-
-Phase 9 完成 API / Worker / 前端镜像、全栈 Compose、Linux 依赖验证与 GitHub Actions，检查从干净环境启动、迁移、seed、重启和持久化。当前仅基础设施 YAML 和实际容器可用，不等同于全栈部署。
-
-当前没有推送 GitHub、部署公网或创建付费云资源。未来发布先完成可审查构建和配置，再按用户授权执行。
+API/前端应用镜像、Linux应用依赖、全栈 Compose、CI、浏览器及公网部署属于后续阶段。当前没有独立 Worker、自动维护清理工具或部署到公网的记录。

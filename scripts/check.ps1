@@ -1,4 +1,4 @@
-param([switch]$SkipPostgres)
+param([switch]$SkipPostgres, [switch]$SkipRag)
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -24,21 +24,26 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Ruff lint failed.' }
     & $interpreterPath -m ruff format --check .
     if ($LASTEXITCODE -ne 0) { throw 'Ruff format check failed.' }
-    $pytestArguments = @('--junitxml=var/test-results/phase2.xml')
-    if ($SkipPostgres) { $pytestArguments += @('-m', 'not postgres') }
+    $pytestArguments = @('--junitxml=var/test-results/phase3.xml')
+    $excluded = @()
+    if ($SkipPostgres) { $excluded += 'not postgres' }
     else { $pytestArguments += '--require-postgres' }
+    if ($SkipRag) { $excluded += 'not rag' }
+    else { $pytestArguments += '--require-rag' }
+    if ($excluded.Count -gt 0) { $pytestArguments += @('-m', ($excluded -join ' and ')) }
     & $interpreterPath -m pytest @pytestArguments
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
-    [xml]$report = Get-Content -LiteralPath 'var/test-results/phase2.xml' -Raw
+    [xml]$report = Get-Content -LiteralPath 'var/test-results/phase3.xml' -Raw
     $suite = $report.testsuites.testsuite
     $result = [ordered]@{
-        phase = 2; generated_at = [DateTime]::UtcNow.ToString('o')
+        phase = 3; generated_at = [DateTime]::UtcNow.ToString('o')
         tests = [int]$suite.tests; failures = [int]$suite.failures
         errors = [int]$suite.errors; skipped = [int]$suite.skipped
         elapsed_seconds = [double]::Parse($suite.time, [Globalization.CultureInfo]::InvariantCulture)
         required_postgres = (-not $SkipPostgres)
+        required_rag = (-not $SkipRag)
     }
-    $result | ConvertTo-Json | Set-Content -Encoding utf8 'var/test-results/phase2.json'
+    $result | ConvertTo-Json | Set-Content -Encoding utf8 'var/test-results/phase3.json'
     & $interpreterPath -m pip check
     if ($LASTEXITCODE -ne 0) { throw 'Dependency consistency check failed.' }
 } finally {

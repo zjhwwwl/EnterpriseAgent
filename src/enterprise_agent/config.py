@@ -40,6 +40,20 @@ class Settings(BaseSettings):
     demo_password: SecretStr = "DemoOnly!2026"
     login_max_attempts: int = Field(default=10, ge=1, le=100)
     login_window_seconds: int = Field(default=60, ge=1, le=3600)
+    rag_enabled: bool = False
+    rag_model_dir: Path = PROJECT_ROOT / "var" / "models"
+    rag_model_threads: int = Field(default=2, ge=1, le=8)
+    chroma_host: str = "127.0.0.1"
+    chroma_port: int = Field(default=58000, ge=1, le=65535)
+    chroma_timeout_seconds: float = Field(default=10.0, ge=0.1, le=30)
+    rag_collection_prefix: str = Field(default="ea_knowledge", pattern=r"^[a-z][a-z0-9_]{2,40}$")
+    rag_chunk_size: int = Field(default=500, ge=100, le=1500)
+    rag_chunk_overlap: int = Field(default=80, ge=0, le=500)
+    rag_timeout_seconds: int = Field(default=120, ge=5, le=600)
+    rag_upload_max_bytes: int = Field(default=8 * 1024 * 1024, ge=1024, le=16 * 1024 * 1024)
+    rag_max_chunks: int = Field(default=1000, ge=10, le=2000)
+    rag_min_vector_similarity: float = Field(default=0.45, ge=0, le=1)
+    rag_min_rerank_score: float = Field(default=0.05, ge=0, le=1)
     llm_enabled: bool = False
     deepseek_base_url: AnyHttpUrl = "https://api.deepseek.com"
     deepseek_api_key: SecretStr | None = None
@@ -65,7 +79,7 @@ class Settings(BaseSettings):
             return None
         return value
 
-    @field_validator("data_dir")
+    @field_validator("data_dir", "rag_model_dir")
     @classmethod
     def resolve_data_dir(cls, value: Path) -> Path:
         return (value if value.is_absolute() else PROJECT_ROOT / value).resolve()
@@ -106,7 +120,18 @@ class Settings(BaseSettings):
             raise ValueError("EA_JWT_SECRET must contain at least 32 characters")
         if self.database_url is not None and self.jwt_secret is None:
             raise ValueError("EA_JWT_SECRET is required when a business database is configured")
+        if self.rag_chunk_overlap >= self.rag_chunk_size:
+            raise ValueError("RAG chunk overlap must be smaller than chunk size")
         return self
+
+    @field_validator("chroma_host")
+    @classmethod
+    def validate_chroma_host(cls, value: str) -> str:
+        if not value or len(value) > 253 or any(char in value for char in "/@:?\\ \r\n"):
+            raise ValueError(
+                "Chroma host must be a hostname or IPv4 address without URL credentials"
+            )
+        return value
 
     @field_validator(
         "database_url", "migration_database_url", "test_database_url", "test_migration_database_url"

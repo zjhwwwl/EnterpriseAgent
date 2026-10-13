@@ -1,4 +1,4 @@
 """EnterpriseAgent application package."""
 
-__version__ = "0.2.0"
-DEVELOPMENT_PHASE = 2
+__version__ = "0.3.0"
+DEVELOPMENT_PHASE = 3

@@ -10,6 +10,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from pydantic import SecretStr
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -37,6 +38,83 @@ def pytest_addoption(parser):
     parser.addoption(
         "--require-postgres", action="store_true", help="Fail rather than skip PostgreSQL tests"
     )
+    parser.addoption(
+        "--require-rag", action="store_true", help="Fail rather than skip real RAG dependencies"
+    )
+
+
+@pytest.fixture(scope="session")
+def rag_models(request):
+    from enterprise_agent.rag.backends import ModelRuntime
+
+    settings = Settings(
+        _env_file=None, app_env="test", rag_model_dir=PROJECT_ROOT / "var" / "models"
+    )
+    models = ModelRuntime(settings)
+    if not models.ready():
+        if request.config.getoption("--require-rag"):
+            pytest.fail("Prepared, verified local RAG models are required")
+        pytest.skip("RAG models are not prepared")
+    return models
+
+
+@pytest.fixture
+def rag_settings(tmp_path):
+    return Settings(
+        _env_file=None,
+        app_env="test",
+        data_dir=tmp_path,
+        rag_enabled=True,
+        rag_model_dir=PROJECT_ROOT / "var" / "models",
+        rag_collection_prefix="ea_test_" + uuid4().hex,
+    )
+
+
+@pytest_asyncio.fixture
+async def rag_runtime(rag_models, rag_settings, request):
+    from enterprise_agent.rag.runtime import RagRuntime
+
+    runtime = RagRuntime(rag_settings, models=rag_models)
+    if not await runtime.call(runtime.store.ready):
+        if request.config.getoption("--require-rag"):
+            pytest.fail("Real Chroma HTTP server is required")
+        pytest.skip("Chroma HTTP server is not available")
+    await runtime.call(lambda: runtime.store.collection)
+    try:
+        yield runtime
+    finally:
+        await asyncio.to_thread(runtime.store.client.delete_collection, runtime.store.name)
+        await runtime.close()
+
+
+@pytest.fixture
+def pg_rag_service(pg_factory, rag_settings, rag_runtime):
+    from enterprise_agent.services.knowledge import KnowledgeService
+
+    return KnowledgeService(pg_factory, rag_settings, rag_runtime)
+
+
+@pytest.fixture
+def rag_api_app(pg_urls, rag_settings, rag_runtime):
+    configured = rag_settings.model_copy(
+        update={
+            "database_url": SecretStr(pg_urls[0]),
+            "jwt_secret": SecretStr(uuid4().hex + uuid4().hex),
+        }
+    )
+    app = create_app(configured, configure_logs=False, rag_runtime=rag_runtime)
+    return app
+
+
+@pytest_asyncio.fixture
+async def rag_api_client(rag_api_app, pg_seed):
+    async with rag_api_app.router.lifespan_context(rag_api_app):
+        assert rag_api_app.state.database.verified
+        async with AsyncClient(
+            transport=ASGITransport(app=rag_api_app, raise_app_exceptions=False),
+            base_url="http://testserver",
+        ) as client:
+            yield client
 
 
 @pytest.fixture(scope="session")
