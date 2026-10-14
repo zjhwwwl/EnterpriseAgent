@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "real_browser_readonly_existing_local_test_data",
+  "status": "passed",
+  "failure": null,
+  "started_at": "2026-10-14T13:57:58.995Z",
+  "captured_at": "2026-10-14T13:58:05.690Z",
+  "elapsed_ms": 6695,
+  "browser_version": "155.0.4283.45",
+  "browser_channel": "msedge",
+  "test_database": "enterprise_agent_test",
+  "frontend_origin": "http://127.0.0.1:5174",
+  "api_origin": "http://127.0.0.1:8001",
+  "model_enabled_on_test_api": false,
+  "new_model_requests": 0,
+  "requests_from_browser": {
+    "messages": 0,
+    "resume": 0,
+    "recover": 0,
+    "business_mutations": 0
+  },
+  "blocked_mutation_requests": [],
+  "browser_errors": [],
+  "selected_tasks": {
+    "knowledge": {
+      "id": "f850c625-cee4-40c2-9b7c-b19a0e0b3f5a",
+      "session_id": "34e1fd00-02cf-4433-a58e-95d2c98853ec"
+    },
+    "refund": {
+      "id": "b52a6d60-b935-4929-9e99-8ef620df28ea",
+      "session_id": "34e1fd00-02cf-4433-a58e-95d2c98853ec"
+    },
+    "analytics": {
+      "id": "d932995b-a31e-4733-b581-f12b0638fc23",
+      "session_id": "e818383e-9e94-4b48-8a97-91267b5a6307"
+    }
+  },
+  "captures": [
+    {
+      "filename": "agent.png",
+      "captured_at": "2026-10-14T13:58:00.469Z",
+      "path": "/agent",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "png_width": 1440,
+      "png_height": 1293,
+      "scroll_y": 0,
+      "width_checks": [
+        {
+          "viewport_width": 1280,
+          "body_scroll_width": 1280,
+          "document_scroll_width": 1280
+        },
+        {
+          "viewport_width": 1366,
+          "body_scroll_width": 1366,
+          "document_scroll_width": 1366
+        },
+        {
+          "viewport_width": 1440,
+          "body_scroll_width": 1440,
+          "document_scroll_width": 1440
+        }
+      ],
+      "displayed_task_id": "f850c625-cee4-40c2-9b7c-b19a0e0b3f5a",
+      "source_png_artifact": {
+        "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/agent.png",
+        "sha256": "e1f2a0612f2fb3ea6d9de07f6d78b85e74f9bcfac005aacdaee034fae3c41e1a",
+        "bytes": 114831
+      }
+    },
+    {
+      "filename": "citation.png",
+      "captured_at": "2026-10-14T13:58:00.673Z",
+      "path": "/agent",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "png_width": 1440,
+      "png_height": 1293,
+      "scroll_y": 0,
+      "width_checks": [
+        {
+          "viewport_width": 1280,
+          "body_scroll_width": 1280,
+          "document_scroll_width": 1280
+        },
+        {
+          "viewport_width": 1366,
+          "body_scroll_width": 1366,
+          "document_scroll_width": 1366
+        },
+        {
+          "viewport_width": 1440,
+          "body_scroll_width": 1440,
+          "document_scroll_width": 1440
+        }
+      ],
+      "displayed_task_id": "f850c625-cee4-40c2-9b7c-b19a0e0b3f5a",
+      "source_png_artifact": {
+        "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/citation.png",
+        "sha256": "5134be3d8d210d0e4e090ccba64a2b41fa49090ffca280d1ff14d6ddb46c2dc4",
+        "bytes": 125391
+      }
+    },
+    {
+      "filename": "orders.png",
+      "captured_at": "2026-10-14T13:58:02.021Z",
+      "path": "/orders",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "png_width": 1440,
+      "png_height": 2248,
+      "scroll_y": 0,
+      "width_checks": [
+        {
+          "viewport_width": 1280,
+          "body_scroll_width": 1280,
+          "document_scroll_width": 1280
+        },
+        {
+          "viewport_width": 1366,
+          "body_scroll_width": 1366,
+          "document_scroll_width": 1366
+        },
+        {
+          "viewport_width": 1440,
+          "body_scroll_width": 1440,
+          "document_scroll_width": 1440
+        }
+      ],
+      "includes_refund_history": true,
+      "source_png_artifact": {
+        "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/orders.png",
+        "sha256": "f2ac631c31bd1aa57a280dd87e4ea46337c9183e968a6bb27b5693de265bd9fc",
+        "bytes": 190894
+      }
+    },
+    {
+      "filename": "tasks.png",
+      "captured_at": "2026-10-14T13:58:02.274Z",
+      "path": "/tasks",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "png_width": 1440,
+      "png_height": 960,
+      "scroll_y": 0,
+      "width_checks": [
+        {
+          "viewport_width": 1280,
+          "body_scroll_width": 1280,
+          "document_scroll_width": 1280
+        },
+        {
+          "viewport_width": 1366,
+          "body_scroll_width": 1366,
+          "document_scroll_width": 1366
+        },
+        {
+          "viewport_width": 1440,
+          "body_scroll_width": 1440,
+          "document_scroll_width": 1440
+        }
+      ],
+      "source_png_artifact": {
+        "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/tasks.png",
+        "sha256": "b9908d42d1a05965b09a6158a17bcb6ee24bb2b9f3a38193e74e5962ac9dbb92",
+        "bytes": 88787
+      }
+    },
+    {
+      "filename": "approval.png",
+      "captured_at": "2026-10-14T13:58:02.460Z",
+      "path": "/tasks",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "png_width": 1440,
+      "png_height": 960,
+      "scroll_y": 0,
+      "width_checks": [
+        {
+          "viewport_width": 1280,
+          "body_scroll_width": 1280,
+          "document_scroll_width": 1280
+        },
+        {
+          "viewport_width": 1366,
+          "body_scroll_width": 1366,
+          "document_scroll_width": 1366
+        },
+        {
+          "viewport_width": 1440,
+          "body_scroll_width": 1440,
+          "document_scroll_width": 1440
+        }
+      ],
+      "displayed_task_id": "b52a6d60-b935-4929-9e99-8ef620df28ea",
+      "task_state": "completed",
+      "description": "Historical completed refund application receipt",
+      "source_png_artifact": {
+        "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/approval.png",
+        "sha256": "f10bf51a27d92e62f4e153ddfeca91d2b1c33648a37dc89ac66baf15a5d9088b",
+        "bytes": 126845
+      }
+    },
+    {
+      "filename": "knowledge.png",
+      "captured_at": "2026-10-14T13:58:04.191Z",
+      "path": "/knowledge",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "png_width": 1440,
+      "png_height": 1503,
+      "scroll_y": 0,
+      "width_checks": [
+        {
+          "viewport_width": 1280,
+          "body_scroll_width": 1280,
+          "document_scroll_width": 1280
+        },
+        {
+          "viewport_width": 1366,
+          "body_scroll_width": 1366,
+          "document_scroll_width": 1366
+        },
+        {
+          "viewport_width": 1440,
+          "body_scroll_width": 1440,
+          "document_scroll_width": 1440
+        }
+      ],
+      "source_png_artifact": {
+        "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/knowledge.png",
+        "sha256": "27ab1770fcf70ae1edb33334f7a37da251922f430c5bcf1985ddc2596c917cc6",
+        "bytes": 126944
+      }
+    },
+    {
+      "filename": "agent-analytics.png",
+      "captured_at": "2026-10-14T13:58:05.240Z",
+      "path": "/agent",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "png_width": 1440,
+      "png_height": 1293,
+      "scroll_y": 0,
+      "width_checks": [
+        {
+          "viewport_width": 1280,
+          "body_scroll_width": 1280,
+          "document_scroll_width": 1280
+        },
+        {
+          "viewport_width": 1366,
+          "body_scroll_width": 1366,
+          "document_scroll_width": 1366
+        },
+        {
+          "viewport_width": 1440,
+          "body_scroll_width": 1440,
+          "document_scroll_width": 1440
+        }
+      ],
+      "displayed_task_id": "d932995b-a31e-4733-b581-f12b0638fc23",
+      "source_png_artifact": {
+        "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/agent-analytics.png",
+        "sha256": "d204da36dd7383571ffb24acd2227c1d4c3585e4fce08ce41491751fb0de9503",
+        "bytes": 120126
+      }
+    },
+    {
+      "filename": "analytics.png",
+      "captured_at": "2026-10-14T13:58:05.687Z",
+      "path": "/analytics",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "png_width": 1440,
+      "png_height": 1854,
+      "scroll_y": 0,
+      "width_checks": [
+        {
+          "viewport_width": 1280,
+          "body_scroll_width": 1280,
+          "document_scroll_width": 1280
+        },
+        {
+          "viewport_width": 1366,
+          "body_scroll_width": 1366,
+          "document_scroll_width": 1366
+        },
+        {
+          "viewport_width": 1440,
+          "body_scroll_width": 1440,
+          "document_scroll_width": 1440
+        }
+      ],
+      "source_png_artifact": {
+        "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/analytics.png",
+        "sha256": "199800f3d3ca1a1319bfb61774f55d8fcadaca9a0f24f7fd6081dd3159ba2c4d",
+        "bytes": 180767
+      }
+    }
+  ],
+  "limitations": [
+    "Existing completed model tasks are historical records; no new answer is generated",
+    "approval.png shows the historical completed refund task receipt, not a new waiting approval",
+    "Login and authorized read-only SQL are the only allowed POST endpoints",
+    "No images are edited; each PNG is captured directly from the actual browser page"
+  ],
+  "source_artifact": {
+    "path": "var/test-results/phase7-browser/artifacts/screenshots-read-only-real-0b0f0-ut-model-calls-or-mutations/captured.json",
+    "sha256": "2d18fd2af6a002d55836a8da1781f46bc2d9b519f93b1f2f246c456bb199c52a",
+    "bytes": 7482
+  }
+}

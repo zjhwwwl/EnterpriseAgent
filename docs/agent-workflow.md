@@ -1,6 +1,6 @@
 # LangGraph 工作流
 
-当前 Phase 6 / 0.6.0 使用一张 LangGraph 图，复用 OrderService、RefundService、KnowledgeService 和 AnalyticsService。模型负责路由、工具规划、有限检索改写、引用原文选择与受限 SQL 规划；后端决定权限、业务规则、确认和实际执行。分析分支不拆成第二个 Agent，也不增加自由文本模型报告节点。当前验收见[Phase 6](phase-6.md)，[Phase 4](phase-4.md)及[Phase 5](phase-5.md)的原始验证保持历史边界。
+当前 Phase 7 / 0.7.0 使用一张 LangGraph 图，复用 OrderService、RefundService、KnowledgeService 和 AnalyticsService。模型负责路由、工具规划、有限检索改写、引用原文选择与受限 SQL 规划；后端决定权限、业务规则、确认和实际执行。Vue 对话和任务历史消费持久任务契约，提供显式确认与恢复界面，不增加第二个 Agent 或自由文本模型报告节点。当前验收见[Phase 7](phase-7.md)，[Phase 6](phase-6.md)及更早验证保持历史边界。
 
 ## 当前图
 
@@ -70,7 +70,19 @@ intent_router 使用完整私有会话历史解析本轮指代，返回 analytic
 
 执行结果保存 normalized_sql、columns、精确 rows、row_count、truncated 和 elapsed_ms。AnalyticsService 仅从这些行和登记口径构造 Markdown 与 query_rows 图表规范，response_generation 采用此报告，不追加自由文本 LLM 分析。validation 重新校验 QueryResult 和指标，再渲染并比较报告、analysis 与本轮执行事实；失败不能显示为成功结果。只读分析不经过 human_approval，不修改订单/退款，使用原有官方 Checkpoint、Task 和执行预算。
 
-steps 记录 SQL 规划和 execute_analytics_sql 的安全状态、耗时与错误；usage 包含路由/规划器实际供应商报告的 Token，不把本地 SQL 或确定性报告计作模型调用。无结果、NULL 分母和截断均保留，不推断缺失销售额、未返回部分总量或业务变化原因。`result.analysis.chart` 仅为后续前端的数据协议，尚无可交互图表。
+steps 记录 SQL 规划和 execute_analytics_sql 的安全状态、耗时与错误；usage 包含路由/规划器实际供应商报告的 Token，不把本地 SQL 或确定性报告计作模型调用。无结果、NULL 分母和截断均保留，不推断缺失销售额、未返回部分总量或业务变化原因。Vue 在分析页面和任务详情中渲染 `result.analysis.chart`；表格保留完整受限原始值，SVG 比例图最多显示前 30 行。
+
+## 前端会话与人工交互
+
+进入 Agent 页面只读取账号所属会话和任务。新建会话、发送问题、确认/拒绝和恢复都需要显式点击；从运营页面跳转的自然语言只预填草稿，不触发模型调用。消息是有预算的同步 HTTP 请求，不提供 SSE/流式回答；界面等待实际 TaskResponse 后依据 `status` 显示结果，而不将 HTTP 200 显示为完成。
+
+`waiting_approval` 界面展示服务器计算的订单、金额、原因、备注、适用政策与确认期限。确认须勾选核对声明，仅向所属任务 `/resume` 发送 `approval_id` 和布尔 `confirmed`；拒绝也是明确的服务器操作，关闭弹窗不会改变任务。接口和图再次核对审批、归属、时效和业务事实，前端不能改金额、身份或选择恢复节点。
+
+若消息 POST 的结果不明，发送区暂停继续提交，用户手动刷新会话核对服务器持久任务。可恢复错误或 running 任务提供明确的恢复入口，用户核对后调用 `/recover`；恢复可能继续模型步骤，不由页面定时器自动执行。任务详情共享同一组件，展示实际步骤、工具、失败码、elapsed_ms、已知 Token 及缺失/中断消耗提示。历史来源原文是当时的已鉴权快照，点击核验才读取当前引用 API。
+
+Phase 7 真实浏览器验收跨 API 进程重启复用前一轮的待审批任务，显式确认后得到 `pending_review`；客服再分别审核和模拟完成。复用任务原有 5232 Token 仍属于其累计 usage，不能在多个 DTO/轮次中重复计账。通过流程的三个 Task 共 8844 Token，连同全部失败轮次按 Task ID 去重为 14360 Token，详见[阶段记录](phase-7.md)。
+
+同阶段另一次多意图退款提示只执行订单/政策查询，Task 为 completed 但没有准备审批，业务期望检查失败。模型 task completed 只表示其工作流结束，不证明满足了用户全部意图；本阶段没有改路由或规则掩盖该失败。更明确的单一请求通过后，原失败仍保留用于 Phase 8 的独立任务/工具评估。
 
 ## 人工确认与恢复
 

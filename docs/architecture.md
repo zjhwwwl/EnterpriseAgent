@@ -2,12 +2,14 @@
 
 ## 当前实现
 
-Phase 6 / 0.6.0 在同一张 LangGraph 图中新增运营分析分支，使用两个授权聚合视图、独立数据库 reader、SQLGlot AST 白名单、只读事务与执行限额。模型只规划 SQL，AnalyticsService 根据实际返回的行生成报告和图表数据；HTTP 直接查询与 Agent 复用此 Service。MCP 保留三个只读业务工具，不获得分析连接或新增图分支。当前阶段验收见[Phase 6](phase-6.md)，[Phase 5 的 614 项测试](../evals/results/phase5/verification.json)及此前在线烟测保留历史证据。Vue、独立 Worker 与 Langfuse 尚未实现。
+Phase 7 / 0.7.0 在现有模块化单体外增加 Vue 3 / TypeScript / Element Plus 管理后台，五个页面复用现有 FastAPI 契约。LangGraph 仍使用一张图，分析仍经独立 reader、授权聚合视图和 AST 校验；MCP 保留三个只读工具。前端展示真实回答、原始查询行、来源和人工确认，业务规则继续由后端执行。本阶段验证状态见[Phase 7](phase-7.md)，[Phase 6](phase-6.md)及更早证据保留历史边界。独立 Worker 与 Langfuse 尚未实现。
 
 采用模块化单体：API、Service、Repository、Schemas、Agents、Tools 分工明确，模型和前端不能自行修改订单状态或替换当前用户身份。图随请求执行，人工等待写入 Checkpoint；没有任务队列 Worker。
 
 ```mermaid
 flowchart TD
+    WEB["Vue 3：五个业务页面"] --> PROXY["Vite loopback 代理"]
+    PROXY --> HTTP
     HTTP["认证 HTTP 请求"] --> API["FastAPI Routes / Pydantic"]
     API --> AUTH["数据库当前用户与角色"]
     API --> ORDER["OrderService / RefundService"]
@@ -51,6 +53,8 @@ flowchart TD
 | 层 | 实际职责 |
 | --- | --- |
 | API | HTTP、可信认证上下文、Pydantic、上传体限制及响应 |
+| Frontend API / auth | 固定本站 API 路径、Bearer 内存会话、错误/request ID、到期和身份变化处理 |
+| Frontend views / components | 五页业务交互、真实 DTO、安全 Markdown、来源核验、审批/恢复与 SVG 图表 |
 | Service | 归属、角色、政策、确认、幂等、事务、知识索引及审计 |
 | Repository | SQLAlchemy 查询，文档可见性与活动索引代数过滤 |
 | Schemas | 输入与结构化返回；不保存数据库连接或执行规则 |
@@ -69,6 +73,18 @@ flowchart TD
 `application.create_app` 为可注入工厂；导入不会创建运行实例或提前读取用户环境。生命周期按配置建立数据库、Redis、RAG、Checkpoint、分析连接池与可选模型 Client，关闭时释放 HTTP/数据库连接并等待实际推理线程。根目录 `main.py` 使用项目 CLI、JSON 日志及 Windows Selector 事件循环。
 
 知识索引在 HTTP 请求或 CLI 中执行，没有 Redis 工作队列。解析、分块及模型/向量工作通过 Runtime 工作线程与统一容量/超时执行；一次允许一个实际任务，外层超时后线程仍持有容量，直至实际结束，避免连续超时创建无限线程。
+
+## 前端状态与信任边界
+
+前端位于 `frontend/`，Vite 仅绑定 `127.0.0.1:5173`，代理 `/api/v1` 和 `/health` 到 loopback FastAPI。浏览器不持有 DeepSeek Key、数据库 URL 或 JWT 签名秘密。登录 Token、用户和有效期只保存于响应式内存；刷新或关闭页面需重新登录，不使用 localStorage / sessionStorage 保存 Token。认证失败和到期清理身份，延迟返回的旧登录请求不能覆盖当前身份页面。
+
+角色控制只决定按钮和页面提示。订单归属、文档可见性、会话创建角色、审批有效期和 SQL 访问权限仍由后端实时验证。任务页面读取自己的持久化任务，不从客户端提供 user_id、thread 或 Graph 配置。前端依据 `Task.status` 和文档 `status/index_error_code` 显示结果，HTTP 200 / 201 不代表任务完成或索引可用。
+
+订单页面将未决退款的审批、原幂等键和明确决定保存在模块内 Map，按当前账号 ID 取用，使页面切换后可手动核对并保留原请求。该 Map 不是数据库或持久队列，刷新页面会丢失；最终事务幂等、审计与重复申请约束在服务器。Agent 提交结果不明时先锁定发送，用户显式刷新会话读取持久状态；恢复与审批均由用户点击，不自动推进任务。
+
+Markdown 使用 marked + DOMPurify，禁用远程图片、嵌入文档、表单和主动 HTML；引用原文采用文本插值。核验根据 chunk_id 构造认证 API 路径，不导航模型提供的任意 citation_url。历史任务中的来源快照与当前引用 API 的合法性分别展示，不能把已保存原文当作刚完成的权限或版本核验。图表从后端 `query_rows` 规范读取，精确十进制值保留于表格和提示，比例绘图不补 NULL 为零。
+
+前端行为由 43 项受控单元/组件测试验证；21 项 API 回归核对本版本契约。真实 Edge 另外连接专用测试业务数据库、只读 reader、真实 CPU 检索和配置聊天模型完成 14 个检查点，包含真实 Checkpoint 跨服务重启后的人工确认。该流程只操作虚构测试记录，不代替完整模型质量、负载或生产部署验证；失败轮次与消费保留，详见[Phase 7](phase-7.md)。
 
 ## 数据与实体
 
@@ -136,7 +152,7 @@ erDiagram
 
 SQLGlot 30.22.0 解析 PostgreSQL 方言，按精确 AST 类型白名单接受单条 SELECT，显式引用一个授权视图及已登记列。禁止 JOIN、CTE、子查询、UNION、窗口函数、写入、锁、任意函数与其他 schema；星号仅允许 COUNT(*)。允许有限聚合、算术、条件、分组、排序和指定类型转换，详见[API](api.md)。这层约束控制执行能力，不能证明指标、日期范围或模型语义正确。
 
-默认返回最多 100 行、20 列，SQL 使用上限加一行探测截断；调用方更小的 LIMIT 保留。金额的 PostgreSQL NUMERIC 转为精确十进制字符串，不先转换浮点；单个字符串单元格最多 512 字符，行数据 JSON 预算 100 KiB。超时和异常退出事务，底层 SQL/DSN 异常不回显。报告只使用执行结果，正文展示前 20 行，保留完整受限 query.rows；无结果和截断有明确提示，不自动补零或推断业务原因。图表仅返回可验证的数据规范，尚无 Vue 图表页面。
+默认返回最多 100 行、20 列，SQL 使用上限加一行探测截断；调用方更小的 LIMIT 保留。金额的 PostgreSQL NUMERIC 转为精确十进制字符串，不先转换浮点；单个字符串单元格最多 512 字符，行数据 JSON 预算 100 KiB。超时和异常退出事务，底层 SQL/DSN 异常不回显。报告只使用执行结果，正文展示前 20 行，保留完整受限 query.rows；无结果和截断有明确提示，不自动补零或推断业务原因。Vue 分析与任务详情消费同一图表规范，图表最多绘制前 30 行，完整受限结果由表格展示。
 
 ## 解析、模型和检索
 
@@ -186,4 +202,4 @@ Client/Server 均不读取 `.env`，示例白名单仅向子进程传递必要�
 
 ## 后续架构
 
-Phase 7 实现五页 Vue 后台和实际图表展示。任务调度、应用镜像、CI 和 tracing 在确有实现及验证后加入文档，不把目标图当作当前运行能力。
+Phase 8 扩展独立评估与可选 tracing；Phase 9 交付应用镜像、CI 和干净环境启动。当前五页 Vue 后台的真实浏览器与构建证据见阶段记录，任务调度、应用镜像和 tracing 在确有实现及验证后加入文档。

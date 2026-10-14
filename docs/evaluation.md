@@ -2,15 +2,16 @@
 
 ## 真实结果的边界
 
-Phase 6 新增 SQL AST、专用 reader 权限、聚合视图口径、分析 HTTP 和同图分析分支。工程安全测试、固定 SQL 正确性对照和真实在线自然语言规划分别记录，当前汇总状态见[Phase 6](phase-6.md)。历史[Phase 5](phase-5.md) MCP 验收、[Phase 4](phase-4.md)在线修复与[Phase 3](phase-3.md)检索对照保留原始结果，不改写为当前 Agent 或 NL SQL 成绩。
+Phase 7 新增 Vue 客户端、组件安全与交互检查，并对接真实 API 浏览器流程。构建、受控前端单元/组件测试、实际 PostgreSQL/CPU RAG 与浏览器证据分别记录，当前状态见[Phase 7](phase-7.md)。历史[Phase 6](phase-6.md)SQL与在线烟测、[Phase 5](phase-5.md)MCP、[Phase 4](phase-4.md)在线修复与[Phase 3](phase-3.md)检索对照保留原始结果，不改写为本阶段 Agent 或 NL SQL 成绩。
 
 ```powershell
 .\scripts\check.ps1
 .\scripts\evaluate-rag.ps1
 .\scripts\evaluate-analytics.ps1
+.\scripts\frontend.ps1 -Mode Check
 ```
 
-check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，当前保存 `var/test-results/phase6.xml`、`phase6.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。
+check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，当前保存 `var/test-results/phase7.xml`、`phase7.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。前端 TypeScript、Vite 和 Vitest 检查单独运行；浏览器必须注明连接真实后端还是受控接口，不能互相替代。
 
 ## 测试分层
 
@@ -32,6 +33,8 @@ check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgr
 | 分析 AST / 报告 | 精确节点、视图/列/函数白名单、限制改写、精确金额、NULL/截断与图表来源 |
 | 分析真实 PostgreSQL | 原始订单/明细的 Python 基准、上海支付边界、退款 cohort、交易快照、专用 reader ACL、超时与连接恢复 |
 | 分析 HTTP / 图 | 实时角色校验、严格 SQLPlan、相同 Service、实际只读执行与持久化；受控路由与真实在线模型分开 |
+| Vue 单元/组件 | 金额精度、安全 Markdown、API/身份变化、引用核验、status 和显式人工确认；使用受控请求时不当作数据库或线上模型证明 |
+| Vue 真实浏览器 | 实际页面、登录、导航、API 结果与错误、权限、知识索引及售后流程；具体执行/截图按本阶段记录 |
 
 控制流程测试可以注入明确测试替身来隔离故障，但不能用这些结果冒充真实模型或向量库成绩。事务/锁/权限测试使用 PostgreSQL，不使用 SQLite 替代。解析测试使用实际 PDF/DOCX bytes，不用粘贴文本充当 PDF 解析证明。
 
@@ -132,6 +135,24 @@ Phase 4公共证据已归档到evals/results/phase4/：[verification.json](../ev
 首轮 878/879 的唯一失败为旧 JWT fixture 在 collection 时计算未来签发时间，长套件后该时间不再在未来；仅把测试改为执行时计算，生产认证规则未放宽。随后修复规范化 SQL 长度验证与宽数值图表首列遗漏并新增四个回归；122 项聚焦检查为最终套件子集，不叠加为新总数。详情见[阶段记录](phase-6.md)。原始失败记录、历史检索 A/B 和在线失败轮次保留。
 
 上述在线四场景发生在最终两项边界修复前；最终代码以实际归档数据和最终 renderer 离线复核四个报告/参考结果，4/4 保持一致、数据集与 evaluator hash 匹配，新增模型调用 0。这是归档结果校验，不是第二次在线模型评估，记录保存在完整摘要的 archived_live_recheck。
+
+## Phase 7 前端验收协议
+
+前端检查与已有后端/检索/SQL评估分开归档。严格 TypeScript、Vite 构建、Vitest 单元和组件检查覆盖金额精度、认证/身份变化、Markdown 安全、引用和明确确认。组件注入受控 API 响应时，只证明 UI 行为，不当作数据库或线上模型事实。
+
+真实浏览器流程连接本机实际 FastAPI，注明数据库和模型是否受控。覆盖登录、五页导航、权限拒绝、知识检索/管理、直接只读分析、任务状态、敏感操作核对及错误/request ID。实际截图只反映对应执行，不能替代在线模型任务完成率。最终数量、构建与截图证据见[Phase 7](phase-7.md)和[验证报告](../evals/results/phase7/report.md)。
+
+实际结果为 **43 项前端单元/组件测试、21 项本阶段 API 回归，以及真实 Edge 一条串行全流程的 14 个检查点通过**。浏览器使用生产构建、独立测试业务数据库/reader、真实 CPU Embedding/Reranker、Chroma 和配置聊天模型；没有用 API Mock 或受控 ChatModel 替换该流程。单元/组件测试的受控响应仍单独标记，不列为在线模型证据。本阶段没有重跑历史 883 项完整后端套件。
+
+通过流程的三个 Task 为引导式开发案例：退款准备与跨重启显式确认、知识原文与当前引用核验、带 schema/输出约束的自然语言分析。四个模板及自然语言 SQL 的实际行与另行发起的 canonical API 对照；不共享数据库快照，不等同独立基表事实参考，不能把“API 结果一致”解释成 NL SQL 盲评正确率。没有根据一次流程耗时推导性能或负载结论。
+
+保留全部浏览器轮次：首次登录选择器失败未调用模型；多意图退款提示仅查询政策、未准备审批（5516 Token）；更明确的退款请求生成待审批，但测试点击隐藏 checkbox 失败（5232 Token）；修正测试定位后读取此前持久任务，完成后续业务检查。多意图业务期望失败仍属于真实模型限制，本阶段没有改业务路由掩盖它。
+
+最终通过流程按三个 Task 的最新 DTO 统计七次累计模型尝试、prompt 8129 / completion 715 / total **8844 Token**，包含复用任务此前的 **5232 Token**，当轮新增仅 **3612 Token**。所有轮次按 Task ID 去重共四个 Task、十次尝试、prompt 13129 / completion 1231 / total **14360 Token**；unknown_usage_calls=0，实际已调用任务的 usage 完整。重复 resume DTO 替换原快照，不再相加；首轮未提交模型消息不伪填模型 usage。Task DTO 未暴露供应商具体身份/版本，配置名称不能代替响应身份验证。
+
+另行执行的 `verify-frontend.ps1 -ScreenshotsOnly` 已通过，八张实际页面截图及浏览器版本记录见[screenshots.json](../evals/results/phase7/screenshots.json)。测试 API 模型关闭，不 seed/索引或创建任务，只读取完整流程留下的持久任务，允许登录和授权只读 SQL；messages、resume、recover、business_mutations 均为零。八次捕获分别检查 1280/1366/1440 宽度，页面无横向溢出；这不是新一轮模型任务评价或 Token 消费。`approval.png` 为历史提交回执，`citation.png` 为当前来源核验，不能把前者当作当前待确认状态或最新退款审核状态。
+
+前端检查可以不调用 DeepSeek；本地 SVG/Markdown 渲染和 SQL 直接执行不计入 Token 消耗。新增在线调用必须单独记录 actual usage、未知消费和失败轮次，历史 Phase 4/6 文件不覆盖或重记为本阶段。
 
 ## 后续评估
 

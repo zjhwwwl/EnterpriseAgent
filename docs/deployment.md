@@ -2,7 +2,7 @@
 
 ## 实际支持范围
 
-Phase 6 / 0.6.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio / 只读运营分析 + Linux PostgreSQL / Redis / Chroma 容器**。当前阶段验证状态见[Phase 6](phase-6.md)，历史 MCP 与在线 Agent 结果保留。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
+Phase 7 / 0.7.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio / 只读运营分析 / Vue 管理后台 + Linux PostgreSQL / Redis / Chroma 容器**。当前前端构建与浏览器验证状态见[Phase 7](phase-7.md)，历史 MCP、SQL 与在线 Agent 结果保留。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
 
 默认仅绑定 loopback，使用虚构数据与公开演示账号。没有真实支付、退款或付费云资源。
 
@@ -17,6 +17,8 @@ Phase 6 / 0.6.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 
 | 模型 | 项目 var/models |
 | pip/HF 缓存、TEMP/TMP | 项目 var/cache、var/tmp |
 | 原件、秘密、报告 | 项目 var，Git 忽略 |
+| 前端依赖/构建 | 项目 frontend/node_modules、frontend/dist，Git 忽略 |
+| npm / 浏览器测试缓存 | 项目 var/cache 下；具体安装与检查以脚本为准 |
 
 Docker 程序与实际数据盘分别配置，少量 Windows 用户配置仍可能在 C 盘；本项目不另装 Ubuntu。基础设施镜像为 PostgreSQL 17.11-bookworm、Redis 8.4-alpine、Chroma 1.5.9，API 和本地模型运行在 Windows，不把容器运行当作 Linux 应用安装证明。
 
@@ -60,6 +62,48 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 | mcp-demo | 注入普通业务配置，在 loopback API 登录公开模拟客户，经官方 stdio Client 调用三个只读工具 |
 
 当前索引脚本没有选择单文档参数，处理所有未删除的登记文档；要强制重索引某篇已兼容文档，可用 admin 的 reindex API。
+
+## Vue 后台启动与检查
+
+需要 Node.js 24，前端 package.json 限定 `>=24.15.0 <25`，依赖由 `frontend/package-lock.json` 固定。本工作区复用现有 PyCharm Node.js 运行时，不另装 Node；新增依赖和缓存位于 D 盘项目。先确保 FastAPI 已在本机运行，再在新的 PowerShell 终端执行：
+
+```powershell
+.\scripts\frontend.ps1 -Mode Install
+.\scripts\frontend.ps1 -Mode Run
+```
+
+访问 `http://127.0.0.1:5173`，使用 README 中的公开模拟账号。`Install` 根据锁文件安装依赖；`Run` 启动 Vite；`Check` 执行格式检查、Vitest、TypeScript/Vite 构建和生产依赖 audit，测试 JSON 写入 `var/test-results/phase7-frontend-unit.json`：
+
+```powershell
+.\scripts\frontend.ps1 -Mode Check
+```
+
+Vite dev/preview 均仅绑定 `127.0.0.1:5173`，默认代理到 `http://127.0.0.1:8000`。PowerShell 包装脚本使用 `-ApiTarget`，例如 `-ApiTarget 'http://127.0.0.1:18000'` 可指定已经运行的专用本机 API；它注入 `EA_WEB_API_TARGET`。直接运行 Vite 时也可显式设置该变量。两层配置都只接受无用户名、密码、路径、query 或 fragment 的 HTTP loopback origin，不允许公网代理。该配置只提供 API origin，不填写 Key、JWT 或数据库 URL。`frontend/dist` 是本地构建产物，不能当作已发布站点或生产部署证明。
+
+### 真实浏览器业务验收
+
+先完成测试库迁移、真实 RAG 模型准备和本机模型配置，再执行：
+
+```powershell
+.\scripts\frontend.ps1 -Mode Check
+.\scripts\verify-frontend.ps1 -AllowLive
+```
+
+`-AllowLive` 显式接受配置模型的实际供应商调用，可能消耗余额。验证脚本只接受本机 `enterprise_agent_test` 和指定测试业务/reader 角色，数据准备另验证测试迁移角色；增补模拟数据并真实索引，不重置开发库。测试 Chroma 前缀为 `ea_frontend_test`，数据目录为 `var/frontend-test`，Redis 使用 DB 1。
+
+脚本启动 API `127.0.0.1:8001` 和生产构建预览 `127.0.0.1:5174`，拒绝覆盖已有监听；结束只停止记录且核对 executable/参数的子进程。Playwright 使用现有 Edge，1440 × 960、Asia/Shanghai，不下载额外浏览器；npm/TEMP/浏览器缓存配置仍位于 D 盘。原始摘要、截图和日志写入 `var/test-results/phase7-browser`，上一轮产物按摘要哈希保存在 `phase7-browser-trials`，专用 JWT 秘密不提交。
+
+`-Prepared` 仅在已有准备摘要通过隔离检查时跳过数据准备；`-ResumeTask <UUID>` 用于测试同一库中仍有效、属于模拟客户的待审批任务，脚本检查实际持久状态后才允许显式确认。重新运行会创建或修改虚构测试记录；模型数据日期及审批期限需核对。真实结果见[Phase 7](phase-7.md)和[验证报告](../evals/results/phase7/report.md)，不能把测试库流程当作生产部署证明。
+
+完整流程已留下持久任务后，可不调用模型重拍页面：
+
+```powershell
+.\scripts\verify-frontend.ps1 -ScreenshotsOnly
+```
+
+该模式仍核对专用测试环境，但不执行数据准备、seed 或重新索引；要求此前的准备摘要以及知识、退款、分析历史任务已存在。测试 API 显式关闭聊天模型，只允许 GET、模拟账号登录和授权只读 SQL；禁止消息/resume/recover/业务修改，不需要 `-AllowLive`。本次实际保存八张截图，1280/1366/1440 宽度检查无横向溢出且新增模型请求为零，证据见[screenshots.json](../evals/results/phase7/screenshots.json)。退款回执保留提交时状态，当前审核状态从订单页读取；来源核验另有 citation.png。
+
+前端 Token 只保存在运行时内存；刷新页面、有效期到期或 401 后重新登录。订单售后原幂等键保存在按账号区分的模块内 Map，支持同一页面运行周期的跨路由核对，不是持久数据库。关闭/刷新页面后从后端列表核对实际审批和退款记录，不能通过反复创建预览当作恢复。普通订单/知识/分析接口不调用聊天模型；Agent 显式发送或执行恢复才可能消耗 Token。
 
 从已有 Phase 5 工作区升级，先用 `scripts/stop.ps1` 或 Ctrl+C 停止本项目 API，再执行 init-infra → init-analytics → migrate（开发与测试库），随后重启。新 Compose secret 挂载可能重建 PostgreSQL 容器，持久数据目录保留；不要使用 down -v 或删除数据目录。reader 在迁移前已存在时，0005 自动授予两个视图的读取权限；若先迁移，可再幂等运行 init-analytics 补授已存在视图。脚本不自动回滚业务数据或降级迁移。
 
@@ -120,7 +164,7 @@ Redis 与 Chroma 当前没有公网认证方案，仅 loopback 隔离。需要�
 
 旋转专用密码时仅替换对应 ignored hex 文件，再运行 init-infra 同步 DSN/挂载、init-analytics 更新专用角色并重启 API；不要修改业务/owner 密码文件或打印配置。新旧已有数据库都不清空，重复初始化按当前密码文件与明确 ACL 幂等执行。
 
-分析输出按上海支付日期统计；退款为查询时模拟完成状态，不是历史时间点快照。普通报表金额精确保留十进制字符串。返回图表 spec 和数据，尚未提供 Vue 图表渲染或浏览器验收。
+分析输出按上海支付日期统计；退款为查询时模拟完成状态，不是历史时间点快照。普通报表金额精确保留十进制字符串。Vue 分析及任务详情渲染返回的图表 spec，原始受限结果保留在表格；实际浏览器验收状态见本阶段记录。
 
 ## 运营分析评估命令
 
@@ -259,13 +303,16 @@ ready 要求 application、database、已配置 Redis、已启用 knowledge、�
 
 ## 关闭与后续交付
 
-交互式进程用 Ctrl+C；登记的项目后台服务可用 scripts/stop.ps1 检查 PID/项目身份并结束对应树，不能按8000端口终止未知程序。
+交互式进程用 Ctrl+C；登记的项目后台 API 可用 scripts/stop.ps1 检查 PID/项目身份并结束对应树，登记的后台前端用 scripts/stop-frontend.ps1。脚本不会按端口终止未知程序。
+
+`stop-frontend.ps1` 仅适用于后台启动时已记录 `var/runtime/frontend.pid` 的项目 Vite 进程；它同时核对当前 Node executable、项目 Vite 入口和 5173 端口参数。普通 `frontend.ps1 -Mode Run` 前台进程不登记该 PID，直接在原终端按 Ctrl+C 关闭。
 
 ```powershell
 .\scripts\stop.ps1
+.\scripts\stop-frontend.ps1
 docker compose --env-file var/infra-secrets.env -f deploy/compose.yaml stop
 ```
 
 stop 保留数据。不自动使用 down -v、drop database、prune 或删除其他项目文件。
 
-API/前端应用镜像、Linux应用依赖、全栈 Compose、CI、浏览器及公网部署属于后续阶段。当前没有独立 Worker、自动维护清理工具或部署到公网的记录。
+API/前端应用镜像、Linux应用依赖、全栈 Compose、CI及公网部署属于后续阶段。Vue 的构建与实际本地浏览器记录单独见 Phase 7，不当作 Linux 应用或公网部署验证。当前没有独立 Worker、自动维护清理工具或部署到公网的记录。

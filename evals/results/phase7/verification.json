@@ -1,0 +1,267 @@
+{
+    "schema_version":  1,
+    "phase":  7,
+    "version":  "0.7.0",
+    "generated_at_utc":  "2026-10-14T14:04:54.5856279Z",
+    "status":  "phase7_acceptance_passed_with_documented_limits",
+    "frontend_unit":  {
+                          "passed":  43,
+                          "total":  43,
+                          "failed":  0,
+                          "pending":  0,
+                          "todo":  0,
+                          "test_file_count":  6,
+                          "started_at_utc":  "2026-10-14T13:57:32.771000+00:00",
+                          "reported_wall_seconds":  1.746837,
+                          "scope":  "Controlled frontend unit/component tests; HTTP clients and Vue dependencies may use explicit test doubles. No provider model calls or live API claims.",
+                          "source_artifact":  {
+                                                  "path":  "var/test-results/phase7-frontend-unit.json",
+                                                  "sha256":  "33a6fa43208ea58f409628e1e2af3c999957cbf53431beed3375a90b97535787",
+                                                  "bytes":  15917
+                                              }
+                      },
+    "api_regression":  {
+                           "passed":  21,
+                           "total":  21,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0,
+                           "junit_elapsed_seconds":  0.422,
+                           "started_at":  "2026-10-14T21:47:20.089156+08:00",
+                           "scope":  "ASGI API regression tests for phase/version metadata, health lifecycle, request IDs, safe errors, input validation and CORS. Not the full PostgreSQL or RAG integration suite.",
+                           "source_artifact":  {
+                                                   "path":  "var/test-results/phase7-api.xml",
+                                                   "sha256":  "5d63c0c8a9425f762bcc942951a6ba0a8dccf7f6f2fcc25d4b589512f870d246",
+                                                   "bytes":  3137
+                                               }
+                       },
+    "browser_workflow":  {
+                             "passed_tests":  1,
+                             "failed_tests":  0,
+                             "skipped_tests":  0,
+                             "flaky_tests":  0,
+                             "retries":  0,
+                             "checkpoints":  14,
+                             "guided_model_task_count":  3,
+                             "workflow_elapsed_seconds":  25.9,
+                             "playwright_elapsed_seconds":  26.94661,
+                             "real_browser":  "Existing local Microsoft Edge, Playwright headless channel msedge",
+                             "test_database":  "enterprise_agent_test",
+                             "artifact":  "browser-results.json",
+                             "source_artifact":  {
+                                                     "path":  "var/test-results/phase7-browser-trials/20261014T1354191273399Z/playwright.json",
+                                                     "sha256":  "81bb82b1641ed43cda1c6107ece556c28215d8d09e8d70161e86f1e32dc28ee8",
+                                                     "bytes":  5571
+                                                 },
+                             "accuracy_benchmark":  false,
+                             "scope":  "One serial guided workflow with 14 evidence checkpoints, not 14 independent tests or a blind completion-rate benchmark."
+                         },
+    "passing_workflow_cumulative_usage":  {
+                                              "deduplication":  "Latest observed DTO for each unique task ID; resume responses replace earlier snapshots",
+                                              "observed_task_count":  3,
+                                              "model_attempts":  7,
+                                              "provider_known_prompt_tokens":  8129,
+                                              "provider_known_completion_tokens":  715,
+                                              "provider_known_total_tokens":  8844,
+                                              "reused_starting_provider_known_total_tokens":  5232,
+                                              "token_scope":  "Cumulative unique-task ledger, including prior usage of an explicitly reused task",
+                                              "unknown_usage_calls":  0,
+                                              "usage_complete":  true,
+                                              "actual_total_tokens":  8844,
+                                              "incomplete_task_ids":  [
+
+                                                                      ],
+                                              "messages_without_observed_task_dto":  0
+                                          },
+    "all_trials_deduplicated_model_usage":  {
+                                                "deduplication":  "Chronological latest cumulative task DTO per unique Task ID across all four trials; a resume replaces the earlier waiting_approval snapshot.",
+                                                "unique_task_count":  4,
+                                                "model_attempts":  10,
+                                                "provider_known_prompt_tokens":  13129,
+                                                "provider_known_completion_tokens":  1231,
+                                                "provider_known_total_tokens":  14360,
+                                                "unknown_usage_calls":  0,
+                                                "usage_complete_for_invoked_tasks":  true,
+                                                "actual_total_tokens":  14360,
+                                                "new_task_messages_all_trials":  4,
+                                                "phase6_usage_included":  false,
+                                                "zero_message_trial_scope":  "Trial 1 submitted no Agent messages. Its empty provider ledger records actual_total_tokens=null / usage_complete=false; it is retained as N/A, not relabeled as provider-reported zero."
+                                            },
+    "test_environment_preparation":  {
+                                         "prepared_at_utc":  "2026-10-14T09:15:51.872395+00:00",
+                                         "database":  "enterprise_agent_test",
+                                         "collection_prefix":  "ea_frontend_test",
+                                         "data_dir":  "var/frontend-test",
+                                         "reset_performed":  false,
+                                         "seed_counts":  {
+                                                             "users":  25,
+                                                             "products":  30,
+                                                             "orders":  500,
+                                                             "order_items":  1016,
+                                                             "logistics":  456,
+                                                             "refund_requests":  19,
+                                                             "support_tickets":  19,
+                                                             "knowledge_documents":  5,
+                                                             "audit_logs":  43
+                                                         },
+                                         "indexed_documents":  [
+                                                                   {
+                                                                       "id":  "99beabe6-73ce-5ed5-9ca9-ad1b9589e3a9",
+                                                                       "title":  "平台优惠券规则",
+                                                                       "chunks":  8
+                                                                   },
+                                                                   {
+                                                                       "id":  "b30803e5-1f7e-5192-8018-a4128857a6b5",
+                                                                       "title":  "退款与退货规则",
+                                                                       "chunks":  10
+                                                                   },
+                                                                   {
+                                                                       "id":  "dbc20762-5de2-5497-9faa-1ecace11f09a",
+                                                                       "title":  "商品售后政策",
+                                                                       "chunks":  10
+                                                                   },
+                                                                   {
+                                                                       "id":  "e2501e0b-8156-5002-8f3e-65d23010b80a",
+                                                                       "title":  "会员权益",
+                                                                       "chunks":  8
+                                                                   },
+                                                                   {
+                                                                       "id":  "f519669d-3386-507a-94d7-794edf6955f0",
+                                                                       "title":  "物流配送说明",
+                                                                       "chunks":  8
+                                                                   }
+                                                               ],
+                                         "model_calls":  0,
+                                         "source_artifact":  {
+                                                                 "path":  "var/test-results/phase7-browser-preparation.json",
+                                                                 "sha256":  "0326abf273ad67a0229ce05ccf696ae08b918fb5397bfec3ccd8148fc243fb2b",
+                                                                 "bytes":  1134
+                                                             }
+                                     },
+    "final_engineering_checks":  {
+                                     "frontend_format":  {
+                                                             "status":  "passed",
+                                                             "command":  "Prettier --check via scripts/frontend.ps1 -Mode Check",
+                                                             "evidence":  "Root actual final frontend Check execution, native exit 0."
+                                                         },
+                                     "frontend_typecheck":  {
+                                                                "status":  "passed",
+                                                                "command":  "vue-tsc --noEmit",
+                                                                "scope":  "Strict TypeScript check including browser test files",
+                                                                "evidence":  "Root actual final frontend Check execution, native exit 0."
+                                                            },
+                                     "frontend_production_build":  {
+                                                                       "status":  "passed",
+                                                                       "tool":  "Vite",
+                                                                       "elapsed_ms":  496,
+                                                                       "ui_chunk_reported_kb":  984.49,
+                                                                       "ui_chunk_reported_gzip_kb":  316.59,
+                                                                       "warning":  "UI chunk exceeds Vite default 500 kB warning threshold; warning retained, not resolved or suppressed.",
+                                                                       "evidence":  "Root actual final frontend Check execution, native exit 0."
+                                                                   },
+                                     "npm_production_audit":  {
+                                                                  "status":  "passed",
+                                                                  "command":  "npm audit --omit=dev",
+                                                                  "reported_vulnerabilities":  0,
+                                                                  "scope":  "Production dependencies at the time of the actual audit, not a guarantee against future advisories.",
+                                                                  "evidence":  "Root actual final frontend Check execution, native exit 0."
+                                                              },
+                                     "ruff_lint":  {
+                                                       "status":  "passed",
+                                                       "evidence":  "Root executed Ruff check on current source."
+                                                   },
+                                     "ruff_format":  {
+                                                         "status":  "passed",
+                                                         "files":  156,
+                                                         "evidence":  "Root executed Ruff format --check on current source."
+                                                     },
+                                     "pip_check":  {
+                                                       "status":  "passed",
+                                                       "editable_project_version":  "0.7.0",
+                                                       "evidence":  "Root refreshed local editable metadata to 0.7.0 and executed pip check."
+                                                   },
+                                     "secret_scan":  {
+                                                         "scanned_file_count":  343,
+                                                         "status":  "passed",
+                                                         "hits":  0,
+                                                         "configured_secret_count":  8,
+                                                         "scope":  "Git-visible files, production frontend assets, Phase 7 browser logs and trials, Phase 7 runtime logs; exact currently available credentials only, no universal detection claim"
+                                                     },
+                                     "markdown_local_links":  {
+                                                                  "scope":  "Local file existence; anchors and remote URLs not checked",
+                                                                  "status":  "passed",
+                                                                  "missing":  0,
+                                                                  "checked_links":  237
+                                                              },
+                                     "git_diff_check":  {
+                                                            "status":  "passed"
+                                                        }
+                                 },
+    "source_freeze":  {
+                          "performed":  false,
+                          "scope":  "No before/after full-suite source freeze was captured for Phase 7. Source report SHA256 values identify the archived evidence only."
+                      },
+    "historical_phase6_suite":  {
+                                    "tests":  883,
+                                    "phase":  6,
+                                    "current_phase_rerun":  false,
+                                    "artifact":  "../phase6/verification.json"
+                                },
+    "limitations":  [
+                        "Three guided model tasks in the passing browser workflow; historical compound-intent task missed approval creation.",
+                        "Template comparisons prove actual frontend/API wiring; canonical API references execute separately and do not share one database snapshot.",
+                        "No whole Phase 7 backend regression run; current 21 API regressions are separate from the historical Phase 6 883 tests.",
+                        "Not a performance, concurrency, blind RAG or natural-language-to-SQL quality benchmark.",
+                        "No real payment/refund integration, public deployment or paid cloud resource creation."
+                    ],
+    "npm_clean_install":  {
+                              "status":  "passed",
+                              "command":  "scripts/frontend.ps1 -Mode Install (npm ci)",
+                              "added_packages":  158,
+                              "audited_packages":  159,
+                              "reported_vulnerabilities":  0,
+                              "elapsed_seconds_approx":  29,
+                              "evidence":  "Root actual command output; this is not a clean-machine Linux installation."
+                          },
+    "readonly_screenshot_verification":  {
+                                             "status":  "passed",
+                                             "tests":  1,
+                                             "captures":  8,
+                                             "elapsed_seconds":  6.695,
+                                             "playwright_elapsed_seconds":  7.648048,
+                                             "browser_version":  "155.0.4283.45",
+                                             "browser_channel":  "msedge",
+                                             "captured_at":  "2026-10-14T13:58:05.690Z",
+                                             "model_enabled_on_test_api":  false,
+                                             "new_model_requests":  0,
+                                             "business_mutation_requests":  0,
+                                             "provider_token_usage":  null,
+                                             "provider_token_scope":  "N/A: no new model requests; previous completed task records were loaded from the local database.",
+                                             "viewport_widths_checked":  [
+                                                                             1280,
+                                                                             1366,
+                                                                             1440
+                                                                         ],
+                                             "document_horizontal_overflow_detected":  false,
+                                             "new_blind_accuracy_cases":  0,
+                                             "evidence_kind":  "real_browser_readonly_existing_local_test_data",
+                                             "artifact":  "screenshots.json",
+                                             "source_artifact":  {
+                                                                     "path":  "var/test-results/phase7-browser/playwright.json",
+                                                                     "sha256":  "18d3a5e0e5525816167c39e872ecdb99990dc2eb084d5f884e6af3c6cab64aba",
+                                                                     "bytes":  4769
+                                                                 },
+                                             "limitations":  [
+                                                                 "Existing completed model tasks are historical records; no new answer is generated",
+                                                                 "approval.png shows the historical completed refund task receipt, not a new waiting approval",
+                                                                 "Login and authorized read-only SQL are the only allowed POST endpoints",
+                                                                 "No images are edited; each PNG is captured directly from the actual browser page"
+                                                             ]
+                                         },
+    "local_demo":  {
+                       "public_deployment":  false,
+                       "status":  "passed",
+                       "artifact":  "demo-http.json",
+                       "provider_requests":  0
+                   }
+}

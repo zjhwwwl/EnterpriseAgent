@@ -1,0 +1,275 @@
+{
+  "passed": 43,
+  "total": 43,
+  "failed": 0,
+  "pending": 0,
+  "todo": 0,
+  "test_file_count": 6,
+  "started_at_utc": "2026-10-14T13:57:32.771000+00:00",
+  "reported_wall_seconds": 1.746837,
+  "scope": "Controlled frontend unit/component tests; HTTP clients and Vue dependencies may use explicit test doubles. No provider model calls or live API claims.",
+  "files": [
+    {
+      "path": "frontend/tests/unit/chart.spec.ts",
+      "status": "passed",
+      "passed": 5,
+      "assertions": [
+        {
+          "name": "analytics chart from executed rows keeps large exact money values in tooltips and never mutates source values",
+          "status": "passed",
+          "duration_ms": 31.99590000000012
+        },
+        {
+          "name": "analytics chart from executed rows distinguishes missing values from a genuine zero in a bar series",
+          "status": "passed",
+          "duration_ms": 3.736099999999851
+        },
+        {
+          "name": "analytics chart from executed rows does not label an unsafe numeric integer as an exact query value",
+          "status": "passed",
+          "duration_ms": 1.147799999999961
+        },
+        {
+          "name": "analytics chart from executed rows leaves a gap rather than joining a line through a missing observation",
+          "status": "passed",
+          "duration_ms": 3.682800000000043
+        },
+        {
+          "name": "analytics chart from executed rows uses an unavailable state for malformed chart data instead of breaking the task page",
+          "status": "passed",
+          "duration_ms": 2.0848000000000866
+        }
+      ]
+    },
+    {
+      "path": "frontend/tests/unit/citations.spec.ts",
+      "status": "passed",
+      "passed": 4,
+      "assertions": [
+        {
+          "name": "authenticated citation display shows a task-authorized historical citation as escaped text, without following its URL",
+          "status": "passed",
+          "duration_ms": 22.66780000000017
+        },
+        {
+          "name": "authenticated citation display fetches the current source through a trusted citation route only after a click",
+          "status": "passed",
+          "duration_ms": 9.859699999999975
+        },
+        {
+          "name": "authenticated citation display keeps permission errors visible without presenting a fetched source",
+          "status": "passed",
+          "duration_ms": 5.253500000000031
+        },
+        {
+          "name": "authenticated citation display does not let an older source response replace the currently selected citation",
+          "status": "passed",
+          "duration_ms": 7.641000000000076
+        }
+      ]
+    },
+    {
+      "path": "frontend/tests/unit/client.spec.ts",
+      "status": "passed",
+      "passed": 11,
+      "assertions": [
+        {
+          "name": "authenticated API client sends the in-memory bearer token with a bounded same-origin request",
+          "status": "passed",
+          "duration_ms": 4.689499999999953
+        },
+        {
+          "name": "authenticated API client rejects external URLs before sending a bearer token",
+          "status": "passed",
+          "duration_ms": 1.2275999999999385
+        },
+        {
+          "name": "authenticated API client sets JSON content type while allowing the browser to choose a multipart boundary",
+          "status": "passed",
+          "duration_ms": 0.9755000000000109
+        },
+        {
+          "name": "authenticated API client accepts a successful empty 204 response for document deletion",
+          "status": "passed",
+          "duration_ms": 0.3613000000000284
+        },
+        {
+          "name": "authenticated API client clears the current identity on 401 and preserves a safe request ID in the displayed error",
+          "status": "passed",
+          "duration_ms": 0.5235999999999876
+        },
+        {
+          "name": "authenticated API client keeps a valid identity on a business 403 and uses the header request ID fallback",
+          "status": "passed",
+          "duration_ms": 0.5489999999999782
+        },
+        {
+          "name": "authenticated API client does not let an old 401 log out a subsequently selected identity",
+          "status": "passed",
+          "duration_ms": 0.358600000000024
+        },
+        {
+          "name": "authenticated API client rejects a JSON body that finishes after login identity changes",
+          "status": "passed",
+          "duration_ms": 0.6235999999998967
+        },
+        {
+          "name": "authenticated API client verifies /me after login and keeps the bearer token out of browser storage",
+          "status": "passed",
+          "duration_ms": 0.8559000000000196
+        },
+        {
+          "name": "authenticated API client removes the provisional login token when current-user verification fails",
+          "status": "passed",
+          "duration_ms": 0.6238000000000739
+        },
+        {
+          "name": "authenticated API client preserves an HTTP 200 failed-task body rather than turning it into task success",
+          "status": "passed",
+          "duration_ms": 0.2536000000000058
+        }
+      ]
+    },
+    {
+      "path": "frontend/tests/unit/format.spec.ts",
+      "status": "passed",
+      "passed": 11,
+      "assertions": [
+        {
+          "name": "exact monetary display formats integer cents 0 without floating-point money arithmetic",
+          "status": "passed",
+          "duration_ms": 1.0763999999999214
+        },
+        {
+          "name": "exact monetary display formats integer cents 1 without floating-point money arithmetic",
+          "status": "passed",
+          "duration_ms": 0.17600000000015825
+        },
+        {
+          "name": "exact monetary display formats integer cents 12900 without floating-point money arithmetic",
+          "status": "passed",
+          "duration_ms": 0.09840000000008331
+        },
+        {
+          "name": "exact monetary display formats integer cents -1 without floating-point money arithmetic",
+          "status": "passed",
+          "duration_ms": 0.0886000000000422
+        },
+        {
+          "name": "exact monetary display formats integer cents -123456n without floating-point money arithmetic",
+          "status": "passed",
+          "duration_ms": 0.07010000000013861
+        },
+        {
+          "name": "exact monetary display formats integer cents 9007199254740993 without floating-point money arithmetic",
+          "status": "passed",
+          "duration_ms": 0.10520000000019536
+        },
+        {
+          "name": "exact monetary display formats integer cents 9007199254740993.000 without floating-point money arithmetic",
+          "status": "passed",
+          "duration_ms": 0.10199999999986176
+        },
+        {
+          "name": "exact monetary display refuses an unsafe numeric value rather than inventing its lost cents",
+          "status": "passed",
+          "duration_ms": 0.08699999999998909
+        },
+        {
+          "name": "exact monetary display shows an unavailable value for malformed, fractional, or missing cents",
+          "status": "passed",
+          "duration_ms": 0.27359999999998763
+        },
+        {
+          "name": "Shanghai time presentation converts a UTC instant across the Shanghai calendar-day boundary",
+          "status": "passed",
+          "duration_ms": 14.200199999999995
+        },
+        {
+          "name": "Shanghai time presentation uses the unavailable marker for missing or invalid timestamps",
+          "status": "passed",
+          "duration_ms": 0.20949999999993452
+        }
+      ]
+    },
+    {
+      "path": "frontend/tests/unit/markdown.spec.ts",
+      "status": "passed",
+      "passed": 7,
+      "assertions": [
+        {
+          "name": "model Markdown sanitization renders headings, emphasis, and tables from Markdown",
+          "status": "passed",
+          "duration_ms": 45.507899999999836
+        },
+        {
+          "name": "model Markdown sanitization removes scripts and event handlers while retaining harmless answer text",
+          "status": "passed",
+          "duration_ms": 3.685999999999922
+        },
+        {
+          "name": "model Markdown sanitization removes an executable link protocol from javascript:alert(1)",
+          "status": "passed",
+          "duration_ms": 3.386199999999917
+        },
+        {
+          "name": "model Markdown sanitization removes an executable link protocol from data:text/html;base64,PHNjcmlwdD4=",
+          "status": "passed",
+          "duration_ms": 1.8717999999998938
+        },
+        {
+          "name": "model Markdown sanitization removes an executable link protocol from jav&#x61;script:alert(1)",
+          "status": "passed",
+          "duration_ms": 1.9594999999999345
+        },
+        {
+          "name": "model Markdown sanitization keeps safe HTTPS links but does not allow a model-selected browser target",
+          "status": "passed",
+          "duration_ms": 1.6292000000000826
+        },
+        {
+          "name": "model Markdown sanitization removes remote images, embeds, forms, styles, SVG, and inline CSS",
+          "status": "passed",
+          "duration_ms": 8.520999999999958
+        }
+      ]
+    },
+    {
+      "path": "frontend/tests/unit/task-approval.spec.ts",
+      "status": "passed",
+      "passed": 5,
+      "assertions": [
+        {
+          "name": "explicit human approval does not resume after rendering or opening the approval details",
+          "status": "passed",
+          "duration_ms": 65.79449999999997
+        },
+        {
+          "name": "explicit human approval requires checking the confirmation statement and prevents concurrent submissions",
+          "status": "passed",
+          "duration_ms": 13.560200000000123
+        },
+        {
+          "name": "explicit human approval sends an explicit rejection without treating the dialog open as a decision",
+          "status": "passed",
+          "duration_ms": 12.632900000000063
+        },
+        {
+          "name": "explicit human approval disables expired approval and displays a failed task returned in an HTTP 200 body",
+          "status": "passed",
+          "duration_ms": 7.380699999999933
+        },
+        {
+          "name": "explicit human approval retains exact query strings and labels unknown token usage instead of claiming zero",
+          "status": "passed",
+          "duration_ms": 3.837500000000091
+        }
+      ]
+    }
+  ],
+  "source_artifact": {
+    "path": "var/test-results/phase7-frontend-unit.json",
+    "sha256": "33a6fa43208ea58f409628e1e2af3c999957cbf53431beed3375a90b97535787",
+    "bytes": 15917
+  }
+}

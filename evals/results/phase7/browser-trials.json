@@ -1,0 +1,983 @@
+{
+  "schema_version": 1,
+  "phase": 7,
+  "trial_count": 4,
+  "trials": [
+    {
+      "trial": 1,
+      "started_at": "2026-10-14T09:35:58.521Z",
+      "updated_at": "2026-10-14T09:36:13.983Z",
+      "status": "failed",
+      "elapsed_ms": 15462,
+      "category": "test_automation",
+      "reason": "login_selector_timeout",
+      "explanation": "Element Plus readonly input was covered by its select wrapper; test selector was corrected. No Agent message was sent.",
+      "failure": "locator.click: Timeout 15000ms exceeded.\nCall log:\n  - waiting for getByRole('combobox', { name: '演示账号' })\n    - locator resolved to <input readonly value=\"\" type=\"text\" tabindex=\"0\" role=\"combobox\" aria-label=\"演示账号\" autocomplete=\"off\" spellcheck=\"false\" id=\"login-account\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-activedescendant=\"\" aria-autocomplete=\"none\" aria-controls=\"el-id-7903-0\" class=\"el-select__input is-large\"/>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <span>模拟客户 · demo_customer</span> from <div class=\"el-select__selected-item el-select__placeholder\">…</div> subtree intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <span>模拟客户 · demo_customer</span> from <div class=\"el-select__selected-item el-select__placeholder\">…</div> subtree intercepts pointer events\n    - retrying click action\n      - waiting 100ms\n    29 × waiting for element to be visible, enabled and stable\n       - element is visible, enabled and stable\n       - scrolling into view if needed\n       - done scrolling\n       - <span>模拟客户 · demo_customer</span> from <div class=\"el-select__selected-item el-select__placeholder\">…</div> subtree intercepts pointer events\n     - retrying click action\n       - waiting 500ms\n",
+      "requests_from_browser": {
+        "messages": 0,
+        "resume": 0,
+        "recover": 0,
+        "refund_confirmation": 0
+      },
+      "model_usage_as_recorded": {
+        "deduplication": "Latest observed DTO for each unique task ID; resume responses replace earlier snapshots",
+        "observed_task_count": 0,
+        "model_attempts": 0,
+        "provider_known_prompt_tokens": 0,
+        "provider_known_completion_tokens": 0,
+        "provider_known_total_tokens": 0,
+        "unknown_usage_calls": 0,
+        "usage_complete": false,
+        "actual_total_tokens": null,
+        "incomplete_task_ids": [],
+        "messages_without_observed_task_dto": 0
+      },
+      "tasks": [],
+      "source_artifact": {
+        "path": "var/test-results/phase7-browser-trials/01-login-selector/artifacts/workflows-real-local-Enter-86b89-agement-and-analyst-queries/live-results.json",
+        "sha256": "bcdde385719af8ffdb7ad1de37c37872c7dcbaba5316e4917aba6b9758b7b512",
+        "bytes": 3756
+      }
+    },
+    {
+      "trial": 2,
+      "started_at": "2026-10-14T09:40:54.997Z",
+      "updated_at": "2026-10-14T09:41:05.872Z",
+      "status": "failed",
+      "elapsed_ms": 10875,
+      "category": "agent_semantic_limit",
+      "reason": "multintent_plan_missing_approval",
+      "explanation": "The compound request completed with order/item/policy tools without create_refund_request or an approval interrupt. A later trial used a clearer single-intent prompt. This earlier task remains a failed development expectation, not a fixed or successful model case.",
+      "failure": "expect(received).toBe(expected) // Object.is equality\n\nExpected: \"waiting_approval\"\nReceived: \"completed\"",
+      "requests_from_browser": {
+        "messages": 1,
+        "resume": 0,
+        "recover": 0,
+        "refund_confirmation": 1
+      },
+      "model_usage_as_recorded": {
+        "deduplication": "Latest observed DTO for each unique task ID; resume responses replace earlier snapshots",
+        "observed_task_count": 1,
+        "model_attempts": 3,
+        "provider_known_prompt_tokens": 5000,
+        "provider_known_completion_tokens": 516,
+        "provider_known_total_tokens": 5516,
+        "unknown_usage_calls": 0,
+        "usage_complete": true,
+        "actual_total_tokens": 5516,
+        "incomplete_task_ids": [],
+        "messages_without_observed_task_dto": 0
+      },
+      "tasks": [
+        {
+          "id": "8c195e5c-26fb-4c6d-adb6-d02c57d10db5",
+          "session_id": "4809488a-9c78-4c8c-8c50-e37ddf62297e",
+          "task_type": "order",
+          "status": "completed",
+          "error_code": null,
+          "elapsed_ms": 5906,
+          "token_usage": {
+            "model_calls": 3,
+            "prompt_tokens": 5000,
+            "completion_tokens": 516,
+            "total_tokens": 5516,
+            "unknown_usage_calls": 0,
+            "usage_complete": true,
+            "interrupted_usage_unknown": false
+          },
+          "citation_count": 3,
+          "approval_id": null,
+          "refund": null,
+          "analysis": null,
+          "steps": [
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 1049.213,
+              "error_code": null
+            },
+            {
+              "node": "intent_router",
+              "elapsed_ms": 1049.843,
+              "error_code": null
+            },
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 1024.516,
+              "error_code": null
+            },
+            {
+              "node": "planner",
+              "elapsed_ms": 1026.101,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_order",
+              "elapsed_ms": 4.175,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_order_items",
+              "elapsed_ms": 4.018,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_refund_policy",
+              "elapsed_ms": 1716.187,
+              "error_code": null
+            },
+            {
+              "node": "tool_execution",
+              "elapsed_ms": 1724.395,
+              "error_code": null
+            },
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 1976.08,
+              "error_code": null
+            },
+            {
+              "node": "planner",
+              "elapsed_ms": 1977.781,
+              "error_code": null
+            },
+            {
+              "node": "response_generation",
+              "elapsed_ms": 0.047,
+              "error_code": null
+            },
+            {
+              "node": "validation",
+              "elapsed_ms": 13.818,
+              "error_code": null
+            }
+          ]
+        }
+      ],
+      "source_artifact": {
+        "path": "var/test-results/phase7-browser-trials/20261014T0945158713963Z/artifacts/workflows-real-local-Enter-86b89-agement-and-analyst-queries/live-results.json",
+        "sha256": "75526c128709ee4217e25f814098dd4385a253d191c3714026cbf5305ea9e22d",
+        "bytes": 4424
+      }
+    },
+    {
+      "trial": 3,
+      "started_at": "2026-10-14T09:45:21.982Z",
+      "updated_at": "2026-10-14T09:45:46.907Z",
+      "status": "failed",
+      "elapsed_ms": 24925,
+      "category": "test_automation",
+      "reason": "hidden_checkbox_timeout",
+      "explanation": "A real task reached waiting_approval. Playwright tried checking the hidden original Element Plus input. The test was changed to click the visible label, then assert the input is checked. No refund was committed in this trial.",
+      "failure": "locator.check: Timeout 15000ms exceeded.\nCall log:\n  - waiting for getByRole('dialog', { name: '确认退款申请', exact: true }).getByTestId('approval-checkbox').getByRole('checkbox')\n    - locator resolved to <input type=\"checkbox\" class=\"el-checkbox__original\"/>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not stable\n    - retrying click action\n    - waiting 20ms\n    - waiting for element to be visible, enabled and stable\n    - element is not stable\n  2 × retrying click action\n      - waiting 100ms\n      - waiting for element to be visible, enabled and stable\n      - element is not visible\n  28 × retrying click action\n       - waiting 500ms\n       - waiting for element to be visible, enabled and stable\n       - element is not visible\n  - retrying click action\n    - waiting 500ms\n",
+      "requests_from_browser": {
+        "messages": 1,
+        "resume": 0,
+        "recover": 0,
+        "refund_confirmation": 1
+      },
+      "model_usage_as_recorded": {
+        "deduplication": "Latest observed DTO for each unique task ID; resume responses replace earlier snapshots",
+        "observed_task_count": 1,
+        "model_attempts": 3,
+        "provider_known_prompt_tokens": 4935,
+        "provider_known_completion_tokens": 297,
+        "provider_known_total_tokens": 5232,
+        "unknown_usage_calls": 0,
+        "usage_complete": true,
+        "actual_total_tokens": 5232,
+        "incomplete_task_ids": [],
+        "messages_without_observed_task_dto": 0
+      },
+      "tasks": [
+        {
+          "id": "b52a6d60-b935-4929-9e99-8ef620df28ea",
+          "session_id": "34e1fd00-02cf-4433-a58e-95d2c98853ec",
+          "task_type": "order",
+          "status": "waiting_approval",
+          "error_code": null,
+          "elapsed_ms": 4384,
+          "token_usage": {
+            "model_calls": 3,
+            "prompt_tokens": 4935,
+            "completion_tokens": 297,
+            "total_tokens": 5232,
+            "unknown_usage_calls": 0,
+            "usage_complete": true,
+            "interrupted_usage_unknown": false
+          },
+          "citation_count": 6,
+          "approval_id": "0b3505fd-3355-409b-897d-5bf22932ee0e",
+          "refund": null,
+          "analysis": null,
+          "steps": [
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 763.752,
+              "error_code": null
+            },
+            {
+              "node": "intent_router",
+              "elapsed_ms": 764.364,
+              "error_code": null
+            },
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 1080.835,
+              "error_code": null
+            },
+            {
+              "node": "planner",
+              "elapsed_ms": 1082.689,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_order",
+              "elapsed_ms": 3.943,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_order_items",
+              "elapsed_ms": 3.703,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_refund_policy",
+              "elapsed_ms": 1350.42,
+              "error_code": null
+            },
+            {
+              "node": "tool_execution",
+              "elapsed_ms": 1358.08,
+              "error_code": null
+            },
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 721.822,
+              "error_code": null
+            },
+            {
+              "node": "planner",
+              "elapsed_ms": 723.39,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "create_refund_request",
+              "elapsed_ms": 345.08,
+              "error_code": null
+            },
+            {
+              "node": "tool_execution",
+              "elapsed_ms": 345.106,
+              "error_code": null
+            }
+          ]
+        }
+      ],
+      "source_artifact": {
+        "path": "var/test-results/phase7-browser-trials/20261014T0956497480648Z/artifacts/workflows-real-local-Enter-86b89-agement-and-analyst-queries/live-results.json",
+        "sha256": "ef16fc27f3759ece8b62f40ca944bf93c241c88b21d69461d83ebb44136d016e",
+        "bytes": 5502
+      }
+    },
+    {
+      "trial": 4,
+      "started_at": "2026-10-14T09:56:56.100Z",
+      "updated_at": "2026-10-14T09:57:22.000Z",
+      "status": "passed",
+      "elapsed_ms": 25900,
+      "category": "guided_development_smoke",
+      "reason": "complete_workflow_pass_reusing_checkpoint",
+      "explanation": "The same persisted approval task was resumed after server restart, avoiding duplicate model generation; remaining knowledge and analytics model tasks plus the complete UI workflow passed.",
+      "failure": null,
+      "requests_from_browser": {
+        "messages": 2,
+        "resume": 1,
+        "recover": 0,
+        "refund_confirmation": 1
+      },
+      "model_usage_as_recorded": {
+        "deduplication": "Latest observed DTO for each unique task ID; resume responses replace earlier snapshots",
+        "observed_task_count": 3,
+        "model_attempts": 7,
+        "provider_known_prompt_tokens": 8129,
+        "provider_known_completion_tokens": 715,
+        "provider_known_total_tokens": 8844,
+        "reused_starting_provider_known_total_tokens": 5232,
+        "token_scope": "Cumulative unique-task ledger, including prior usage of an explicitly reused task",
+        "unknown_usage_calls": 0,
+        "usage_complete": true,
+        "actual_total_tokens": 8844,
+        "incomplete_task_ids": [],
+        "messages_without_observed_task_dto": 0
+      },
+      "tasks": [
+        {
+          "id": "b52a6d60-b935-4929-9e99-8ef620df28ea",
+          "session_id": "34e1fd00-02cf-4433-a58e-95d2c98853ec",
+          "task_type": "order",
+          "status": "completed",
+          "error_code": null,
+          "elapsed_ms": 4493,
+          "token_usage": {
+            "model_calls": 3,
+            "prompt_tokens": 4935,
+            "completion_tokens": 297,
+            "total_tokens": 5232,
+            "unknown_usage_calls": 0,
+            "usage_complete": true,
+            "interrupted_usage_unknown": false
+          },
+          "citation_count": 3,
+          "approval_id": "0b3505fd-3355-409b-897d-5bf22932ee0e",
+          "refund": {
+            "id": "9a1e3264-cc80-4085-9075-3e1a244961ba",
+            "order_no": "10086",
+            "status": "pending_review",
+            "amount_cents": 12900
+          },
+          "analysis": null,
+          "steps": [
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 763.752,
+              "error_code": null
+            },
+            {
+              "node": "intent_router",
+              "elapsed_ms": 764.364,
+              "error_code": null
+            },
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 1080.835,
+              "error_code": null
+            },
+            {
+              "node": "planner",
+              "elapsed_ms": 1082.689,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_order",
+              "elapsed_ms": 3.943,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_order_items",
+              "elapsed_ms": 3.703,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "get_refund_policy",
+              "elapsed_ms": 1350.42,
+              "error_code": null
+            },
+            {
+              "node": "tool_execution",
+              "elapsed_ms": 1358.08,
+              "error_code": null
+            },
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 721.822,
+              "error_code": null
+            },
+            {
+              "node": "planner",
+              "elapsed_ms": 723.39,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "create_refund_request",
+              "elapsed_ms": 345.08,
+              "error_code": null
+            },
+            {
+              "node": "tool_execution",
+              "elapsed_ms": 345.106,
+              "error_code": null
+            },
+            {
+              "node": "human_approval",
+              "elapsed_ms": 0.063,
+              "error_code": null
+            },
+            {
+              "node": "commit_refund",
+              "elapsed_ms": 22.9,
+              "error_code": null
+            },
+            {
+              "node": "response_generation",
+              "elapsed_ms": 0.029,
+              "error_code": null
+            },
+            {
+              "node": "validation",
+              "elapsed_ms": 16.921,
+              "error_code": null
+            }
+          ]
+        },
+        {
+          "id": "f850c625-cee4-40c2-9b7c-b19a0e0b3f5a",
+          "session_id": "34e1fd00-02cf-4433-a58e-95d2c98853ec",
+          "task_type": "knowledge",
+          "status": "completed",
+          "error_code": null,
+          "elapsed_ms": 4381,
+          "token_usage": {
+            "model_calls": 2,
+            "prompt_tokens": 1288,
+            "completion_tokens": 181,
+            "total_tokens": 1469,
+            "unknown_usage_calls": 0,
+            "usage_complete": true,
+            "interrupted_usage_unknown": false
+          },
+          "citation_count": 1,
+          "approval_id": null,
+          "refund": null,
+          "analysis": null,
+          "steps": [
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 822.19,
+              "error_code": null
+            },
+            {
+              "node": "intent_router",
+              "elapsed_ms": 822.935,
+              "error_code": null
+            },
+            {
+              "node": "knowledge_retrieval",
+              "elapsed_ms": 2326.854,
+              "error_code": null
+            },
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 1139.894,
+              "error_code": null
+            },
+            {
+              "node": "response_generation",
+              "elapsed_ms": 1140.636,
+              "error_code": null
+            },
+            {
+              "node": "validation",
+              "elapsed_ms": 13.767,
+              "error_code": null
+            }
+          ]
+        },
+        {
+          "id": "d932995b-a31e-4733-b581-f12b0638fc23",
+          "session_id": "e818383e-9e94-4b48-8a97-91267b5a6307",
+          "task_type": "analytics",
+          "status": "completed",
+          "error_code": null,
+          "elapsed_ms": 2213,
+          "token_usage": {
+            "model_calls": 2,
+            "prompt_tokens": 1906,
+            "completion_tokens": 237,
+            "total_tokens": 2143,
+            "unknown_usage_calls": 0,
+            "usage_complete": true,
+            "interrupted_usage_unknown": false
+          },
+          "citation_count": 0,
+          "approval_id": null,
+          "refund": null,
+          "analysis": {
+            "metric_ids": [
+              "paid_sales"
+            ],
+            "columns": [
+              "business_date",
+              "sales_cents"
+            ],
+            "rows": [
+              [
+                "2026-10-08",
+                "253935"
+              ],
+              [
+                "2026-10-09",
+                "442760"
+              ],
+              [
+                "2026-10-10",
+                "294815"
+              ]
+            ],
+            "normalized_sql": "SELECT business_date, SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) GROUP BY business_date ORDER BY business_date ASC LIMIT 101",
+            "truncated": false
+          },
+          "steps": [
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 964.426,
+              "error_code": null
+            },
+            {
+              "node": "intent_router",
+              "elapsed_ms": 964.882,
+              "error_code": null
+            },
+            {
+              "node": "model_call",
+              "attempt": 1,
+              "elapsed_ms": 1153.441,
+              "error_code": null
+            },
+            {
+              "node": "analytics_planner",
+              "elapsed_ms": 1154.12,
+              "error_code": null
+            },
+            {
+              "node": "business_tool",
+              "tool": "execute_analytics_sql",
+              "elapsed_ms": 8.552,
+              "error_code": null
+            },
+            {
+              "node": "analytics_execution",
+              "elapsed_ms": 8.573,
+              "error_code": null
+            },
+            {
+              "node": "response_generation",
+              "elapsed_ms": 0.002,
+              "error_code": null
+            },
+            {
+              "node": "validation",
+              "elapsed_ms": 0.503,
+              "error_code": null
+            }
+          ]
+        }
+      ],
+      "source_artifact": {
+        "path": "var/test-results/phase7-browser-trials/20261014T1354191273399Z/artifacts/workflows-real-local-Enter-86b89-agement-and-analyst-queries/live-results.json",
+        "sha256": "857ac59655d5c67d7705e14c74fca31cbc63330708ac8edf8108eebeb3cb16e9",
+        "bytes": 14095
+      }
+    }
+  ],
+  "all_trials_deduplicated_model_usage": {
+    "deduplication": "Chronological latest cumulative task DTO per unique Task ID across all four trials; a resume replaces the earlier waiting_approval snapshot.",
+    "unique_task_count": 4,
+    "model_attempts": 10,
+    "provider_known_prompt_tokens": 13129,
+    "provider_known_completion_tokens": 1231,
+    "provider_known_total_tokens": 14360,
+    "unknown_usage_calls": 0,
+    "usage_complete_for_invoked_tasks": true,
+    "actual_total_tokens": 14360,
+    "new_task_messages_all_trials": 4,
+    "phase6_usage_included": false,
+    "zero_message_trial_scope": "Trial 1 submitted no Agent messages. Its empty provider ledger records actual_total_tokens=null / usage_complete=false; it is retained as N/A, not relabeled as provider-reported zero."
+  },
+  "latest_task_ledgers": [
+    {
+      "task": {
+        "id": "8c195e5c-26fb-4c6d-adb6-d02c57d10db5",
+        "session_id": "4809488a-9c78-4c8c-8c50-e37ddf62297e",
+        "task_type": "order",
+        "status": "completed",
+        "error_code": null,
+        "elapsed_ms": 5906,
+        "token_usage": {
+          "model_calls": 3,
+          "prompt_tokens": 5000,
+          "completion_tokens": 516,
+          "total_tokens": 5516,
+          "unknown_usage_calls": 0,
+          "usage_complete": true,
+          "interrupted_usage_unknown": false
+        },
+        "citation_count": 3,
+        "approval_id": null,
+        "refund": null,
+        "analysis": null,
+        "steps": [
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 1049.213,
+            "error_code": null
+          },
+          {
+            "node": "intent_router",
+            "elapsed_ms": 1049.843,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 1024.516,
+            "error_code": null
+          },
+          {
+            "node": "planner",
+            "elapsed_ms": 1026.101,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "get_order",
+            "elapsed_ms": 4.175,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "get_order_items",
+            "elapsed_ms": 4.018,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "get_refund_policy",
+            "elapsed_ms": 1716.187,
+            "error_code": null
+          },
+          {
+            "node": "tool_execution",
+            "elapsed_ms": 1724.395,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 1976.08,
+            "error_code": null
+          },
+          {
+            "node": "planner",
+            "elapsed_ms": 1977.781,
+            "error_code": null
+          },
+          {
+            "node": "response_generation",
+            "elapsed_ms": 0.047,
+            "error_code": null
+          },
+          {
+            "node": "validation",
+            "elapsed_ms": 13.818,
+            "error_code": null
+          }
+        ]
+      },
+      "latest_trial": 2,
+      "observed_at": "2026-10-14T09:41:05.872Z"
+    },
+    {
+      "task": {
+        "id": "b52a6d60-b935-4929-9e99-8ef620df28ea",
+        "session_id": "34e1fd00-02cf-4433-a58e-95d2c98853ec",
+        "task_type": "order",
+        "status": "completed",
+        "error_code": null,
+        "elapsed_ms": 4493,
+        "token_usage": {
+          "model_calls": 3,
+          "prompt_tokens": 4935,
+          "completion_tokens": 297,
+          "total_tokens": 5232,
+          "unknown_usage_calls": 0,
+          "usage_complete": true,
+          "interrupted_usage_unknown": false
+        },
+        "citation_count": 3,
+        "approval_id": "0b3505fd-3355-409b-897d-5bf22932ee0e",
+        "refund": {
+          "id": "9a1e3264-cc80-4085-9075-3e1a244961ba",
+          "order_no": "10086",
+          "status": "pending_review",
+          "amount_cents": 12900
+        },
+        "analysis": null,
+        "steps": [
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 763.752,
+            "error_code": null
+          },
+          {
+            "node": "intent_router",
+            "elapsed_ms": 764.364,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 1080.835,
+            "error_code": null
+          },
+          {
+            "node": "planner",
+            "elapsed_ms": 1082.689,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "get_order",
+            "elapsed_ms": 3.943,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "get_order_items",
+            "elapsed_ms": 3.703,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "get_refund_policy",
+            "elapsed_ms": 1350.42,
+            "error_code": null
+          },
+          {
+            "node": "tool_execution",
+            "elapsed_ms": 1358.08,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 721.822,
+            "error_code": null
+          },
+          {
+            "node": "planner",
+            "elapsed_ms": 723.39,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "create_refund_request",
+            "elapsed_ms": 345.08,
+            "error_code": null
+          },
+          {
+            "node": "tool_execution",
+            "elapsed_ms": 345.106,
+            "error_code": null
+          },
+          {
+            "node": "human_approval",
+            "elapsed_ms": 0.063,
+            "error_code": null
+          },
+          {
+            "node": "commit_refund",
+            "elapsed_ms": 22.9,
+            "error_code": null
+          },
+          {
+            "node": "response_generation",
+            "elapsed_ms": 0.029,
+            "error_code": null
+          },
+          {
+            "node": "validation",
+            "elapsed_ms": 16.921,
+            "error_code": null
+          }
+        ]
+      },
+      "latest_trial": 4,
+      "observed_at": "2026-10-14T09:57:22.000Z"
+    },
+    {
+      "task": {
+        "id": "f850c625-cee4-40c2-9b7c-b19a0e0b3f5a",
+        "session_id": "34e1fd00-02cf-4433-a58e-95d2c98853ec",
+        "task_type": "knowledge",
+        "status": "completed",
+        "error_code": null,
+        "elapsed_ms": 4381,
+        "token_usage": {
+          "model_calls": 2,
+          "prompt_tokens": 1288,
+          "completion_tokens": 181,
+          "total_tokens": 1469,
+          "unknown_usage_calls": 0,
+          "usage_complete": true,
+          "interrupted_usage_unknown": false
+        },
+        "citation_count": 1,
+        "approval_id": null,
+        "refund": null,
+        "analysis": null,
+        "steps": [
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 822.19,
+            "error_code": null
+          },
+          {
+            "node": "intent_router",
+            "elapsed_ms": 822.935,
+            "error_code": null
+          },
+          {
+            "node": "knowledge_retrieval",
+            "elapsed_ms": 2326.854,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 1139.894,
+            "error_code": null
+          },
+          {
+            "node": "response_generation",
+            "elapsed_ms": 1140.636,
+            "error_code": null
+          },
+          {
+            "node": "validation",
+            "elapsed_ms": 13.767,
+            "error_code": null
+          }
+        ]
+      },
+      "latest_trial": 4,
+      "observed_at": "2026-10-14T09:57:22.000Z"
+    },
+    {
+      "task": {
+        "id": "d932995b-a31e-4733-b581-f12b0638fc23",
+        "session_id": "e818383e-9e94-4b48-8a97-91267b5a6307",
+        "task_type": "analytics",
+        "status": "completed",
+        "error_code": null,
+        "elapsed_ms": 2213,
+        "token_usage": {
+          "model_calls": 2,
+          "prompt_tokens": 1906,
+          "completion_tokens": 237,
+          "total_tokens": 2143,
+          "unknown_usage_calls": 0,
+          "usage_complete": true,
+          "interrupted_usage_unknown": false
+        },
+        "citation_count": 0,
+        "approval_id": null,
+        "refund": null,
+        "analysis": {
+          "metric_ids": [
+            "paid_sales"
+          ],
+          "columns": [
+            "business_date",
+            "sales_cents"
+          ],
+          "rows": [
+            [
+              "2026-10-08",
+              "253935"
+            ],
+            [
+              "2026-10-09",
+              "442760"
+            ],
+            [
+              "2026-10-10",
+              "294815"
+            ]
+          ],
+          "normalized_sql": "SELECT business_date, SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) GROUP BY business_date ORDER BY business_date ASC LIMIT 101",
+          "truncated": false
+        },
+        "steps": [
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 964.426,
+            "error_code": null
+          },
+          {
+            "node": "intent_router",
+            "elapsed_ms": 964.882,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 1153.441,
+            "error_code": null
+          },
+          {
+            "node": "analytics_planner",
+            "elapsed_ms": 1154.12,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "execute_analytics_sql",
+            "elapsed_ms": 8.552,
+            "error_code": null
+          },
+          {
+            "node": "analytics_execution",
+            "elapsed_ms": 8.573,
+            "error_code": null
+          },
+          {
+            "node": "response_generation",
+            "elapsed_ms": 0.002,
+            "error_code": null
+          },
+          {
+            "node": "validation",
+            "elapsed_ms": 0.503,
+            "error_code": null
+          }
+        ]
+      },
+      "latest_trial": 4,
+      "observed_at": "2026-10-14T09:57:22.000Z"
+    }
+  ],
+  "latest_passing_trial_incremental_usage": {
+    "new_task_messages": 2,
+    "new_model_attempts": 4,
+    "provider_known_new_total_tokens": 3612,
+    "reused_task_prior_total_tokens": 5232,
+    "derivation": "8844 cumulative tokens minus 5232 already consumed by the reused task; no model call occurred during its resume."
+  }
+}

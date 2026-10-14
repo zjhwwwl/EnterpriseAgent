@@ -6,3 +6,10 @@
 *.ps1 text eol=crlf
 *.sh text eol=lf
 *.yaml text eol=lf
+frontend/**/*.ts text eol=lf
+frontend/**/*.vue text eol=lf
+frontend/**/*.css text eol=lf
+frontend/**/*.svg text eol=lf
+frontend/*.json text eol=lf
+frontend/*.html text eol=lf
+frontend/.npmrc text eol=lf

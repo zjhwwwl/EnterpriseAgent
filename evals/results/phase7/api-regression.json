@@ -1,0 +1,122 @@
+{
+  "passed": 21,
+  "total": 21,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "junit_elapsed_seconds": 0.422,
+  "started_at": "2026-10-14T21:47:20.089156+08:00",
+  "scope": "ASGI API regression tests for phase/version metadata, health lifecycle, request IDs, safe errors, input validation and CORS. Not the full PostgreSQL or RAG integration suite.",
+  "test_cases": [
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_service_information_and_liveness",
+      "elapsed_seconds": 0.021
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_readiness_follows_lifespan_and_does_not_claim_database_health",
+      "elapsed_seconds": 0.007
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_http_errors_share_a_request_correlated_envelope[GET-/not-a-route-404-NOT_FOUND]",
+      "elapsed_seconds": 0.022
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_http_errors_share_a_request_correlated_envelope[POST-/health/live-405-METHOD_NOT_ALLOWED]",
+      "elapsed_seconds": 0.02
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_validation_response_never_echoes_sensitive_input",
+      "elapsed_seconds": 0.021
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_unhandled_exception_response_is_generic_and_keeps_request_id",
+      "elapsed_seconds": 0.022
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_safe_500_response_keeps_the_explicit_cors_policy[http://localhost:5173]",
+      "elapsed_seconds": 0.022
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_safe_500_response_keeps_the_explicit_cors_policy[https://evil.example.com]",
+      "elapsed_seconds": 0.022
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_valid_request_id_is_preserved[a]",
+      "elapsed_seconds": 0.006
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_valid_request_id_is_preserved[valid_ID-1.2]",
+      "elapsed_seconds": 0.007
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_valid_request_id_is_preserved[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
+      "elapsed_seconds": 0.007
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_invalid_request_id_is_replaced_with_server_generated_id[]",
+      "elapsed_seconds": 0.006
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_invalid_request_id_is_replaced_with_server_generated_id[.bad]",
+      "elapsed_seconds": 0.006
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_invalid_request_id_is_replaced_with_server_generated_id[a b]",
+      "elapsed_seconds": 0.005
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_invalid_request_id_is_replaced_with_server_generated_id[a@b]",
+      "elapsed_seconds": 0.006
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_invalid_request_id_is_replaced_with_server_generated_id[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
+      "elapsed_seconds": 0.006
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_invalid_request_id_is_replaced_with_server_generated_id[\\xe9]",
+      "elapsed_seconds": 0.006
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_query_and_body_cannot_override_request_context",
+      "elapsed_seconds": 0.021
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_concurrent_requests_keep_separate_contexts",
+      "elapsed_seconds": 0.04
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_cors_only_accepts_configured_origin",
+      "elapsed_seconds": 0.006
+    },
+    {
+      "class": "tests.integration.test_api",
+      "name": "test_documentation_can_be_disabled_per_application",
+      "elapsed_seconds": 0.096
+    }
+  ],
+  "source_artifact": {
+    "path": "var/test-results/phase7-api.xml",
+    "sha256": "5d63c0c8a9425f762bcc942951a6ba0a8dccf7f6f2fcc25d4b589512f870d246",
+    "bytes": 3137
+  }
+}

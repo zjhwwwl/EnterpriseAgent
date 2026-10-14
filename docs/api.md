@@ -1,6 +1,14 @@
 # API 契约
 
-**当前版本 0.6.0 / Phase 6。** 已有健康、认证、订单、退款、知识库、LangGraph 会话与审批，以及授权聚合运营分析 HTTP 接口。MCP 保留独立 stdio 三个只读工具，不注册 HTTP 路由，OpenAPI 仅覆盖 HTTP；Vue 尚未提供。当前契约以实际代码和 OpenAPI 为准，阶段验收见[Phase 6](phase-6.md)，旧测试与在线烟测不改写为本阶段成绩。
+**当前版本 0.7.0 / Phase 7。** Vue 五页后台消费现有健康、认证、订单、退款、知识库、LangGraph 会话与审批，以及授权聚合运营分析 HTTP 接口；本阶段不新增绕过 Service 的业务写入口。MCP 保留独立 stdio 三个只读工具，不注册 HTTP 路由，OpenAPI 仅覆盖 HTTP。当前契约以实际代码和 OpenAPI 为准，本阶段验收见[Phase 7](phase-7.md)，历史测试与在线烟测不改写为本阶段成绩。
+
+## 浏览器集成约定
+
+Vue 路由为 `/agent`、`/orders`、`/knowledge`、`/analytics`、`/tasks`，登录页为 `/login`。开发服务通过同源 `/api/v1` 和 `/health` 代理请求，API Client 仅接受本站 API 路径，附带内存 Bearer Token，不向任意 URL 转发凭据。Token 不写入持久浏览器存储；401 或有效期到期后需重新登录。前端角色显示不替代后端认证、实时权限和归属校验。
+
+Agent 深链接支持 `/agent?session=<UUID>`；`message` 只预填最多 2000 字符草稿，不能自动创建会话或发送消息。任务历史支持 `/tasks?session=<UUID>&task=<UUID>`，分别筛选账号所属会话和打开所属任务。业务 POST 不自动重试；网络结果不明先查询持久状态。订单退款手动重试保留原 approval_id、决定和幂等键，模块内 Map 只保障当前页面运行周期，不替代后端事务。
+
+任务失败按响应体 status/error_code 显示；知识上传和重新索引同时核对 status/index_error_code。引用核验按 chunk_id 请求认证 `/knowledge/citations/{id}`，原文文本插值；历史引用快照不会自动获得当前可见性证明。所有失败提示可显示安全错误及 request ID，不回显请求密码或 Token。
 
 ## 基础接口与认证
 
@@ -8,7 +16,7 @@
 
 | 方法 | 路径 | 成功码 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/` | 200 | 名称、版本、phase=6、文档及健康入口 |
+| GET | `/` | 200 | 名称、版本、phase=7、文档及健康入口 |
 | GET | `/health/live` | 200 | HTTP 进程存活 |
 | GET | `/health/ready` | 200 / 503 | 实际数据库与已配置 Redis 的就绪检查 |
 | POST | `/api/v1/auth/login` | 200 | JSON 账号密码，返回 JWT |
@@ -163,7 +171,7 @@ $result | Select-Object status, replayed, refund
 {"message":"订单 10086 的商品不想要了，请申请无理由退款。"}
 ```
 
-TaskResponse 包括 id、session_id、task_type、status、message、result、steps、token_usage、error_code、elapsed_ms 与时间。status 支持 running / waiting_approval / completed / failed / rejected / expired / cancelled；具体失败以 error_code 为准，不能把 HTTP 200 当作任务成功。result 包括 answer、approval、refund_result、citations、facts、warning_codes。未配置模型时返回 503，不创建伪造回答。
+TaskResponse 包括 id、session_id、task_type、status、message、result、steps、token_usage、error_code、elapsed_ms 与时间。status 支持 running / waiting_approval / completed / failed / rejected / expired / cancelled；具体失败以 error_code 为准，不能把 HTTP 200 当作任务成功。result 包括 answer、approval、refund_result、citations、facts、warning_codes、analysis；初始或中断结果可能缺少部分字段。未配置模型时返回 503，不创建伪造回答。
 
 Agent 退款参数只允许订单号、reason 与 notes；订单号限定 5–30 位 ASCII 数字。服务器先判断真实资格并限定适用政策文档检索，再准备审批。waiting_approval 时 result.approval 包含服务器计算的订单、金额、原因、期限、policy 和 requires_confirmation=true；尚未创建退款或工单。
 
@@ -188,7 +196,7 @@ confirmed 必须是 JSON 布尔值，false 也记录拒绝与审计。Agent 确�
 | 图/工具/模型已执行但受规则终止 | Task.status=failed 与 error_code，如 invalid_tool_arguments / agent_tool_limit / insufficient_policy_evidence |
 | 中断需恢复 | Task.status=failed 与 agent_timeout / agent_checkpoint_error，并明确提示恢复核对 |
 
-运营分析接口属于后续阶段；MCP 契约见下文。
+运营分析接口和 MCP 契约见下文；Vue Agent、历史页面展示相同 TaskResponse。
 
 
 ## 知识库管理
@@ -312,7 +320,7 @@ SQL 必须是一个授权视图上的单条 PostgreSQL SELECT，显式写出合�
 | metric_ids / metric_definitions | 选择的登记指标及其口径；不自动证明 SQL 与指标语义匹配 |
 | chart | 可为空；type 为 line / bar，labels、series、source=query_rows 来自实际 rows |
 
-默认最多返回 100 行、20 列，配置可将行数调至最多 500；服务端最多读取上限加一行以判断截断。字符串单元格最多 512 字符，行数据 JSON 预算 100 KiB，超限明确拒绝。报告正文最多展示 20 行，完整受限结果保留在 query.rows。空结果不推断销量为零，截断不作为完整汇总。图表选首个非数值列或列名以 `_id` 结尾的列作为维度，维度可在后续列；所有 `_id` 列不加入数值 series。纯数值宽表保留全部可用 series，标签使用返回行序号；ISO 日期标签生成 line，其余为 bar，没有可用数值时 chart 为 null。该规范不包含 Vue 渲染、自动业务原因或语义指标识别。
+默认最多返回 100 行、20 列，配置可将行数调至最多 500；服务端最多读取上限加一行以判断截断。字符串单元格最多 512 字符，行数据 JSON 预算 100 KiB，超限明确拒绝。报告正文最多展示 20 行，完整受限结果保留在 query.rows。空结果不推断销量为零，截断不作为完整汇总。图表选首个非数值列或列名以 `_id` 结尾的列作为维度，维度可在后续列；所有 `_id` 列不加入数值 series。纯数值宽表保留全部可用 series，标签使用返回行序号；ISO 日期标签生成 line，其余为 bar，没有可用数值时 chart 为 null。Vue SVG 组件只消费该实际结果规范，图表显示前 30 行并保留原值提示；不追加业务原因或语义指标识别。
 
 | HTTP 状态 | code | 场景 |
 | --- | --- | --- |

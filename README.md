@@ -2,7 +2,7 @@
 
 基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手，面向中国大陆 AI Agent 开发工程师求职展示。项目使用虚构电商数据，以业务规则、权限、事务、可追溯检索和真实验证为重点，分阶段交付。
 
-**当前版本 0.6.0 / Phase 6：运营分析 Agent 与受限只读 SQL。** 同一张 LangGraph 图新增分析分支：模型规划 SQL，专用数据库账号读取两个授权聚合视图，后端根据实际结果生成报告和图表数据。SQLGlot AST 白名单、数据库权限、只读事务、超时与结果限制共同控制执行；仅 analyst / admin 可用。[883 项完整测试通过](evals/results/phase6/verification.json)，真实 SQL、HTTP 与在线开发烟测分别归档，见[阶段记录](docs/phase-6.md)。Phase 3–5 的原始证据保留，Vue 后台属于 Phase 7。
+**当前开发阶段 0.7.0 / Phase 7：Vue 管理后台与真实 API 集成。** 新增 Agent 对话、订单与售后、企业知识库、运营分析、任务历史五个页面，使用 Vue 3、TypeScript、Vite 和 Element Plus。页面读取现有认证接口，展示真实任务状态、引用、执行步骤、查询结果与图表；退款、审核、删除和重新索引均提供显式核对界面。43 项前端单元/组件测试、21 项 API 回归及真实 Edge 全流程的 14 个检查点通过，详见[阶段记录](docs/phase-7.md)与[验证报告](evals/results/phase7/report.md)。这些开发检查不等同盲评或完整模型质量成绩；[Phase 6 的 883 项测试](evals/results/phase6/verification.json)保留为历史结果，本阶段未重跑完整套件。
 
 ## 功能与技术栈
 
@@ -18,6 +18,7 @@
 | 会话与审批 | 私有 thread、官方 PostgreSQL Checkpoint、多轮历史、人工 interrupt/resume、显式恢复与幂等写入 |
 | MCP | 官方 SDK 1.30.0、独立 stdio Server / Client、工具发现、三个只读工具、每次调用重新认证 |
 | 运营分析 | 单图 NL SQL、SQLGlot 30.22.0、独立 reader、两个聚合视图、真实查询报告和图表数据 |
+| Vue 管理后台 | 五个业务页面、JWT 内存会话、按角色显示操作、Markdown 安全渲染、引用核验、人工确认与 SVG 图表 |
 | 评估 | 30 条中文 dev/test 数据集、真实向量与混合重排对照 CLI、JSON / CSV / Markdown |
 | 本地部署 | Windows Python 3.13 + Linux PostgreSQL / Redis / Chroma 容器，缓存与数据位于 D 盘 |
 
@@ -27,7 +28,9 @@ AI 检索使用 **真实 CPU ONNX 推理**，通过 FastEmbed 和 ONNX Runtime �
 
 ```mermaid
 flowchart TD
-    CLIENT["Swagger / HTTP Client"] --> API["FastAPI：认证与校验"]
+    WEB["Vue 3 / TypeScript / Element Plus"] --> PROXY["Vite：loopback API 代理"]
+    PROXY --> API["FastAPI：认证与校验"]
+    CLIENT["Swagger / HTTP Client"] --> API
     API --> BIZ["订单退款 Service"]
     BIZ --> REPO["业务 Repository"]
     REPO --> PG["PostgreSQL：事实、政策、确认、审计"]
@@ -86,6 +89,7 @@ EnterpriseAgent/
 ├─ alembic/                      # 0001_ecommerce → … → 0005_analytics
 ├─ data/knowledge/               # 5 篇模拟政策
 ├─ evals/datasets/rag.json
+├─ frontend/                     # Vue 五页、API client、认证内存状态、组件与前端测试
 ├─ scripts/                      # bootstrap/init/migrate/seed/prepare/index/eval/check/run/mcp-demo
 ├─ tests/                        # 单元、真实 PostgreSQL、真实模型、HTTP
 ├─ deploy/compose.yaml           # 当前为基础设施容器
@@ -115,6 +119,15 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 首次模型准备显式下载固定版本公开文件，合计 **396,800,683 字节**；可使用可信离线副本与 `prepare-rag-models.py --offline-source`。模型推理只读取校验成功的本地文件。索引脚本处理已登记且未删除的文档，当前 fingerprint 已索引的文档会跳过。评估限定五篇种子文档，不把用户上传内容混入对照。
 
 使用 Agent 前在不提交的 `.env` 设置 `EA_LLM_ENABLED=true` 并填写自己的 `EA_DEEPSEEK_API_KEY`，随后重启。默认 `EA_DEEPSEEK_MODEL=deepseek-flash`，显式禁用 Thinking；Key 只留后端。未配置时发消息返回 `agent_model_not_configured`，不会用测试脚本伪装模型回答。完整配置见 [部署](docs/deployment.md)。
+
+在另一个 PowerShell 终端启动后台。需要 Node.js 24，前端依赖由提交的 `frontend/package-lock.json` 固定；不把 API Key、数据库连接或 JWT 秘密放进 Vite 配置。
+
+```powershell
+.\scripts\frontend.ps1 -Mode Install
+.\scripts\frontend.ps1 -Mode Run
+```
+
+访问 [Vue 后台](http://127.0.0.1:5173)，使用下表的公开模拟账号登录。前端通过同源 `/api/v1` 和 `/health` 代理访问本机 API；首次进入页面只读取必要数据，不自动创建 Agent 任务或调用聊天模型。前端安装缓存及运行目录保留在项目 D 盘，详见[部署](docs/deployment.md)。
 
 `init-infra.ps1` 生成并保留本地随机 PostgreSQL/JWT 秘密，启动 PostgreSQL、Redis、Chroma，并同步两个专用分析连接字段；`init-analytics.ps1` 为新旧项目库初始化受限 reader，不重置数据。秘密位于被 Git 忽略的 `var/infra/` 和 `var/infra-secrets.env`。迁移和 seed 使用初始化账号；业务 API 与分析使用各自受限账号。API 启动不自动迁移、seed、下载模型或索引。详情见 [部署](docs/deployment.md)。
 
@@ -163,18 +176,65 @@ MCP Demo 在 API、数据库、Chroma 和已索引知识库就绪后执行：
 
 seed 默认当天 UTC 基准、随机种子 42、500 订单；本工作区使用 2026-10-12 的固定数据。API 用当前 UTC 判断期限，数据会随时间超期；重复 seed 不覆盖已有数据。业务测试注入固定时钟。
 
-目前没有 Vue 后台或真实浏览器 Demo 截图，Agent 会话通过 Swagger / HTTP 使用。Phase 7 完成后加入实际截图，Swagger 不替代前端验收。完整接口见 [API](docs/api.md)。
+Vue 后台提供五个业务页面：
+
+| 页面 | 实际交互 |
+| --- | --- |
+| Agent 对话 | 新建/选择持久会话、显式发送、按 `Task.status` 显示回答和失败、步骤/用量/来源、确认与恢复 |
+| 订单与售后 | 当前账号可见订单、商品/物流/资格，客户核对退款，客服/管理员审核及模拟完成 |
+| 企业知识库 | 可见文档与下载、三种检索模式、来源核验；管理员上传、删除、重新索引与错误状态 |
+| 运营分析 | 授权目录、四个只读 SQL 模板、手动查询、精确原始结果、SVG 图表、指标口径；自然语言只预填 Agent 草稿 |
+| 任务历史 | 自己的分页任务、会话筛选、执行详情和关联会话跳转 |
+
+登录 Token 只保存在页面运行时内存，刷新页面需重新登录。前端角色显示不授予权限，所有访问和修改继续由后端验证。真实浏览器连接专用本机测试库、真实 CPU 检索和配置的聊天模型；截图来自实际页面，使用虚构数据。完整接口见 [API](docs/api.md)，浏览器执行范围见 [Phase 7](docs/phase-7.md)。
+
+### 实际 Demo 截图
+
+Agent 对话展示已保存的多轮任务、实际回答、工具步骤和知识来源：
+
+![Agent 对话与知识引用](docs/screenshots/phase7/agent.png)
+
+订单与售后展示当前账号的订单、物流、退款资格和人工核对入口：
+
+![订单与售后](docs/screenshots/phase7/orders.png)
+
+企业知识库展示已索引文档与真实检索；维护操作仍受管理员权限和政策来源保护约束：
+
+![企业知识库](docs/screenshots/phase7/knowledge.png)
+
+运营分析展示实际只读查询、精确原始值、指标口径和 SVG 图表：
+
+![运营分析](docs/screenshots/phase7/analytics.png)
+
+任务历史展示当前账号的持久化任务与执行详情：
+
+![任务历史](docs/screenshots/phase7/tasks.png)
+
+[退款提交回执](docs/screenshots/phase7/approval.png)、[来源核验](docs/screenshots/phase7/citation.png)与[自然语言分析结果](docs/screenshots/phase7/agent-analytics.png)另行保留。截图为真实页面，历史回执展示申请提交时状态；最新退款审核结果在订单页读取。截图仅证明对应本机运行状态，不代表公网部署、性能或开放式模型质量。
 
 ## 测试与 Evaluation
 
 ```powershell
 .\scripts\check.ps1
 .\scripts\evaluate-rag.ps1
+.\scripts\frontend.ps1 -Mode Check
 ```
 
 check默认传`--require-postgres --require-rag`，执行Ruff、格式、pytest与pip check。Phase 4初验**511项通过、0失败/错误/跳过**，JUnit524.068秒、81条Chroma弃用警告保留；真实Uvicorn重启后仅创建一条退款和工单。初验主服务五项健康通过，尚未配置模型时503且零任务。[验证摘要](evals/results/phase4/verification.json)、[重启](evals/results/phase4/http-restart.json)和[主HTTP](evals/results/phase4/demo-http.json)保留原始`online_deepseek_tested=false`。在线修复后110项核心测试通过，[517项完整复验通过](evals/results/phase4-live/verification.json)；历史初验不冒称最新代码验收。
 
 Phase 5 新增官方 MCP 工具发现、严格参数、逐次 SQL 认证、越权/撤销/角色变化、错误脱敏及真实 stdio 子进程测试。真实 PostgreSQL、CPU 模型和 Chroma 用于政策检索；检查退款、工单和审批数量不变，stdout 仅含 JSON-RPC，SDK 退出后实际子进程结束。[实际 Client Demo](evals/results/phase5/mcp-demo.json)完成三工具读取；[主服务 HTTP](evals/results/phase5/demo-http.json)为 0.5.0 / phase=5、五项就绪通过。完整检查 **614 项通过、0 失败/错误/跳过**，JUnit 548.312 秒，85 条 Chroma 弃用警告保留，Ruff / 格式 / pip check 通过。本阶段未调用云模型，不能据此推导模型意图或任务完成率。[完整摘要](evals/results/phase5/verification.json)、[实际协议证据](evals/results/phase5/mcp-stdio.json)与[可读报告](evals/results/phase5/report.md)已归档，详见[Phase 5](docs/phase-5.md)。
+
+Phase 7 的 **43 项前端单元/组件测试与 21 项 API 回归通过**，严格 TypeScript、格式检查、Vite 构建和生产依赖 audit 通过。真实 Edge 连接专用本机 API 完成 **1 条串行全流程、14 个检查点**，覆盖五页、跨客户拒绝、退款确认/审核/模拟完成、真实知识检索与维护、只读查询及持久任务。受控组件测试和真实浏览器证据分开记录，详见[验证报告](evals/results/phase7/report.md)。
+
+最终通过流程观察到三个唯一 Task、七次模型调用尝试、累计 **8844 Token**；其中 **5232 Token** 来自前一轮已持久化的待审批任务，实际通过轮新增 **3612 Token**。连同失败轮次按 Task ID 去重，本阶段共四个 Task、十次尝试、prompt 13129 / completion 1231 / total **14360 Token**，没有未知消费。首次登录选择器失败没有提交模型消息；另一轮多意图退款请求只完成政策查询而未准备审批，失败保留。三个引导式任务用于开发验收，不据此声称模型任务完成率或泛化正确率。
+
+如需重新执行真实浏览器业务流程，先完成本机基础设施、迁移及模型配置，再显式接受在线模型调用：
+
+```powershell
+.\scripts\verify-frontend.ps1 -AllowLive
+```
+
+该脚本仅操作专用 `enterprise_agent_test` 中的虚构业务记录，真实供应商调用可能消耗余额；不重置开发库，不创建云资源。测试数据随时间超期，需核对数据日期和退款期限。普通前端 Check 不触发聊天模型调用。
 
 Phase 6 最终完整检查 **883 项通过、0 失败/错误/跳过**，强制真实 PostgreSQL / RAG；JUnit 697.865 秒、CLI 697.89 秒，Ruff lint / 153 文件格式 / pip check 通过。85 条 Chroma legacy embedding function config 弃用警告保留，未声称修复。[完整摘要](evals/results/phase6/verification.json)、[143 个选定源码/脚本/测试/锁/数据集的稳定哈希](evals/results/phase6/source-freeze.json)与[可读报告](evals/results/phase6/report.md)已归档；首轮 878/879 的失败及修复保留，122 项聚焦子集不重复累计。
 
@@ -201,12 +261,12 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 - 原文抽取校验与确定性业务报告，记录工具步骤、实际报告的 Token 和未知使用量。
 - MCP 只适配协议入口，严格参数、实时身份和业务归属复用现有 Tools / Service；通过实际子进程验证协议与退出。
 - 分析 SQL 在专用 reader 上执行，AST 只接受单个授权视图；金额保留精确十进制，报告来源可逐行核对。
+- 前端将 HTTP 成功、Agent 完成与知识索引完成分别显示；不确定的业务提交先核对服务器，再按原审批和幂等键决定是否手动重试。
 
 ## 后续阶段
 
 | 阶段 | 内容 |
 | --- | --- |
-| Phase 7 | Vue 3 / TypeScript / Element Plus 五个业务页面 |
 | Phase 8 | 扩展 Agent、工具、SQL 与回答忠实度评估；可选追踪 |
 | Phase 9 | 应用/前端镜像、全栈 Compose、GitHub Actions、干净环境验证 |
 
@@ -219,18 +279,21 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 - PDF 只读已有文本层，无 OCR；DOCX 覆盖正文与表格，不包含页眉页脚、修订文本及文本框；TXT/MD 仅 UTF-8。
 - 默认 Chunk 为 500 **字符**、重叠 80；模型输入上限 512 Token，字符不等于 Token，较长内容会被模型截断。
 - 本地 CPU 推理、同步请求/CLI 索引，不是独立持久队列或高吞吐生产服务；向量清理失败可能留下旧条目，未知数据库提交结果可能留下未登记原件，没有自动清理工具。
-- DeepSeek 历史结果为手选开发烟测；本阶段在线 NL SQL 验收状态见阶段记录，仍无独立完整模型质量或负载评估，没有 Vue 或 Langfuse。
+- DeepSeek 历史结果为手选开发烟测，仍无独立完整模型质量或负载评估，没有 Langfuse tracing 集成。
 - 分析仅支持一个授权聚合视图上的受限 SELECT，不支持 JOIN、CTE、子查询、窗口函数或自由数据源。AST 证明执行边界，不能证明模型选择了正确指标或时间范围。
-- 返回图表规范和数据，尚无可交互图表页面；截断结果不能作为完整总量，指标口径与执行 SQL 都需要核对。
+- 图表只展示前 30 行的相对数值和原始值悬停提示，完整受限结果见表格；截断结果不能作为完整总量，指标口径与执行 SQL 都需要核对。
 - MCP 仅本机 stdio、每进程一个 JWT 身份、三个只读工具；没有网络 MCP/OAuth、Token 自动续期或 Agent 图内 MCP 调用分支。stdin 来自可信本机 Client，尚未提供恶意大帧内存隔离或生产负载评估。
 - 知识回答为可追溯原文抽取，能限制文字编造，但不能证明选段语义足够或已识别所有政策冲突。
 - Agent 通过请求同步执行、人工等待持久化，不提供流式 UI、独立 Worker、自动任务重领或自动恢复调度。
 - 当前 Compose 是基础设施，Windows 应用与 ONNX 推理已验证；Linux 应用镜像和全栈部署尚未验证。
 - 小型人工数据集与分数门控不能代表开放式回答语义可靠性。
 - 公开演示账号与 loopback 服务不能直接作为公网配置。
+- 前端 JWT 与未决退款的原审批/幂等键只存运行时内存；无自动 Token 续期，刷新或关闭页面后需重新登录并从后端核对记录。
+- 本阶段真实多意图退款提示出现只查询政策、未进入审批的情况；更明确的单一请求通过。该失败仍待更大独立任务/工具评估，不将改写提示算作通用解决。
+- Vite 构建保留 UI chunk 超过 500 kB 的警告，本次 minified 约 984.49 kB、gzip 316.59 kB；尚未完成组件按需引入优化或独立页面加载性能测试。
 
 ## 文档与许可证
 
-[架构](docs/architecture.md) · [API](docs/api.md) · [Agent 工作流](docs/agent-workflow.md) · [Evaluation](docs/evaluation.md) · [部署](docs/deployment.md) · [技术决策](docs/technical-decisions.md) · [Phase 1](docs/phase-1.md) · [Phase 2](docs/phase-2.md) · [Phase 3](docs/phase-3.md) · [Phase 4](docs/phase-4.md) · [Phase 5](docs/phase-5.md) · [Phase 6](docs/phase-6.md)
+[架构](docs/architecture.md) · [API](docs/api.md) · [Agent 工作流](docs/agent-workflow.md) · [Evaluation](docs/evaluation.md) · [部署](docs/deployment.md) · [技术决策](docs/technical-decisions.md) · [Phase 1](docs/phase-1.md) · [Phase 2](docs/phase-2.md) · [Phase 3](docs/phase-3.md) · [Phase 4](docs/phase-4.md) · [Phase 5](docs/phase-5.md) · [Phase 6](docs/phase-6.md) · [Phase 7](docs/phase-7.md)
 
 代码采用 [MIT License](LICENSE)。

@@ -1,0 +1,29 @@
+{
+    "checked_at_utc":  "2026-10-14T14:03:41.5328305Z",
+    "frontend_url":  "http://127.0.0.1:5173",
+    "api_url":  "http://127.0.0.1:8000",
+    "frontend_http":  200,
+    "service_information":  {
+                                "name":  "EnterpriseAgent",
+                                "version":  "0.7.0",
+                                "phase":  7,
+                                "docs_url":  "/docs",
+                                "health_url":  "/health/ready"
+                            },
+    "readiness":  {
+                      "status":  "ok",
+                      "service":  "EnterpriseAgent",
+                      "version":  "0.7.0",
+                      "phase":  7,
+                      "checks":  {
+                                     "application":  "ok",
+                                     "database":  "ok",
+                                     "redis":  "ok",
+                                     "knowledge":  "ok",
+                                     "agent_checkpoint":  "ok",
+                                     "analytics":  "ok"
+                                 }
+                  },
+    "requests_scope":  "Service metadata and readiness only; no Agent messages or provider requests",
+    "background_frontend_stop_restart":  "Verified against recorded Node executable and absolute project Vite entry; restart returned HTTP 200"
+}
