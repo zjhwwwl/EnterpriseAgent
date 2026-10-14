@@ -6,7 +6,7 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-EXPECTED_SCHEMA_REVISION = "0004_agent_role"
+EXPECTED_SCHEMA_REVISION = "0005_analytics"
 logger = logging.getLogger("enterprise_agent.database")
 
 

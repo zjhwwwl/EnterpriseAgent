@@ -10,8 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
 from enterprise_agent import DEVELOPMENT_PHASE, __version__
+from enterprise_agent.analytics.runtime import AnalyticsRuntime
 from enterprise_agent.api.errors import register_error_handlers
-from enterprise_agent.api.routes import agent, auth, knowledge, orders, refunds, system
+from enterprise_agent.api.routes import agent, analytics, auth, knowledge, orders, refunds, system
 from enterprise_agent.api.upload_limit import UploadLimitMiddleware
 from enterprise_agent.config import Settings, get_settings
 from enterprise_agent.database import Database
@@ -29,6 +30,7 @@ def create_app(
     rag_runtime: RagRuntime | None = None,
     agent_model=None,
     agent_checkpoint=None,
+    analytics_runtime=None,
 ) -> FastAPI:
     resolved = settings if settings is not None else get_settings()
     if configure_logs:
@@ -50,6 +52,9 @@ def create_app(
                 application.state.rag = (
                     rag_runtime if rag_runtime is not None else RagRuntime(resolved)
                 )
+            if resolved.analytics_enabled:
+                application.state.analytics = analytics_runtime or AnalyticsRuntime(resolved)
+                await application.state.analytics.is_ready()
             if (
                 resolved.agent_enabled
                 and application.state.database is not None
@@ -84,11 +89,13 @@ def create_app(
                 await application.state.redis.aclose()
             if application.state.rag is not None and rag_runtime is None:
                 await application.state.rag.close()
+            if application.state.analytics is not None and analytics_runtime is None:
+                await application.state.analytics.close()
             logger.info("Application stopped", extra={"event": "application_stopped"})
 
     application = FastAPI(
         title="EnterpriseAgent",
-        description="Phase 5：企业知识与订单 Agent、人工退款确认；另提供独立 stdio MCP 服务。",
+        description="Phase 6：企业知识与订单 Agent、人工退款确认、只读运营 SQL 分析及独立 MCP。",
         version=__version__,
         lifespan=lifespan,
         docs_url="/docs" if resolved.docs_enabled else None,
@@ -102,6 +109,7 @@ def create_app(
     application.state.rag = None
     application.state.agent_checkpoint = None
     application.state.agent_model = None
+    application.state.analytics = None
     application.state.clock = lambda: datetime.now(UTC)
     # add_middleware prepends each layer: RequestContext -> CORS -> UploadLimit.
     # CORS must also wrap UploadLimit's early responses before routing.
@@ -115,6 +123,14 @@ def create_app(
         message="Agent 请求超过正文大小限制",
     )
     application.add_middleware(
+        UploadLimitMiddleware,
+        max_bytes=16 * 1024,
+        allowance=0,
+        path_prefix="/api/v1/analytics/",
+        error_code="analytics_request_too_large",
+        message="运营分析请求超过正文大小限制",
+    )
+    application.add_middleware(
         CORSMiddleware,
         allow_origins=resolved.cors_origins,
         allow_credentials=False,
@@ -124,6 +140,6 @@ def create_app(
     )
     application.add_middleware(RequestContextMiddleware)
     register_error_handlers(application)
-    for module in (system, auth, orders, refunds, knowledge, agent):
+    for module in (system, auth, orders, refunds, knowledge, agent, analytics):
         application.include_router(module.router)
     return application

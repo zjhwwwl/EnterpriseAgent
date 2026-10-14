@@ -1,0 +1,940 @@
+{
+  "started_at_utc": "2026-10-13T20:09:51.113992+00:00",
+  "finished_at_utc": "2026-10-13T20:09:59.665929+00:00",
+  "dataset_sha256": "b1f85c6987ec2eaf72ee47c9ebaf4155a073be2b1d872cef2d9d98b7a4cf71c0",
+  "evaluator_sha256": "852faf5e8e4f675db25cedeac1dc67dd22eebee6902bbe50b87424ee9dc2faa7",
+  "scope": "four_schema_guided_development_smoke_cases_not_blind_or_statistical_evaluation",
+  "transport": "loopback_api_only",
+  "controlled_model_only": false,
+  "provider_identity": "not_exposed_by_local_task_dto",
+  "operator_supplied_model_label": "deepseek-flash",
+  "operator_settings": "not_exposed_by_api",
+  "trusted_catalog": {
+    "schema": "ea_analytics",
+    "views": {
+      "daily_orders": {
+        "business_date": "DATE",
+        "paid_order_count": "BIGINT",
+        "goods_revenue_cents": "NUMERIC",
+        "shipping_revenue_cents": "NUMERIC",
+        "gross_revenue_cents": "NUMERIC",
+        "completed_refund_order_count": "BIGINT",
+        "completed_refund_cents": "NUMERIC"
+      },
+      "daily_product_sales": {
+        "business_date": "DATE",
+        "product_id": "BIGINT",
+        "product_name": "TEXT",
+        "category": "TEXT",
+        "units_sold": "BIGINT",
+        "goods_revenue_cents": "NUMERIC"
+      }
+    },
+    "metric_definitions": {
+      "paid_sales": "按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。",
+      "refund_rate": "所选支付日期订单群截至查询时 completed_simulated 的退款订单数 / 已支付订单数；不是所选期间发生的退款事件率；分母为零时返回 NULL。",
+      "order_count": "按 Asia/Shanghai 支付日期计算的已支付订单数，不包含未支付或已取消订单。",
+      "product_sales": "按支付日期统计商品实付金额，单位分，不含运费、不扣退款；名称和类目使用订单明细快照，历史名称不同会分组展示。"
+    },
+    "business_timezone": "Asia/Shanghai",
+    "as_of_utc": "2026-10-13T20:09:51.570665+00:00",
+    "today": "2026-10-14",
+    "date_windows": {
+      "last_seven_days_including_today": {
+        "start_inclusive": "2026-10-08",
+        "end_exclusive": "2026-10-15"
+      },
+      "this_month_to_date": {
+        "start_inclusive": "2026-10-01",
+        "end_exclusive": "2026-10-15"
+      },
+      "previous_complete_week": {
+        "start_inclusive": "2026-09-30",
+        "end_exclusive": "2026-10-07"
+      },
+      "latest_complete_week": {
+        "start_inclusive": "2026-10-07",
+        "end_exclusive": "2026-10-14"
+      }
+    },
+    "notes": [
+      "时间窗口采用左闭右开；今天的数据截至实际查询时间，非完整自然日。",
+      "退款状态为模拟完成；查询时可能变化，毛销售额不扣除退款。",
+      "商品名称和类目来自订单明细快照，跨历史名称可出现不同分组。"
+    ]
+  },
+  "reference_snapshot": "separate_readonly_api_requests_not_a_shared_database_snapshot",
+  "date_drift_detected": false,
+  "planned_cases": 4,
+  "recorded_cases": 4,
+  "run_complete": true,
+  "passed_cases": 4,
+  "known_provider_tokens": {
+    "prompt_tokens": 7427,
+    "completion_tokens": 1019,
+    "total_tokens": 8446
+  },
+  "known_model_call_attempts": 8,
+  "tasks_with_unknown_or_incomplete_consumption": 0,
+  "consumption_complete": true,
+  "records": [
+    {
+      "id": "paid_sales_last_seven_days",
+      "question": "统计最近七天销售额（含今天、含运费、不扣退款，以 sales_cents 返回一行）。",
+      "executed": true,
+      "passed": true,
+      "reason": "ordered_columns_and_rows_match_real_reader_reference",
+      "task": {
+        "id": "4419471a-95d1-4d3a-a9c4-546c8744bd21",
+        "session_id": "d3cd8296-fab0-4088-a6ec-ef8dbc7ee5d8",
+        "task_type": "analytics",
+        "status": "completed",
+        "message": "统计最近七天销售额（含今天、含运费、不扣退款，以 sales_cents 返回一行）。",
+        "result": {
+          "answer": "运营查询结果\n\n实际返回 1 行。\n\n指标口径：\n- 按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。\n\n| sales_cents |\n| --- |\n| 991510 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101\n```",
+          "approval": null,
+          "refund_result": null,
+          "citations": [],
+          "facts": [
+            {
+              "name": "execute_analytics_sql",
+              "result": {
+                "normalized_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101",
+                "columns": [
+                  "sales_cents"
+                ],
+                "rows": [
+                  [
+                    "991510"
+                  ]
+                ],
+                "row_count": 1,
+                "truncated": false,
+                "elapsed_ms": 6.201
+              }
+            }
+          ],
+          "warning_codes": [],
+          "analysis": {
+            "answer": "运营查询结果\n\n实际返回 1 行。\n\n指标口径：\n- 按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。\n\n| sales_cents |\n| --- |\n| 991510 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101\n```",
+            "query": {
+              "normalized_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101",
+              "columns": [
+                "sales_cents"
+              ],
+              "rows": [
+                [
+                  "991510"
+                ]
+              ],
+              "row_count": 1,
+              "truncated": false,
+              "elapsed_ms": 6.201
+            },
+            "chart": {
+              "type": "bar",
+              "labels": [
+                "1"
+              ],
+              "series": [
+                {
+                  "name": "sales_cents",
+                  "column_index": 0,
+                  "data": [
+                    "991510"
+                  ]
+                }
+              ],
+              "source": "query_rows"
+            },
+            "metric_ids": [
+              "paid_sales"
+            ],
+            "metric_definitions": {
+              "paid_sales": "按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。"
+            }
+          }
+        },
+        "steps": [
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 1199.73,
+            "error_code": null
+          },
+          {
+            "node": "intent_router",
+            "elapsed_ms": 1200.483,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 743.44,
+            "error_code": null
+          },
+          {
+            "node": "analytics_planner",
+            "elapsed_ms": 744.079,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "execute_analytics_sql",
+            "elapsed_ms": 8.122,
+            "error_code": null
+          },
+          {
+            "node": "analytics_execution",
+            "elapsed_ms": 8.139,
+            "error_code": null
+          },
+          {
+            "node": "response_generation",
+            "elapsed_ms": 0.002,
+            "error_code": null
+          },
+          {
+            "node": "validation",
+            "elapsed_ms": 0.063,
+            "error_code": null
+          }
+        ],
+        "token_usage": {
+          "model_calls": 2,
+          "prompt_tokens": 1811,
+          "completion_tokens": 199,
+          "total_tokens": 2010,
+          "unknown_usage_calls": 0,
+          "usage_complete": true,
+          "interrupted_usage_unknown": false
+        },
+        "error_code": null,
+        "elapsed_ms": 2052,
+        "created_at": "2026-10-13T20:09:51.704395Z",
+        "updated_at": "2026-10-13T20:09:53.784308Z",
+        "completed_at": "2026-10-13T20:09:53.784312Z"
+      },
+      "reference": {
+        "answer": "运营查询结果\n\n实际返回 1 行。\n\n指标口径：\n- 按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。\n\n| sales_cents |\n| --- |\n| 991510 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT COALESCE(SUM(gross_revenue_cents), 0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101\n```",
+        "query": {
+          "normalized_sql": "SELECT COALESCE(SUM(gross_revenue_cents), 0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101",
+          "columns": [
+            "sales_cents"
+          ],
+          "rows": [
+            [
+              "991510"
+            ]
+          ],
+          "row_count": 1,
+          "truncated": false,
+          "elapsed_ms": 6.053
+        },
+        "chart": {
+          "type": "bar",
+          "labels": [
+            "1"
+          ],
+          "series": [
+            {
+              "name": "sales_cents",
+              "column_index": 0,
+              "data": [
+                "991510"
+              ]
+            }
+          ],
+          "source": "query_rows"
+        },
+        "metric_ids": [
+          "paid_sales"
+        ],
+        "metric_definitions": {
+          "paid_sales": "按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。"
+        }
+      },
+      "reference_metadata": {
+        "canonical_sql": "SELECT COALESCE(SUM(gross_revenue_cents),0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-08' AND business_date < DATE '2026-10-15'",
+        "metric_ids": [
+          "paid_sales"
+        ],
+        "trusted_date": "2026-10-14"
+      },
+      "session_id": "d3cd8296-fab0-4088-a6ec-ef8dbc7ee5d8",
+      "request_elapsed_ms": 2179.018,
+      "date_drift": false
+    },
+    {
+      "id": "refund_rate_month_cohort",
+      "question": "本月退款率是多少？按支付日期订单群统计截至查询时的已完成模拟退款，返回退款百分数 refund_rate_percent，保留两位小数；分母为零返回 NULL。",
+      "executed": true,
+      "passed": true,
+      "reason": "ordered_columns_and_rows_match_real_reader_reference",
+      "task": {
+        "id": "f3b40b8d-6458-45c7-aada-269662167ba3",
+        "session_id": "8ce5ab25-9ead-4878-98ea-b43dc212557c",
+        "task_type": "analytics",
+        "status": "completed",
+        "message": "本月退款率是多少？按支付日期订单群统计截至查询时的已完成模拟退款，返回退款百分数 refund_rate_percent，保留两位小数；分母为零返回 NULL。",
+        "result": {
+          "answer": "运营查询结果\n\n实际返回 1 行。\n\n指标口径：\n- 所选支付日期订单群截至查询时 completed_simulated 的退款订单数 / 已支付订单数；不是所选期间发生的退款事件率；分母为零时返回 NULL。\n\n| refund_rate_percent |\n| --- |\n| 2.33 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT ROUND(SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0) * 100, 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101\n```",
+          "approval": null,
+          "refund_result": null,
+          "citations": [],
+          "facts": [
+            {
+              "name": "execute_analytics_sql",
+              "result": {
+                "normalized_sql": "SELECT ROUND(SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0) * 100, 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101",
+                "columns": [
+                  "refund_rate_percent"
+                ],
+                "rows": [
+                  [
+                    "2.33"
+                  ]
+                ],
+                "row_count": 1,
+                "truncated": false,
+                "elapsed_ms": 6.924
+              }
+            }
+          ],
+          "warning_codes": [],
+          "analysis": {
+            "answer": "运营查询结果\n\n实际返回 1 行。\n\n指标口径：\n- 所选支付日期订单群截至查询时 completed_simulated 的退款订单数 / 已支付订单数；不是所选期间发生的退款事件率；分母为零时返回 NULL。\n\n| refund_rate_percent |\n| --- |\n| 2.33 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT ROUND(SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0) * 100, 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101\n```",
+            "query": {
+              "normalized_sql": "SELECT ROUND(SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0) * 100, 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101",
+              "columns": [
+                "refund_rate_percent"
+              ],
+              "rows": [
+                [
+                  "2.33"
+                ]
+              ],
+              "row_count": 1,
+              "truncated": false,
+              "elapsed_ms": 6.924
+            },
+            "chart": {
+              "type": "bar",
+              "labels": [
+                "1"
+              ],
+              "series": [
+                {
+                  "name": "refund_rate_percent",
+                  "column_index": 0,
+                  "data": [
+                    "2.33"
+                  ]
+                }
+              ],
+              "source": "query_rows"
+            },
+            "metric_ids": [
+              "refund_rate"
+            ],
+            "metric_definitions": {
+              "refund_rate": "所选支付日期订单群截至查询时 completed_simulated 的退款订单数 / 已支付订单数；不是所选期间发生的退款事件率；分母为零时返回 NULL。"
+            }
+          }
+        },
+        "steps": [
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 772.346,
+            "error_code": null
+          },
+          {
+            "node": "intent_router",
+            "elapsed_ms": 772.763,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 908.197,
+            "error_code": null
+          },
+          {
+            "node": "analytics_planner",
+            "elapsed_ms": 908.77,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "execute_analytics_sql",
+            "elapsed_ms": 9.069,
+            "error_code": null
+          },
+          {
+            "node": "analytics_execution",
+            "elapsed_ms": 9.099,
+            "error_code": null
+          },
+          {
+            "node": "response_generation",
+            "elapsed_ms": 0.008,
+            "error_code": null
+          },
+          {
+            "node": "validation",
+            "elapsed_ms": 0.135,
+            "error_code": null
+          }
+        ],
+        "token_usage": {
+          "model_calls": 2,
+          "prompt_tokens": 1850,
+          "completion_tokens": 238,
+          "total_tokens": 2088,
+          "unknown_usage_calls": 0,
+          "usage_complete": true,
+          "interrupted_usage_unknown": false
+        },
+        "error_code": null,
+        "elapsed_ms": 1797,
+        "created_at": "2026-10-13T20:09:53.868972Z",
+        "updated_at": "2026-10-13T20:09:55.677930Z",
+        "completed_at": "2026-10-13T20:09:55.677934Z"
+      },
+      "reference": {
+        "answer": "运营查询结果\n\n实际返回 1 行。\n\n指标口径：\n- 所选支付日期订单群截至查询时 completed_simulated 的退款订单数 / 已支付订单数；不是所选期间发生的退款事件率；分母为零时返回 NULL。\n\n| refund_rate_percent |\n| --- |\n| 2.33 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0), 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101\n```",
+        "query": {
+          "normalized_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0), 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101",
+          "columns": [
+            "refund_rate_percent"
+          ],
+          "rows": [
+            [
+              "2.33"
+            ]
+          ],
+          "row_count": 1,
+          "truncated": false,
+          "elapsed_ms": 12.875
+        },
+        "chart": {
+          "type": "bar",
+          "labels": [
+            "1"
+          ],
+          "series": [
+            {
+              "name": "refund_rate_percent",
+              "column_index": 0,
+              "data": [
+                "2.33"
+              ]
+            }
+          ],
+          "source": "query_rows"
+        },
+        "metric_ids": [
+          "refund_rate"
+        ],
+        "metric_definitions": {
+          "refund_rate": "所选支付日期订单群截至查询时 completed_simulated 的退款订单数 / 已支付订单数；不是所选期间发生的退款事件率；分母为零时返回 NULL。"
+        }
+      },
+      "reference_metadata": {
+        "canonical_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count),0),2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-15'",
+        "metric_ids": [
+          "refund_rate"
+        ],
+        "trusted_date": "2026-10-14"
+      },
+      "session_id": "8ce5ab25-9ead-4878-98ea-b43dc212557c",
+      "request_elapsed_ms": 1846.521,
+      "date_drift": false
+    },
+    {
+      "id": "compare_complete_seven_day_periods",
+      "question": "对比最近两周已支付订单量（排除今天）：前七天为 previous_week，后七天为 latest_week。返回 period、paid_order_count 两列，按 period 升序排列。",
+      "executed": true,
+      "passed": true,
+      "reason": "ordered_columns_and_rows_match_real_reader_reference",
+      "task": {
+        "id": "8e606f19-eb6f-4020-8a9a-cd9214790633",
+        "session_id": "115a8b1c-5223-442e-9cab-3ba93090f35c",
+        "task_type": "analytics",
+        "status": "completed",
+        "message": "对比最近两周已支付订单量（排除今天）：前七天为 previous_week，后七天为 latest_week。返回 period、paid_order_count 两列，按 period 升序排列。",
+        "result": {
+          "answer": "运营查询结果\n\n实际返回 2 行。\n\n指标口径：\n- 按 Asia/Shanghai 支付日期计算的已支付订单数，不包含未支付或已取消订单。\n\n| period | paid_order_count |\n| --- | --- |\n| latest_week | 18 |\n| previous_week | 28 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT CASE WHEN business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-07' AS DATE) THEN 'previous_week' WHEN business_date >= CAST('2026-10-07' AS DATE) AND business_date < CAST('2026-10-14' AS DATE) THEN 'latest_week' END AS period, SUM(paid_order_count) AS paid_order_count FROM ea_analytics.daily_orders WHERE (business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-07' AS DATE)) OR (business_date >= CAST('2026-10-07' AS DATE) AND business_date < CAST('2026-10-14' AS DATE)) GROUP BY period ORDER BY period ASC LIMIT 101\n```",
+          "approval": null,
+          "refund_result": null,
+          "citations": [],
+          "facts": [
+            {
+              "name": "execute_analytics_sql",
+              "result": {
+                "normalized_sql": "SELECT CASE WHEN business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-07' AS DATE) THEN 'previous_week' WHEN business_date >= CAST('2026-10-07' AS DATE) AND business_date < CAST('2026-10-14' AS DATE) THEN 'latest_week' END AS period, SUM(paid_order_count) AS paid_order_count FROM ea_analytics.daily_orders WHERE (business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-07' AS DATE)) OR (business_date >= CAST('2026-10-07' AS DATE) AND business_date < CAST('2026-10-14' AS DATE)) GROUP BY period ORDER BY period ASC LIMIT 101",
+                "columns": [
+                  "period",
+                  "paid_order_count"
+                ],
+                "rows": [
+                  [
+                    "latest_week",
+                    "18"
+                  ],
+                  [
+                    "previous_week",
+                    "28"
+                  ]
+                ],
+                "row_count": 2,
+                "truncated": false,
+                "elapsed_ms": 9.947
+              }
+            }
+          ],
+          "warning_codes": [],
+          "analysis": {
+            "answer": "运营查询结果\n\n实际返回 2 行。\n\n指标口径：\n- 按 Asia/Shanghai 支付日期计算的已支付订单数，不包含未支付或已取消订单。\n\n| period | paid_order_count |\n| --- | --- |\n| latest_week | 18 |\n| previous_week | 28 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT CASE WHEN business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-07' AS DATE) THEN 'previous_week' WHEN business_date >= CAST('2026-10-07' AS DATE) AND business_date < CAST('2026-10-14' AS DATE) THEN 'latest_week' END AS period, SUM(paid_order_count) AS paid_order_count FROM ea_analytics.daily_orders WHERE (business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-07' AS DATE)) OR (business_date >= CAST('2026-10-07' AS DATE) AND business_date < CAST('2026-10-14' AS DATE)) GROUP BY period ORDER BY period ASC LIMIT 101\n```",
+            "query": {
+              "normalized_sql": "SELECT CASE WHEN business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-07' AS DATE) THEN 'previous_week' WHEN business_date >= CAST('2026-10-07' AS DATE) AND business_date < CAST('2026-10-14' AS DATE) THEN 'latest_week' END AS period, SUM(paid_order_count) AS paid_order_count FROM ea_analytics.daily_orders WHERE (business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-07' AS DATE)) OR (business_date >= CAST('2026-10-07' AS DATE) AND business_date < CAST('2026-10-14' AS DATE)) GROUP BY period ORDER BY period ASC LIMIT 101",
+              "columns": [
+                "period",
+                "paid_order_count"
+              ],
+              "rows": [
+                [
+                  "latest_week",
+                  "18"
+                ],
+                [
+                  "previous_week",
+                  "28"
+                ]
+              ],
+              "row_count": 2,
+              "truncated": false,
+              "elapsed_ms": 9.947
+            },
+            "chart": {
+              "type": "bar",
+              "labels": [
+                "latest_week",
+                "previous_week"
+              ],
+              "series": [
+                {
+                  "name": "paid_order_count",
+                  "column_index": 1,
+                  "data": [
+                    "18",
+                    "28"
+                  ]
+                }
+              ],
+              "source": "query_rows"
+            },
+            "metric_ids": [
+              "order_count"
+            ],
+            "metric_definitions": {
+              "order_count": "按 Asia/Shanghai 支付日期计算的已支付订单数，不包含未支付或已取消订单。"
+            }
+          }
+        },
+        "steps": [
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 764.683,
+            "error_code": null
+          },
+          {
+            "node": "intent_router",
+            "elapsed_ms": 765.164,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 1086.692,
+            "error_code": null
+          },
+          {
+            "node": "analytics_planner",
+            "elapsed_ms": 1087.437,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "execute_analytics_sql",
+            "elapsed_ms": 13.918,
+            "error_code": null
+          },
+          {
+            "node": "analytics_execution",
+            "elapsed_ms": 13.95,
+            "error_code": null
+          },
+          {
+            "node": "response_generation",
+            "elapsed_ms": 0.001,
+            "error_code": null
+          },
+          {
+            "node": "validation",
+            "elapsed_ms": 0.103,
+            "error_code": null
+          }
+        ],
+        "token_usage": {
+          "model_calls": 2,
+          "prompt_tokens": 1868,
+          "completion_tokens": 321,
+          "total_tokens": 2189,
+          "unknown_usage_calls": 0,
+          "usage_complete": true,
+          "interrupted_usage_unknown": false
+        },
+        "error_code": null,
+        "elapsed_ms": 1964,
+        "created_at": "2026-10-13T20:09:55.768141Z",
+        "updated_at": "2026-10-13T20:09:57.744042Z",
+        "completed_at": "2026-10-13T20:09:57.744045Z"
+      },
+      "reference": {
+        "answer": "运营查询结果\n\n实际返回 2 行。\n\n指标口径：\n- 按 Asia/Shanghai 支付日期计算的已支付订单数，不包含未支付或已取消订单。\n\n| period | paid_order_count |\n| --- | --- |\n| latest_week | 18 |\n| previous_week | 28 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT CASE WHEN business_date < CAST('2026-10-07' AS DATE) THEN 'previous_week' ELSE 'latest_week' END AS period, SUM(paid_order_count) AS paid_order_count FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-14' AS DATE) GROUP BY period ORDER BY period LIMIT 101\n```",
+        "query": {
+          "normalized_sql": "SELECT CASE WHEN business_date < CAST('2026-10-07' AS DATE) THEN 'previous_week' ELSE 'latest_week' END AS period, SUM(paid_order_count) AS paid_order_count FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-09-30' AS DATE) AND business_date < CAST('2026-10-14' AS DATE) GROUP BY period ORDER BY period LIMIT 101",
+          "columns": [
+            "period",
+            "paid_order_count"
+          ],
+          "rows": [
+            [
+              "latest_week",
+              "18"
+            ],
+            [
+              "previous_week",
+              "28"
+            ]
+          ],
+          "row_count": 2,
+          "truncated": false,
+          "elapsed_ms": 6.542
+        },
+        "chart": {
+          "type": "bar",
+          "labels": [
+            "latest_week",
+            "previous_week"
+          ],
+          "series": [
+            {
+              "name": "paid_order_count",
+              "column_index": 1,
+              "data": [
+                "18",
+                "28"
+              ]
+            }
+          ],
+          "source": "query_rows"
+        },
+        "metric_ids": [
+          "order_count"
+        ],
+        "metric_definitions": {
+          "order_count": "按 Asia/Shanghai 支付日期计算的已支付订单数，不包含未支付或已取消订单。"
+        }
+      },
+      "reference_metadata": {
+        "canonical_sql": "SELECT CASE WHEN business_date < DATE '2026-10-07' THEN 'previous_week' ELSE 'latest_week' END AS period, SUM(paid_order_count) AS paid_order_count FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-09-30' AND business_date < DATE '2026-10-14' GROUP BY period ORDER BY period",
+        "metric_ids": [
+          "order_count"
+        ],
+        "trusted_date": "2026-10-14"
+      },
+      "session_id": "115a8b1c-5223-442e-9cab-3ba93090f35c",
+      "request_elapsed_ms": 2012.834,
+      "date_drift": false
+    },
+    {
+      "id": "product_sales_top_five",
+      "question": "最近七天（含今天）哪些商品销售额最高？返回 product_id、product_name、goods_revenue_cents 前五名，商品销售额不含运费、不扣退款；按销售额降序、product_id 和 product_name 升序排列。",
+      "executed": true,
+      "passed": true,
+      "reason": "ordered_columns_and_rows_match_real_reader_reference",
+      "task": {
+        "id": "91c09894-bd0d-4001-8794-2ed4d487674d",
+        "session_id": "7708a3d4-2eee-4531-a1da-f040b1e4e613",
+        "task_type": "analytics",
+        "status": "completed",
+        "message": "最近七天（含今天）哪些商品销售额最高？返回 product_id、product_name、goods_revenue_cents 前五名，商品销售额不含运费、不扣退款；按销售额降序、product_id 和 product_name 升序排列。",
+        "result": {
+          "answer": "运营查询结果\n\n实际返回 5 行。\n\n指标口径：\n- 按支付日期统计商品实付金额，单位分，不含运费、不扣退款；名称和类目使用订单明细快照，历史名称不同会分组展示。\n\n| product_id | product_name | goods_revenue_cents |\n| --- | --- | --- |\n| 12 | 模拟商品 12 | 245640 |\n| 13 | 模拟商品 13 | 110865 |\n| 23 | 模拟商品 23 | 103180 |\n| 29 | 模拟商品 29 | 92340 |\n| 14 | 模拟商品 14 | 86700 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT product_id, product_name, SUM(goods_revenue_cents) AS goods_revenue_cents FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) GROUP BY product_id, product_name ORDER BY goods_revenue_cents DESC, product_id ASC, product_name ASC LIMIT 5\n```",
+          "approval": null,
+          "refund_result": null,
+          "citations": [],
+          "facts": [
+            {
+              "name": "execute_analytics_sql",
+              "result": {
+                "normalized_sql": "SELECT product_id, product_name, SUM(goods_revenue_cents) AS goods_revenue_cents FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) GROUP BY product_id, product_name ORDER BY goods_revenue_cents DESC, product_id ASC, product_name ASC LIMIT 5",
+                "columns": [
+                  "product_id",
+                  "product_name",
+                  "goods_revenue_cents"
+                ],
+                "rows": [
+                  [
+                    12,
+                    "模拟商品 12",
+                    "245640"
+                  ],
+                  [
+                    13,
+                    "模拟商品 13",
+                    "110865"
+                  ],
+                  [
+                    23,
+                    "模拟商品 23",
+                    "103180"
+                  ],
+                  [
+                    29,
+                    "模拟商品 29",
+                    "92340"
+                  ],
+                  [
+                    14,
+                    "模拟商品 14",
+                    "86700"
+                  ]
+                ],
+                "row_count": 5,
+                "truncated": false,
+                "elapsed_ms": 5.931
+              }
+            }
+          ],
+          "warning_codes": [],
+          "analysis": {
+            "answer": "运营查询结果\n\n实际返回 5 行。\n\n指标口径：\n- 按支付日期统计商品实付金额，单位分，不含运费、不扣退款；名称和类目使用订单明细快照，历史名称不同会分组展示。\n\n| product_id | product_name | goods_revenue_cents |\n| --- | --- | --- |\n| 12 | 模拟商品 12 | 245640 |\n| 13 | 模拟商品 13 | 110865 |\n| 23 | 模拟商品 23 | 103180 |\n| 29 | 模拟商品 29 | 92340 |\n| 14 | 模拟商品 14 | 86700 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT product_id, product_name, SUM(goods_revenue_cents) AS goods_revenue_cents FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) GROUP BY product_id, product_name ORDER BY goods_revenue_cents DESC, product_id ASC, product_name ASC LIMIT 5\n```",
+            "query": {
+              "normalized_sql": "SELECT product_id, product_name, SUM(goods_revenue_cents) AS goods_revenue_cents FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) GROUP BY product_id, product_name ORDER BY goods_revenue_cents DESC, product_id ASC, product_name ASC LIMIT 5",
+              "columns": [
+                "product_id",
+                "product_name",
+                "goods_revenue_cents"
+              ],
+              "rows": [
+                [
+                  12,
+                  "模拟商品 12",
+                  "245640"
+                ],
+                [
+                  13,
+                  "模拟商品 13",
+                  "110865"
+                ],
+                [
+                  23,
+                  "模拟商品 23",
+                  "103180"
+                ],
+                [
+                  29,
+                  "模拟商品 29",
+                  "92340"
+                ],
+                [
+                  14,
+                  "模拟商品 14",
+                  "86700"
+                ]
+              ],
+              "row_count": 5,
+              "truncated": false,
+              "elapsed_ms": 5.931
+            },
+            "chart": {
+              "type": "bar",
+              "labels": [
+                "12",
+                "13",
+                "23",
+                "29",
+                "14"
+              ],
+              "series": [
+                {
+                  "name": "goods_revenue_cents",
+                  "column_index": 2,
+                  "data": [
+                    "245640",
+                    "110865",
+                    "103180",
+                    "92340",
+                    "86700"
+                  ]
+                }
+              ],
+              "source": "query_rows"
+            },
+            "metric_ids": [
+              "product_sales"
+            ],
+            "metric_definitions": {
+              "product_sales": "按支付日期统计商品实付金额，单位分，不含运费、不扣退款；名称和类目使用订单明细快照，历史名称不同会分组展示。"
+            }
+          }
+        },
+        "steps": [
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 759.367,
+            "error_code": null
+          },
+          {
+            "node": "intent_router",
+            "elapsed_ms": 759.952,
+            "error_code": null
+          },
+          {
+            "node": "model_call",
+            "attempt": 1,
+            "elapsed_ms": 938.209,
+            "error_code": null
+          },
+          {
+            "node": "analytics_planner",
+            "elapsed_ms": 939.906,
+            "error_code": null
+          },
+          {
+            "node": "business_tool",
+            "tool": "execute_analytics_sql",
+            "elapsed_ms": 8.067,
+            "error_code": null
+          },
+          {
+            "node": "analytics_execution",
+            "elapsed_ms": 8.091,
+            "error_code": null
+          },
+          {
+            "node": "response_generation",
+            "elapsed_ms": 0.002,
+            "error_code": null
+          },
+          {
+            "node": "validation",
+            "elapsed_ms": 0.066,
+            "error_code": null
+          }
+        ],
+        "token_usage": {
+          "model_calls": 2,
+          "prompt_tokens": 1898,
+          "completion_tokens": 261,
+          "total_tokens": 2159,
+          "unknown_usage_calls": 0,
+          "usage_complete": true,
+          "interrupted_usage_unknown": false
+        },
+        "error_code": null,
+        "elapsed_ms": 1798,
+        "created_at": "2026-10-13T20:09:57.842258Z",
+        "updated_at": "2026-10-13T20:09:59.651458Z",
+        "completed_at": "2026-10-13T20:09:59.651460Z"
+      },
+      "reference": {
+        "answer": "运营查询结果\n\n实际返回 5 行。\n\n指标口径：\n- 按支付日期统计商品实付金额，单位分，不含运费、不扣退款；名称和类目使用订单明细快照，历史名称不同会分组展示。\n\n| product_id | product_name | goods_revenue_cents |\n| --- | --- | --- |\n| 12 | 模拟商品 12 | 245640 |\n| 13 | 模拟商品 13 | 110865 |\n| 23 | 模拟商品 23 | 103180 |\n| 29 | 模拟商品 29 | 92340 |\n| 14 | 模拟商品 14 | 86700 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT product_id, product_name, SUM(goods_revenue_cents) AS goods_revenue_cents FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) GROUP BY product_id, product_name ORDER BY goods_revenue_cents DESC, product_id ASC, product_name ASC LIMIT 5\n```",
+        "query": {
+          "normalized_sql": "SELECT product_id, product_name, SUM(goods_revenue_cents) AS goods_revenue_cents FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) GROUP BY product_id, product_name ORDER BY goods_revenue_cents DESC, product_id ASC, product_name ASC LIMIT 5",
+          "columns": [
+            "product_id",
+            "product_name",
+            "goods_revenue_cents"
+          ],
+          "rows": [
+            [
+              12,
+              "模拟商品 12",
+              "245640"
+            ],
+            [
+              13,
+              "模拟商品 13",
+              "110865"
+            ],
+            [
+              23,
+              "模拟商品 23",
+              "103180"
+            ],
+            [
+              29,
+              "模拟商品 29",
+              "92340"
+            ],
+            [
+              14,
+              "模拟商品 14",
+              "86700"
+            ]
+          ],
+          "row_count": 5,
+          "truncated": false,
+          "elapsed_ms": 21.977
+        },
+        "chart": {
+          "type": "bar",
+          "labels": [
+            "12",
+            "13",
+            "23",
+            "29",
+            "14"
+          ],
+          "series": [
+            {
+              "name": "goods_revenue_cents",
+              "column_index": 2,
+              "data": [
+                "245640",
+                "110865",
+                "103180",
+                "92340",
+                "86700"
+              ]
+            }
+          ],
+          "source": "query_rows"
+        },
+        "metric_ids": [
+          "product_sales"
+        ],
+        "metric_definitions": {
+          "product_sales": "按支付日期统计商品实付金额，单位分，不含运费、不扣退款；名称和类目使用订单明细快照，历史名称不同会分组展示。"
+        }
+      },
+      "reference_metadata": {
+        "canonical_sql": "SELECT product_id, product_name, SUM(goods_revenue_cents) AS goods_revenue_cents FROM ea_analytics.daily_product_sales WHERE business_date >= DATE '2026-10-08' AND business_date < DATE '2026-10-15' GROUP BY product_id, product_name ORDER BY goods_revenue_cents DESC, product_id ASC, product_name ASC LIMIT 5",
+        "metric_ids": [
+          "product_sales"
+        ],
+        "trusted_date": "2026-10-14"
+      },
+      "session_id": "7708a3d4-2eee-4531-a1da-f040b1e4e613",
+      "request_elapsed_ms": 1843.253,
+      "date_drift": false
+    }
+  ]
+}

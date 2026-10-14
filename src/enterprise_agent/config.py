@@ -68,6 +68,12 @@ class Settings(BaseSettings):
     agent_max_history_messages: int = Field(default=12, ge=2, le=24)
     mcp_access_token: SecretStr | None = None
     mcp_request_timeout_seconds: float = Field(default=15, ge=1, le=120)
+    analytics_enabled: bool = False
+    analytics_database_url: SecretStr | None = None
+    test_analytics_database_url: SecretStr | None = None
+    analytics_statement_timeout_ms: int = Field(default=5000, ge=100, le=10000)
+    analytics_max_rows: int = Field(default=100, ge=1, le=500)
+    analytics_max_sql_chars: int = Field(default=8000, ge=128, le=16000)
 
     @field_validator("log_level", mode="before")
     @classmethod
@@ -83,6 +89,8 @@ class Settings(BaseSettings):
         "jwt_secret",
         "deepseek_api_key",
         "mcp_access_token",
+        "analytics_database_url",
+        "test_analytics_database_url",
         mode="before",
     )
     @classmethod
@@ -135,6 +143,8 @@ class Settings(BaseSettings):
     def validate_llm_configuration(self) -> Self:
         if self.llm_enabled and self.deepseek_api_key is None:
             raise ValueError("EA_DEEPSEEK_API_KEY is required when EA_LLM_ENABLED is true")
+        if self.analytics_enabled and self.analytics_database_url is None:
+            raise ValueError("EA_ANALYTICS_DATABASE_URL is required when analytics is enabled")
         if self.jwt_secret is not None and len(self.jwt_secret.get_secret_value()) < 32:
             raise ValueError("EA_JWT_SECRET must contain at least 32 characters")
         if self.database_url is not None and self.jwt_secret is None:
@@ -153,7 +163,12 @@ class Settings(BaseSettings):
         return value
 
     @field_validator(
-        "database_url", "migration_database_url", "test_database_url", "test_migration_database_url"
+        "database_url",
+        "migration_database_url",
+        "test_database_url",
+        "test_migration_database_url",
+        "analytics_database_url",
+        "test_analytics_database_url",
     )
     @classmethod
     def validate_postgres_url(cls, value: SecretStr | None) -> SecretStr | None:
@@ -178,6 +193,8 @@ class Settings(BaseSettings):
             self.demo_password,
             self.deepseek_api_key,
             self.mcp_access_token,
+            self.analytics_database_url,
+            self.test_analytics_database_url,
         ):
             if secret is not None:
                 raw = secret.get_secret_value()

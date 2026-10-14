@@ -20,7 +20,9 @@ from enterprise_agent.domain_errors import BusinessError
 _MAX_BODY_BYTES = 256 * 1024
 _MAX_ARGUMENT_BYTES = 16 * 1024
 _MAX_TOOL_CALLS = 4
-_WORKFLOW_TOOL_NAMES = frozenset({"route_task", "rewrite_query", "select_knowledge_quotes"})
+_WORKFLOW_TOOL_NAMES = frozenset(
+    {"route_task", "rewrite_query", "select_knowledge_quotes", "plan_analytics_sql"}
+)
 
 
 @dataclass(frozen=True)

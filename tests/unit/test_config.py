@@ -187,3 +187,32 @@ def test_mcp_token_is_hidden_and_registered_for_message_redaction():
 def test_mcp_timeout_is_bounded(timeout):
     with pytest.raises(ValidationError):
         Settings(_env_file=None, mcp_request_timeout_seconds=timeout)
+
+
+@pytest.mark.parametrize("name", ["analytics_database_url", "test_analytics_database_url"])
+def test_analytics_credentials_are_validated_and_redacted(name):
+    raw = "postgresql+psycopg://test-reader:test-private-analytics@localhost/enterprise_agent_test"
+    configured = Settings(_env_file=None, **{name: raw})
+    assert raw in configured.secret_values()
+    assert "test-private-analytics" in configured.secret_values()
+    assert raw not in repr(configured)
+    assert raw not in configured.model_dump_json()
+    assert getattr(Settings(_env_file=None, **{name: ""}), name) is None
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, **{name: "sqlite:///data.db"})
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"analytics_enabled": True},
+        {"analytics_max_rows": 0},
+        {"analytics_max_rows": 501},
+        {"analytics_statement_timeout_ms": 99},
+        {"analytics_statement_timeout_ms": 10001},
+        {"analytics_max_sql_chars": 16001},
+    ],
+)
+def test_analytics_settings_fail_closed(overrides):
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, **overrides)

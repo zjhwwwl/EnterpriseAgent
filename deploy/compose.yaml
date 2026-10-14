@@ -26,6 +26,8 @@ services:
       - postgres_superuser_password
       - postgres_app_password
       - postgres_test_password
+      - postgres_analytics_password
+      - postgres_test_analytics_password
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ea_local_admin -d enterprise_agent"]
       interval: 5s
@@ -54,3 +56,7 @@ secrets:
     file: ../var/infra/postgres-app-password
   postgres_test_password:
     file: ../var/infra/postgres-test-password
+  postgres_analytics_password:
+    file: ../var/infra/postgres-analytics-password
+  postgres_test_analytics_password:
+    file: ../var/infra/postgres-test-analytics-password

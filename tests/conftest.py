@@ -28,6 +28,7 @@ _PG_ENV = {
         "EA_TEST_DATABASE_URL",
         "EA_TEST_MIGRATION_DATABASE_URL",
         "EA_REDIS_URL",
+        "EA_TEST_ANALYTICS_DATABASE_URL",
     )
 }
 if sys.platform == "win32":
@@ -173,6 +174,43 @@ async def pg_admin_factory(pg_urls):
         yield async_sessionmaker(engine, expire_on_commit=False)
     finally:
         await engine.dispose()
+
+
+@pytest.fixture(scope="session")
+def analytics_urls(pg_urls, request):
+    raw = _PG_ENV["EA_TEST_ANALYTICS_DATABASE_URL"]
+    if not raw:
+        if request.config.getoption("--require-postgres"):
+            pytest.fail("Explicit dedicated analytics reader credentials are required")
+        pytest.skip("Dedicated analytics reader credentials are not exported")
+    parsed = make_url(raw)
+    if parsed.database != "enterprise_agent_test" or parsed.username != "ea_test_analytics_reader":
+        pytest.fail("Analytics tests refuse a non-dedicated reader or database")
+    return raw, pg_urls[1]
+
+
+@pytest.fixture
+def analytics_settings(analytics_urls):
+    return Settings(
+        _env_file=None,
+        app_env="test",
+        analytics_enabled=True,
+        analytics_database_url=analytics_urls[0],
+    )
+
+
+@pytest_asyncio.fixture
+async def analytics_runtime(analytics_settings):
+    from enterprise_agent.analytics.runtime import AnalyticsRuntime
+
+    runtime = AnalyticsRuntime(analytics_settings)
+    try:
+        assert await runtime.is_ready(), (
+            "A dedicated, migrated read-only analytics role is required"
+        )
+        yield runtime
+    finally:
+        await runtime.close()
 
 
 @pytest_asyncio.fixture

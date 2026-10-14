@@ -63,6 +63,9 @@ async def readiness(request: Request, response: Response) -> HealthResponse:
     checkpoint = request.app.state.agent_checkpoint
     if checkpoint is not None:
         checks["agent_checkpoint"] = "ok" if await checkpoint.is_ready() else "not_ready"
+    analytics = request.app.state.analytics
+    if analytics is not None:
+        checks["analytics"] = "ok" if await analytics.is_ready() else "not_ready"
     ready = all(value == "ok" for value in checks.values())
     if not ready:
         response.status_code = 503

@@ -23,6 +23,7 @@ from enterprise_agent.schemas.agent import (
     TaskResponse,
 )
 from enterprise_agent.security import Principal
+from enterprise_agent.services.analytics import AnalyticsService
 from enterprise_agent.services.orders import validate_pagination
 from enterprise_agent.tools import BusinessTools
 
@@ -39,6 +40,7 @@ class AgentService:
         model=None,
         rag_runtime=None,
         clock=lambda: datetime.now(UTC),
+        analytics_runtime=None,
     ):
         self.sessions, self.settings, self.checkpoint, self.model = (
             sessions,
@@ -47,6 +49,11 @@ class AgentService:
             model,
         )
         self.tools = BusinessTools(sessions, settings, rag_runtime, clock)
+        self.analytics = (
+            AnalyticsService(analytics_runtime, clock=clock)
+            if analytics_runtime is not None
+            else None
+        )
         self.graph = build_graph(checkpoint.saver) if checkpoint is not None else None
 
     async def _session(self, actor, identifier, *, lock=False, session=None):
@@ -133,7 +140,7 @@ class AgentService:
         }
 
     def _context(self, actor):
-        return AgentContext(actor, self.tools, self.model, self.settings)
+        return AgentContext(actor, self.tools, self.model, self.settings, self.analytics)
 
     async def send(self, actor, session_id, message):
         message = MessageInput(message=message).message
@@ -284,6 +291,7 @@ class AgentService:
                     "citations",
                     "facts",
                     "warning_codes",
+                    "analysis",
                 )
             }
             session.add(
@@ -343,7 +351,14 @@ class AgentService:
                 **task.result,
                 **{
                     key: state[key]
-                    for key in ("approval", "refund_result", "citations", "facts", "warning_codes")
+                    for key in (
+                        "approval",
+                        "refund_result",
+                        "citations",
+                        "facts",
+                        "warning_codes",
+                        "analysis",
+                    )
                     if key in state
                 },
             }

@@ -7,10 +7,11 @@ Import-LocalInfra
 $env:EA_LLM_ENABLED = 'false'
 $env:EA_AGENT_ENABLED = 'false'
 $env:EA_RAG_ENABLED = 'true'
+$env:EA_ANALYTICS_ENABLED = 'false'
 foreach ($credentialName in @(
     'EA_DEEPSEEK_API_KEY', 'EA_MIGRATION_DATABASE_URL',
     'EA_TEST_DATABASE_URL', 'EA_TEST_MIGRATION_DATABASE_URL', 'EA_REDIS_URL',
-    'EA_MCP_ACCESS_TOKEN'
+    'EA_MCP_ACCESS_TOKEN', 'EA_ANALYTICS_DATABASE_URL', 'EA_TEST_ANALYTICS_DATABASE_URL'
 )) {
     [Environment]::SetEnvironmentVariable($credentialName, $null, 'Process')
 }

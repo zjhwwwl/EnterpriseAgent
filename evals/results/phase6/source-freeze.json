@@ -1,0 +1,724 @@
+{
+    "captured_before_run_utc":  "2026-10-14T08:08:51.8359086Z",
+    "verified_after_run_utc":  "2026-10-14T08:22:53.8614596Z",
+    "scope":  "selected_python_shell_sql_lock_toml_and_analytics_dataset_files",
+    "file_count":  143,
+    "unchanged":  true,
+    "files":  [
+                  {
+                      "path":  "alembic/env.py",
+                      "sha256":  "eb48d40f35bb97134d7169bedcf69be329b4014cdb3a6a8993818781c0625773",
+                      "modified_before_run_utc":  "2026-10-12T14:31:05.8340000Z"
+                  },
+                  {
+                      "path":  "alembic/versions/0001_ecommerce.py",
+                      "sha256":  "0fdbd0b3054a0f8ed0cf8c29ea30b260ea8c04bf6c7cc4d2828fa8c9e2ccf29e",
+                      "modified_before_run_utc":  "2026-10-12T15:01:07.3200000Z"
+                  },
+                  {
+                      "path":  "alembic/versions/0002_knowledge.py",
+                      "sha256":  "09a5849b75fb4a97ce51cf12cfbf1507a0b7dcd1ba798b40fb97f43e06db21f3",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1568782Z"
+                  },
+                  {
+                      "path":  "alembic/versions/0003_agent.py",
+                      "sha256":  "3f0042c3159d073488f92ae25aa055a45d9b78f9942f8b79f3f266a382dc41e1",
+                      "modified_before_run_utc":  "2026-10-13T04:29:35.6972859Z"
+                  },
+                  {
+                      "path":  "alembic/versions/0004_agent_role.py",
+                      "sha256":  "ef35f273d878ba018229c940f462afbdd37a0b30eee87e87afa511387179c64f",
+                      "modified_before_run_utc":  "2026-10-13T09:03:10.9930419Z"
+                  },
+                  {
+                      "path":  "alembic/versions/0005_analytics.py",
+                      "sha256":  "7f79e4b6e7984193e05fae2c7b95386d714715c4efc084ed06979710f36b2e60",
+                      "modified_before_run_utc":  "2026-10-13T19:45:34.5879970Z"
+                  },
+                  {
+                      "path":  "deploy/postgres/init.sh",
+                      "sha256":  "4b4e907eea9bc53bb6a30cf1cb6700e231c7bed1521a3e97f918db4870c256b8",
+                      "modified_before_run_utc":  "2026-10-13T19:43:45.9951361Z"
+                  },
+                  {
+                      "path":  "evals/datasets/analytics-live-smoke.json",
+                      "sha256":  "b1f85c6987ec2eaf72ee47c9ebaf4155a073be2b1d872cef2d9d98b7a4cf71c0",
+                      "modified_before_run_utc":  "2026-10-13T20:04:44.8814763Z"
+                  },
+                  {
+                      "path":  "evals/datasets/analytics-sql.json",
+                      "sha256":  "6b1fbe0d6d5266c2bd364c1b9bba50b7d1ad9ea856448ae58b78b8104372867a",
+                      "modified_before_run_utc":  "2026-10-13T19:59:25.5633089Z"
+                  },
+                  {
+                      "path":  "main.py",
+                      "sha256":  "c53b7309f77833dde9e256721c6aed78ee6a694de200b627ebde3d97ab3a0f67",
+                      "modified_before_run_utc":  "2026-10-12T13:02:16.4712541Z"
+                  },
+                  {
+                      "path":  "pyproject.toml",
+                      "sha256":  "ca942eb6e0c212b23e5d328dfba1ccec3dc2960d5d69df51b3b51b362ccb415c",
+                      "modified_before_run_utc":  "2026-10-13T19:54:11.1259821Z"
+                  },
+                  {
+                      "path":  "requirements/base.lock",
+                      "sha256":  "32c065e074938f836de29d0e18e582cf638c15518be8f8e02b760667cd205868",
+                      "modified_before_run_utc":  "2026-10-13T19:59:21.1429036Z"
+                  },
+                  {
+                      "path":  "requirements/dev.lock",
+                      "sha256":  "e728a38e89c59c8af82cecafae14104d48959d7d032e9c00bae35cd822003f3c",
+                      "modified_before_run_utc":  "2026-10-13T19:59:31.2736460Z"
+                  },
+                  {
+                      "path":  "scripts/bootstrap.ps1",
+                      "sha256":  "ecac1934c143752912e03ef13ad8778197d4edf057e587e4d1d91945fef734d0",
+                      "modified_before_run_utc":  "2026-10-12T14:48:30.2432919Z"
+                  },
+                  {
+                      "path":  "scripts/check.ps1",
+                      "sha256":  "add52e1a36e714c029034ef2c15b190f54824edbfb7896fb342b7cc55e38a109",
+                      "modified_before_run_utc":  "2026-10-13T19:49:58.6195783Z"
+                  },
+                  {
+                      "path":  "scripts/common.ps1",
+                      "sha256":  "5b528918f1f4c36260e61eba7b3df90bbfe23e2ee9c5d32480ac39aadd0218b0",
+                      "modified_before_run_utc":  "2026-10-12T14:48:30.2401628Z"
+                  },
+                  {
+                      "path":  "scripts/evaluate-agent-live.py",
+                      "sha256":  "dcf9df13a75e57089b71ca859e718574e33d8e9ffc2d01a251a47bfae835cd01",
+                      "modified_before_run_utc":  "2026-10-13T14:23:27.2426785Z"
+                  },
+                  {
+                      "path":  "scripts/evaluate-analytics.ps1",
+                      "sha256":  "69b34bc8aef52258539c6a9bfeb71cedc79d53f10040fe247d9d3e16010f1ccc",
+                      "modified_before_run_utc":  "2026-10-13T20:03:22.9612248Z"
+                  },
+                  {
+                      "path":  "scripts/evaluate-analytics-live.py",
+                      "sha256":  "852faf5e8e4f675db25cedeac1dc67dd22eebee6902bbe50b87424ee9dc2faa7",
+                      "modified_before_run_utc":  "2026-10-13T20:08:45.9539682Z"
+                  },
+                  {
+                      "path":  "scripts/evaluate-rag.ps1",
+                      "sha256":  "f6950e59a5676fbd365e13cd78a0cd86a2cad71ab56e487529b872a963cb693f",
+                      "modified_before_run_utc":  "2026-10-12T19:52:18.6420753Z"
+                  },
+                  {
+                      "path":  "scripts/index-knowledge.ps1",
+                      "sha256":  "8014af354fcc915ae8bd11ebd5e778cc0926129267dc8dbb810a8c37f6d46ccb",
+                      "modified_before_run_utc":  "2026-10-12T19:52:18.6415557Z"
+                  },
+                  {
+                      "path":  "scripts/init-analytics.ps1",
+                      "sha256":  "9b8320f3919847ec19c56191c03e351569dc0ee42407ab4b8abda161d6844285",
+                      "modified_before_run_utc":  "2026-10-13T19:48:03.7210619Z"
+                  },
+                  {
+                      "path":  "scripts/init-infra.ps1",
+                      "sha256":  "770e685840f2d497320aa1da3ce5b87bc6bd4115ed0f12424f24b58a1f4239b7",
+                      "modified_before_run_utc":  "2026-10-13T19:48:03.7200001Z"
+                  },
+                  {
+                      "path":  "scripts/mcp-demo.ps1",
+                      "sha256":  "05602734caabb0607359faedaf98b80977b5d726574c7d32edb11696926fb2ae",
+                      "modified_before_run_utc":  "2026-10-13T19:49:56.3650258Z"
+                  },
+                  {
+                      "path":  "scripts/migrate.ps1",
+                      "sha256":  "15191692862b43ae6d46253006493bac6d10695ff3916e044f4b75ef89aaebae",
+                      "modified_before_run_utc":  "2026-10-12T14:48:30.2412183Z"
+                  },
+                  {
+                      "path":  "scripts/prepare-rag.ps1",
+                      "sha256":  "1d83a53816feb636068eef4f32145488289ee8acd76e05c1f36825e201bf146f",
+                      "modified_before_run_utc":  "2026-10-12T19:52:18.6410242Z"
+                  },
+                  {
+                      "path":  "scripts/prepare-rag-models.py",
+                      "sha256":  "35e6a28210990554e550c31892acca532f964684491fecadf2f3212fbf081670",
+                      "modified_before_run_utc":  "2026-10-12T20:00:29.7685138Z"
+                  },
+                  {
+                      "path":  "scripts/run.ps1",
+                      "sha256":  "fc8925153d71e497b9af83e734a80f0b72fa5cbb913f1a83680d11b44c560194",
+                      "modified_before_run_utc":  "2026-10-13T19:49:17.6419670Z"
+                  },
+                  {
+                      "path":  "scripts/seed.ps1",
+                      "sha256":  "35d7e81ce2baea14d73cc61c9648353886e3778d28739396741355482b8e6296",
+                      "modified_before_run_utc":  "2026-10-12T14:48:30.2422854Z"
+                  },
+                  {
+                      "path":  "scripts/stop.ps1",
+                      "sha256":  "eda272ea264ac8276176d94a52d363f81b5008f3f44468ee136a5cd00db520cc",
+                      "modified_before_run_utc":  "2026-10-12T15:10:26.3932013Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/__init__.py",
+                      "sha256":  "d8fff3bffcd4c9f6aefab3be99f0131eb64ccf239adaf619d77478940f0beeb0",
+                      "modified_before_run_utc":  "2026-10-13T19:44:37.1099715Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/agents/__init__.py",
+                      "sha256":  "1eb040d23d8a3a3c8985fd30b9075153920ebfbb1b4d5aae355fd4a9c3124102",
+                      "modified_before_run_utc":  "2026-10-13T04:30:49.5622090Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/agents/checkpoint.py",
+                      "sha256":  "9de34ddaeb94b58e3a6155bafe511a4419c5202b497006fb9be71be180dae746",
+                      "modified_before_run_utc":  "2026-10-13T09:37:10.4589335Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/agents/graph.py",
+                      "sha256":  "b0a35f9614c5a018cee0e64cd9f3d5c4f34466f5925410426a31540242095691",
+                      "modified_before_run_utc":  "2026-10-14T08:08:10.4455427Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/agents/llm.py",
+                      "sha256":  "7eca87d7a8b3366871b4b8b66efdaf1accba6f91b2be4a5e8fa2f9b544238ecd",
+                      "modified_before_run_utc":  "2026-10-13T19:44:31.3766063Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/analytics/__init__.py",
+                      "sha256":  "b11842bb23874bc4db194b04087c7c230656478577f03d4207e4ca16ca83560e",
+                      "modified_before_run_utc":  "2026-10-13T19:45:18.2072368Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/analytics/catalog.py",
+                      "sha256":  "e5fde25083bb51d9f3b30a3b63b2109f06f13de2b6b382c79619b2ccbf05389d",
+                      "modified_before_run_utc":  "2026-10-13T19:51:37.0026131Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/analytics/evaluation.py",
+                      "sha256":  "461090f1c66fb18afd880e9f86610d1eccd98103938dc8aa7213b9823aed0c19",
+                      "modified_before_run_utc":  "2026-10-13T20:04:32.8307607Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/analytics/runtime.py",
+                      "sha256":  "7227ebc862b821f7b10ac9114f260e677633aa64b527840848dfeeee330e601f",
+                      "modified_before_run_utc":  "2026-10-13T19:53:33.8434983Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/analytics/sql.py",
+                      "sha256":  "1527ae1ce43c1c91df0afc612cd6d8313e2b35c5cbba288381aae3bf161869fc",
+                      "modified_before_run_utc":  "2026-10-13T20:05:35.9102947Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/__init__.py",
+                      "sha256":  "1ea40c6c4884f97c8022edbd3907b6fb282417a0771cf22745805ec6a2ba311c",
+                      "modified_before_run_utc":  "2026-10-12T13:04:03.4617820Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/dependencies.py",
+                      "sha256":  "c11690519b3888354d5ece1638150608e1b2f051abd252bda9dd733e93888759",
+                      "modified_before_run_utc":  "2026-10-13T15:17:01.1933546Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/errors.py",
+                      "sha256":  "9d1ee334a8e16be7a6831ea7b1cb21bab1392c3d9bdbf5ff900f6d56ffdaaff2",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5867533Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/routes/__init__.py",
+                      "sha256":  "dab9089f6e5e76ff3617fb8244e267dbffd3204aba183185f618358eceb70702",
+                      "modified_before_run_utc":  "2026-10-12T13:04:05.1554455Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/routes/agent.py",
+                      "sha256":  "5dbe4aaf48b88f4395a376999efba9d1144e270a80760dd2c3eb310db714d674",
+                      "modified_before_run_utc":  "2026-10-13T19:49:17.6406853Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/routes/analytics.py",
+                      "sha256":  "0a9c5e9a361ca7c1da5b1a8d155f3233c3a825efe5c9d9f2cce5185a42e4388a",
+                      "modified_before_run_utc":  "2026-10-13T19:54:11.1254589Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/routes/auth.py",
+                      "sha256":  "fb446977d082b00e3f33bdc46abc3d12cef51fc20e9ddc4da87aca3241479e72",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5847561Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/routes/knowledge.py",
+                      "sha256":  "696497730fcaa7ddc5e3a43df96144d6b907a1ca077210b59d26554a60fbb856",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1618770Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/routes/orders.py",
+                      "sha256":  "afba3dcf6b7dec595cc7debfeafa8ae252e65b8e784bc42d2fb401661a240e21",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5857532Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/routes/refunds.py",
+                      "sha256":  "d9eb0514519f29828e180b558ff13ead0410cd9f0f1d4ef59a0e2bb1d7ce5f3e",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5857532Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/routes/system.py",
+                      "sha256":  "99cae433ae684a7e2140170348dd0d7b2578a4163f9a5d2a7281827eed290807",
+                      "modified_before_run_utc":  "2026-10-13T19:49:17.6386850Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/api/upload_limit.py",
+                      "sha256":  "33be620f38beb00367e745b51027470ee4c99e498fcff1892c9c17767ef7a241",
+                      "modified_before_run_utc":  "2026-10-13T09:09:28.5042644Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/application.py",
+                      "sha256":  "6a3e7d958c5cd4d2d5e4695f62b871fb1a62f727c5ec3d3d71fd184e581a9166",
+                      "modified_before_run_utc":  "2026-10-13T19:54:13.3678110Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/cli.py",
+                      "sha256":  "76d1b49ad15b1d8a422740f46e9993698695ced76c59945ddc77c64ed2d604af",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5857532Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/config.py",
+                      "sha256":  "b036f32be8e3a695f5f0dc167ae59cb57eadb0a75314c4a0b83b6bee895f42ac",
+                      "modified_before_run_utc":  "2026-10-13T19:54:13.4797738Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/database.py",
+                      "sha256":  "4100a50217affb668b503c9705f8ab64c90cafb8730cc27c0e0357ef86e0a8b5",
+                      "modified_before_run_utc":  "2026-10-13T19:44:37.1115677Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/domain_errors.py",
+                      "sha256":  "5f410031b7ba8dd376382a7120523c911a6d057d1f83e9c9bb501a8011928f4a",
+                      "modified_before_run_utc":  "2026-10-12T14:38:20.7351616Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/evaluation.py",
+                      "sha256":  "51ea6286f086fcb0487dae28783d05d800a678fe6643d729b0aa69ab16f97c0e",
+                      "modified_before_run_utc":  "2026-10-13T02:22:17.0301803Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/knowledge_cli.py",
+                      "sha256":  "90e175bc211c8308a1cad6b641a3192144a038e7b54f138cdffb6c497b10a0cf",
+                      "modified_before_run_utc":  "2026-10-12T19:56:42.4873252Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/logging_config.py",
+                      "sha256":  "36f68139a486455d5017951f1340366cb75c0b4c46cf6193a6b5e78ae74a590a",
+                      "modified_before_run_utc":  "2026-10-13T15:31:33.5385776Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/main.py",
+                      "sha256":  "691bc187319a0437c4a7a4a535d0076560e68c73f3228dc37e813a04729c84af",
+                      "modified_before_run_utc":  "2026-10-12T13:23:34.0746091Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/mcp/__init__.py",
+                      "sha256":  "8a0a744ee2eb33b750659697aa9514ef59d7f672fd660cb6d14fd78cb5532b15",
+                      "modified_before_run_utc":  "2026-10-13T15:18:13.5079648Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/mcp/client.py",
+                      "sha256":  "86637343bd3169a5e69629a53dbee6330a7233c47dca18c04e0049c8abfb2dee",
+                      "modified_before_run_utc":  "2026-10-13T19:49:56.3644922Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/mcp/server.py",
+                      "sha256":  "6a95a4f568ebc219824caff8a6a41cd798b6137f592fe47911e7285fa64b4c3c",
+                      "modified_before_run_utc":  "2026-10-13T19:49:56.3634350Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/models/__init__.py",
+                      "sha256":  "87c0d321ef80a120e5354b72fc390980faeb3ecea203da2f4a0922ba75972465",
+                      "modified_before_run_utc":  "2026-10-12T14:23:48.8880000Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/models/entities.py",
+                      "sha256":  "3070b4a02381b4502effb3c1b81bf8f8640c24df546d768f3bb7e828dd51c2ff",
+                      "modified_before_run_utc":  "2026-10-13T09:03:10.9919705Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/rag/__init__.py",
+                      "sha256":  "c5a1733c9a595526c78ad74c79e6c282dedd4760176a7253287535a73de78f26",
+                      "modified_before_run_utc":  "2026-10-12T19:39:38.1206597Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/rag/backends.py",
+                      "sha256":  "7c6f9d6faa81312edba0a8320a280f475f49bb6aa67019bb031e73cc7c99620d",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1578780Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/rag/chunking.py",
+                      "sha256":  "6859deb941258809710dafc8de5af0614840c97c2898400ee4bf8f1e1d9175eb",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1578780Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/rag/parsing.py",
+                      "sha256":  "b71bd2c1ad6f724d0865071e73013e0e15a9c247a9182631b396a1e98a612837",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1598775Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/rag/ranking.py",
+                      "sha256":  "5b13b3b2275943f3460cd28694338345af9e3e211b53485ede86422f45e8568c",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1578780Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/rag/runtime.py",
+                      "sha256":  "630fe2314cb9a9a3bf27221910ad313d760d672bd59a935ad0b3f109895c399a",
+                      "modified_before_run_utc":  "2026-10-12T20:02:52.9189469Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/rag/store.py",
+                      "sha256":  "028d07eac7f14907d7b1bd033d6df4b30aea95ed896b5d37e9624914c0845d4a",
+                      "modified_before_run_utc":  "2026-10-13T02:12:28.2630000Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/repositories/__init__.py",
+                      "sha256":  "18ee1bf0f32da91345d5a793ba4b9144065b50d19a26c376a2f770f56495d84c",
+                      "modified_before_run_utc":  "2026-10-12T14:26:20.0411216Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/repositories/agent.py",
+                      "sha256":  "e677a8af9ebc2b442a5ca50e7f0ffd3c126cafb709b7d515b9b39dba4c9bdff9",
+                      "modified_before_run_utc":  "2026-10-13T09:03:10.9924731Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/repositories/knowledge.py",
+                      "sha256":  "dce831d2dc39f79ff4b26b9f59e12c917169709bb0d4065df1b6e800002d948a",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1568782Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/repositories/orders.py",
+                      "sha256":  "48947b85b20509011531b82d88258e06e17f029d844306b98be02dc40bdc6020",
+                      "modified_before_run_utc":  "2026-10-12T14:26:20.0416426Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/repositories/refunds.py",
+                      "sha256":  "49f08b5d84875608175f497b7b36fa7a81e02b3f4de2125b1573a98fbaf88022",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5857532Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/request_context.py",
+                      "sha256":  "cb9790e43bb866ee4ecaba1290e9e40af9bca6baf84839547631f8d37b86c694",
+                      "modified_before_run_utc":  "2026-10-12T13:23:38.6742667Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/schemas/__init__.py",
+                      "sha256":  "6dceddf3bcac5bacbbe06c67cc17e806b0130dfcdef219b5ee346c8ea6925533",
+                      "modified_before_run_utc":  "2026-10-12T13:04:01.2533821Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/schemas/agent.py",
+                      "sha256":  "994e34eb9a56867a36b23c0670f8eae1ea9adc7b5ce61f5121df2ff551c5ca0d",
+                      "modified_before_run_utc":  "2026-10-13T09:08:49.3661737Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/schemas/analytics.py",
+                      "sha256":  "d340ec4667f5e8cdc37c7439a1b4fa07165ba4fcb322acc9dfdf9bce90656b0e",
+                      "modified_before_run_utc":  "2026-10-13T19:51:37.0026131Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/schemas/analytics_report.py",
+                      "sha256":  "ba09e600614b905e23990c3be4bfc1625b414ec97c36b4c9c84bf7e6eee4e030",
+                      "modified_before_run_utc":  "2026-10-13T19:54:11.1244222Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/schemas/auth.py",
+                      "sha256":  "16ed96a09cc0d582f2a913d798e82e0b0639e84fe01f9e90580ef6666c7433cf",
+                      "modified_before_run_utc":  "2026-10-12T14:38:20.7367403Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/schemas/business.py",
+                      "sha256":  "d416c93c6ada78b26301efa9108b6f4080f8ac405aebbb765de561a565f3f4c5",
+                      "modified_before_run_utc":  "2026-10-12T14:26:20.0400783Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/schemas/knowledge.py",
+                      "sha256":  "8105339232e3eed310d7e422a00d3bf60b9b90897f384d357a3cb5c632104199",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1568782Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/schemas/system.py",
+                      "sha256":  "3c7909e8ffa7a0e8ae5c2f90f3fc1748602fd227ed66844424ddc62ccf5a4403",
+                      "modified_before_run_utc":  "2026-10-12T13:04:01.8063518Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/security.py",
+                      "sha256":  "df804b275b7aa9ec4f1416265d3b47645b6c1e94fd55507977720125cf8c0f94",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5875091Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/seed.py",
+                      "sha256":  "e273dc1631935e3e3d88f1ba285415653b8499b38ccd837449925192fc98db9e",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5882420Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/services/__init__.py",
+                      "sha256":  "e18a0394699ac660d8c7ebcdb3b8a92155edc7d3a4a5abbe12ed43d302255bd4",
+                      "modified_before_run_utc":  "2026-10-12T14:26:20.0437461Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/services/agent.py",
+                      "sha256":  "9b12c16433e99b82dabe39eda55c1c767a9ca4c683c9e0892af49a7f4c81cdd0",
+                      "modified_before_run_utc":  "2026-10-13T19:54:13.4807739Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/services/analytics.py",
+                      "sha256":  "e621d55fb55df1fab99a472c05ef2c5d64ff10cc52b2c0912b9187b9b6dd95a1",
+                      "modified_before_run_utc":  "2026-10-14T08:08:22.9223508Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/services/auth.py",
+                      "sha256":  "4af404c2cd097df2f8cc5e69930001a2c38e717948a84a64fd7ad3c0c935c62f",
+                      "modified_before_run_utc":  "2026-10-13T15:17:01.1928300Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/services/knowledge.py",
+                      "sha256":  "470b7cfdd5d4324a2a580adde20afa26c07253ae9ba429392396d99ccfa747f5",
+                      "modified_before_run_utc":  "2026-10-13T02:17:03.3107113Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/services/orders.py",
+                      "sha256":  "a525ca8af89a6caa0b1a15490d1ed84f6e19d6d1653dd6347078984f4e531136",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5867533Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/services/refunds.py",
+                      "sha256":  "858ed7ac0f23e0efd157b6f8e2582233264ce3485ff30ac181873a07f8c584d1",
+                      "modified_before_run_utc":  "2026-10-13T08:57:25.9397045Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/tools/__init__.py",
+                      "sha256":  "82f8c8b7dbcf059fd209918586ea7d10ef1a2f1334730913f811b394910f2247",
+                      "modified_before_run_utc":  "2026-10-13T04:24:53.0901431Z"
+                  },
+                  {
+                      "path":  "src/enterprise_agent/tools/business.py",
+                      "sha256":  "b77977af062273995d6627a2f311684ae19adabc55c4829dd95315c8f8bd7b3e",
+                      "modified_before_run_utc":  "2026-10-13T04:27:39.5918529Z"
+                  },
+                  {
+                      "path":  "tests/conftest.py",
+                      "sha256":  "0ba9a4319587ef804f88d642a159392c2a878817c86d329d36893d4f03fde05d",
+                      "modified_before_run_utc":  "2026-10-13T19:54:13.4797738Z"
+                  },
+                  {
+                      "path":  "tests/e2e/agent_control_server.py",
+                      "sha256":  "ea7162b24e89e885049619101af7a0e9c9f6f6fb2a52ea024745f76fc5a2cbdc",
+                      "modified_before_run_utc":  "2026-10-13T09:17:52.4529148Z"
+                  },
+                  {
+                      "path":  "tests/e2e/test_agent_server.py",
+                      "sha256":  "5eb6543d24311d5eae7bdd6bdf7578729b984f3bf10db75d5672909718d622ee",
+                      "modified_before_run_utc":  "2026-10-13T09:17:52.4529148Z"
+                  },
+                  {
+                      "path":  "tests/e2e/test_local_server.py",
+                      "sha256":  "0c459e7157945a29c5394bb70e9d13b9d56b09d819316ba6c1b74ddda1df608e",
+                      "modified_before_run_utc":  "2026-10-12T15:13:05.2445905Z"
+                  },
+                  {
+                      "path":  "tests/e2e/test_mcp_stdio.py",
+                      "sha256":  "0ac0b36e11735c35d2f2e84093fa00c8a5c7441c53eca370040d841d4a101366",
+                      "modified_before_run_utc":  "2026-10-13T15:24:28.3085144Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_agent_analytics.py",
+                      "sha256":  "2ca80df9d5138394c7e29ab5a41ae3e843892e2853c581b07d5f53f894cb813d",
+                      "modified_before_run_utc":  "2026-10-13T19:56:44.7694922Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_agent_api.py",
+                      "sha256":  "5c4dcd0733139ecef4f6f2e63cc18386d186789ac49b8eaa8efaace902f9c890",
+                      "modified_before_run_utc":  "2026-10-13T09:13:04.4673549Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_agent_persistence.py",
+                      "sha256":  "afd9feddbec9a3309f326e6b6adafe1f14c74053ad70e62bbdc78023c9fbf910",
+                      "modified_before_run_utc":  "2026-10-13T09:04:16.3575342Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_agent_tools_database.py",
+                      "sha256":  "00b1808eab9e2050e0e49fdf449f48bbcf9deb5288b4bda604c31e24be5c4dcd",
+                      "modified_before_run_utc":  "2026-10-13T09:11:12.1219659Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_agent_workflow.py",
+                      "sha256":  "97ec8b550f2bac409aea35cb0322cf046bfcf415fa367f242c8964e948fe8549",
+                      "modified_before_run_utc":  "2026-10-13T09:37:10.4621089Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_analytics_api.py",
+                      "sha256":  "2efb1d36f0583d432986805109c0434adfbdaec229a9649965ab50deb67541f8",
+                      "modified_before_run_utc":  "2026-10-13T19:57:46.0453841Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_analytics_evaluation.py",
+                      "sha256":  "aca8f2c5db3582683d0171ce40038369a1077a49761b031b7cb6126e2528810e",
+                      "modified_before_run_utc":  "2026-10-13T20:03:22.9612248Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_analytics_runtime.py",
+                      "sha256":  "daa3a4fcba8673ebb9a3d7659b7aa48d48c7f2152a516f77e5e2c47f0198eace",
+                      "modified_before_run_utc":  "2026-10-13T19:51:47.4224521Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_analytics_views.py",
+                      "sha256":  "493f4e57d027127d8232eab8e2ad9fad9577308d1355d7663527781f13eaa300",
+                      "modified_before_run_utc":  "2026-10-13T20:00:33.2316963Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_api.py",
+                      "sha256":  "62134788659ff780583917456a2dbd9f5605224d7ae9baf5b6bf9ca48400cbba",
+                      "modified_before_run_utc":  "2026-10-13T19:49:58.6195783Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_auth_api.py",
+                      "sha256":  "d9a828821e2c63e1787f8326f32fe1afc0bc7142203dee0530b8f17fb8aab79f",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5875091Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_business.py",
+                      "sha256":  "f14a69c4706a412bf3ff88c6be0a282d38918ed095296880b02832c55100df6d",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5897643Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_chroma_timeout.py",
+                      "sha256":  "dd2173bd78079fbbc16be864637ba9f4884ce7748988ae6030847357bc557a7d",
+                      "modified_before_run_utc":  "2026-10-13T02:12:28.2720000Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_database_integrity.py",
+                      "sha256":  "548b08720f97d8e8fd968d779169dd62435e80796550292fc6d319dca8cbc851",
+                      "modified_before_run_utc":  "2026-10-12T14:53:15.2933023Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_database_runtime.py",
+                      "sha256":  "003178c3709f00738a6df49348aeb8211a8563f037e1d25187705d483f58908e",
+                      "modified_before_run_utc":  "2026-10-13T09:38:09.9613214Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_knowledge_integrity.py",
+                      "sha256":  "d1dad9c068a2e8bd02e76b868fad8b8500aa568f8a109bf5b1b40ea122680eae",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1578780Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_knowledge_service.py",
+                      "sha256":  "14bd333e76777cb6e45591b484fc2bf8875c3214c6ca198f7049f28480ec9720",
+                      "modified_before_run_utc":  "2026-10-13T02:17:07.1127096Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_mcp_authorization.py",
+                      "sha256":  "67e652d881ee20aa4db636d4c68c8d54a5b3f798ac1c1e2d573a4fadbad2910f",
+                      "modified_before_run_utc":  "2026-10-13T15:27:21.8220261Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_migration_scope.py",
+                      "sha256":  "e72ea22bfa122d3d97f8cf26b7889e757e9c7b90251ec86088783adec43cf55d",
+                      "modified_before_run_utc":  "2026-10-12T15:03:29.6346928Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_rag_models.py",
+                      "sha256":  "3d62b912f180f55cdb1b72fc7f02218adbd16d1def9c3abb83045a414c9c636f",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1598775Z"
+                  },
+                  {
+                      "path":  "tests/integration/test_upload_cors.py",
+                      "sha256":  "bedd733fc76df4080a204ebbc43cb0b7ac7585d012d55e7d94ce98ce42bf801f",
+                      "modified_before_run_utc":  "2026-10-13T02:20:51.5040936Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_agent_analytics_graph.py",
+                      "sha256":  "0cce1404b9a05328ae2c06917b23ffd7c865decc67d1c8dbc9c6c2f745cc6645",
+                      "modified_before_run_utc":  "2026-10-14T08:08:10.4471118Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_agent_checkpoint_serializer.py",
+                      "sha256":  "a689d20af48149ba013f4867669adc02cb8ef264f1915e65b8380381bff8a880",
+                      "modified_before_run_utc":  "2026-10-13T08:55:02.1392804Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_agent_graph.py",
+                      "sha256":  "b79796479066f089f833d44915ecc83709db39565be941f11aa9ef212661af1b",
+                      "modified_before_run_utc":  "2026-10-13T14:29:05.6129273Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_agent_llm.py",
+                      "sha256":  "6d61c05f4c5a9e1c233178ba6fa29021d9ac330fd1ba283c01ded97e3581ef96",
+                      "modified_before_run_utc":  "2026-10-13T14:15:12.6582822Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_agent_tools.py",
+                      "sha256":  "2caf0b3f0445e8a82d7feb21db295d5b2ce55d110ea7d8044616a50edf66b34d",
+                      "modified_before_run_utc":  "2026-10-13T04:28:19.9551129Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_analytics_live_checks.py",
+                      "sha256":  "a0725ceb0fcf59a67112a41f1030237e272addb2a41c70f1fb382fd3ade98a34",
+                      "modified_before_run_utc":  "2026-10-13T20:08:45.9545116Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_analytics_service.py",
+                      "sha256":  "b6d60b1fdc2b547d75f14c410e6975f5ad65ff92e36b300239603a2f96c47d9c",
+                      "modified_before_run_utc":  "2026-10-14T08:08:22.9223508Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_analytics_sql.py",
+                      "sha256":  "fae9e6c5944e44a32d4b9b3c38925cdf36788982322752d6b00e85d544d6127d",
+                      "modified_before_run_utc":  "2026-10-13T20:05:37.8157207Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_chunking.py",
+                      "sha256":  "2e0106c639769b7033614b2cebb46614a1977e624dbd8fb83ba3cd00758d3b79",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1608786Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_config.py",
+                      "sha256":  "f3165663b01d5807f8d0e2648bfc39b157429fe45cf7af74ce5636d38a98f33e",
+                      "modified_before_run_utc":  "2026-10-13T19:54:13.4797738Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_document_parsing.py",
+                      "sha256":  "a52d9c56933f491293faa354e39c72169594b84cf5ac0c7083ee191388e7e694",
+                      "modified_before_run_utc":  "2026-10-12T19:53:52.1638772Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_factory_import.py",
+                      "sha256":  "0e1630b39ea5937458f676182f51849d129c2c6001b9c7287afef8dcc310a156",
+                      "modified_before_run_utc":  "2026-10-12T13:20:27.4354156Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_logging.py",
+                      "sha256":  "b5a3c44a574e64370b58094518fbc53a812850a6599f9fbb905de2195510349d",
+                      "modified_before_run_utc":  "2026-10-12T13:26:13.4492171Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_mcp_client.py",
+                      "sha256":  "8d7173c1c2d810e3bfab2e1bebb15cfadc525a8377b8f1724e98f7958d8ad3ce",
+                      "modified_before_run_utc":  "2026-10-13T15:36:44.5693769Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_mcp_server.py",
+                      "sha256":  "6f20774966fe0a1efd2854c471e80c17662fc5734aee47920f666e67557072d6",
+                      "modified_before_run_utc":  "2026-10-13T15:25:43.9091263Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_rag_runtime.py",
+                      "sha256":  "4b5214d993c8dedea102f0f752cc1e8d33cdb565b73851623ccf02ed8c3fc297",
+                      "modified_before_run_utc":  "2026-10-12T19:56:42.4863261Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_ranking.py",
+                      "sha256":  "18254379cff0ce0ca3c65653419ca66d6506193d4e50b09fed72f5937ada40ba",
+                      "modified_before_run_utc":  "2026-10-13T01:54:55.3047240Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_refund_rules.py",
+                      "sha256":  "ab473b4cc4a976da5e9c97ee66ab17c53f2299a56008ae640ef5f2b6d428c7c1",
+                      "modified_before_run_utc":  "2026-10-12T14:48:41.5882420Z"
+                  },
+                  {
+                      "path":  "tests/unit/test_security.py",
+                      "sha256":  "f2de80a14c3e9eb50053e30cc5509b1abd5c2e50d7e311019ac93f32846aebcb",
+                      "modified_before_run_utc":  "2026-10-14T08:08:18.8698684Z"
+                  }
+              ]
+}

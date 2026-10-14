@@ -1,6 +1,6 @@
 # LangGraph 工作流
 
-Phase 4 已实现一张LangGraph图，复用真实OrderService、RefundService与KnowledgeService。模型负责路由、选择工具、有限查询改写和引用原文选择；后端决定权限、金额、政策、确认与写入。初验511项工程检查、真实TCP重启与后续真实在线补充见[Phase 4](phase-4.md)。受控模型不代表在线效果；5手选场景也不是完整质量评估，冻结代码[517项完整复验通过](../evals/results/phase4-live/verification.json)。
+当前 Phase 6 / 0.6.0 使用一张 LangGraph 图，复用 OrderService、RefundService、KnowledgeService 和 AnalyticsService。模型负责路由、工具规划、有限检索改写、引用原文选择与受限 SQL 规划；后端决定权限、业务规则、确认和实际执行。分析分支不拆成第二个 Agent，也不增加自由文本模型报告节点。当前验收见[Phase 6](phase-6.md)，[Phase 4](phase-4.md)及[Phase 5](phase-5.md)的原始验证保持历史边界。
 
 ## 当前图
 
@@ -20,16 +20,19 @@ flowchart TD
     HUMAN --> COMMIT[commit_refund：确认或拒绝]
     COMMIT --> RESPONSE
     PLAN -->|工具调用结束| RESPONSE
+    ROUTER -->|analytics| SQLPLAN[analytics_planner：plan_analytics_sql]
+    SQLPLAN --> SQLEXEC[analytics_execution：授权/AST/只读事务]
+    SQLEXEC --> RESPONSE
     ROUTER -->|unsupported| RESPONSE
     RESPONSE --> CHECK[validation]
     CHECK --> END[同步 Task 与结果]
 ```
 
-POLICY/PREPARE 是 tool_execution 内部步骤，不是额外独立 Agent。各节点失败按安全错误终止；没有 NL SQL 或 MCP 分支，路由为 unsupported 时明确说明当前范围。
+POLICY/PREPARE 是 tool_execution 内部步骤，不是额外独立 Agent。analytics_planner / analytics_execution 是当前图节点。各节点失败按安全错误终止；没有 MCP 图分支，unsupported 明确说明当前范围。
 
 ## State、Context 与持久化
 
-State 保存 task_id、用户消息、意图、查询、历史、模型消息、工具计划与结果、引用、服务器审批、退款结果、步数、工具次数、改写次数、steps、usage、状态、回答和 warning_codes。
+State 保存 task_id、用户消息、意图、查询、历史、模型消息、工具计划与结果、引用、服务器审批、退款结果、analysis、步数、工具次数、改写次数、steps、usage、状态、回答和 warning_codes。analysis 为真实查询结果、图表规范及指标定义；持久化后同步到 Task.result.analysis。
 
 Principal、Service、模型和配置放在可信 AgentContext。State 中的订单用户字段仅为业务事实，不能用来决定认证；模型不能提供 user_id、role、权限或 graph config。session/thread 由后端产生，HTTP 仅接受会话和任务 UUID，所有角色都只能查询自己的会话、任务和确认记录，当前角色还须匹配不可变创建角色；角色变化需新会话，恢复原角色后可访问原合法会话。
 
@@ -58,6 +61,16 @@ prepare_refund 的 task_id 由服务端可信上下文提供；同任务同参�
 知识分支先检索，证据不足只允许改写一次；仍不足直接说明不能确认。回答候选排除只含标题的Chunk，模型调用select_knowledge_quotes返回0–3段连续原文；候选不能回答原始问题时允许空列表拒答。选段仍须来自有效Chunk，权限、文本和当前代数通过校验后才构造回答。它不是完整语义蕴含或政策冲突检测，也没有调整RAG分数门槛。
 
 订单分支仅采纳Service结构化事实，确定性报告展示订单、商品、物流、资格和申请状态。Router结合完整历史解析本轮query；业务planner仅接收original_request、resolved_query与本轮工具消息，旧答案不进入planner，避免复用历史回答跳过本轮事实查询。最终自由文本不成为业务结论；退款准备仍需数据库资格和对应政策文档证据。
+
+## 运营分析分支
+
+intent_router 使用完整私有会话历史解析本轮指代，返回 analytics 意图；进入规划器前 AnalyticsService 校验可信 Principal 的当前 analyst / admin 角色。规划提示只包含本轮 original_request、resolved_query 和受控 catalog：两个视图的合法字段、指标口径、上海业务日期及服务端窗口。历史结果不能代替本轮数据查询。
+
+模型通过 named `plan_analytics_sql` 返回一个 SQLPlan：sql、metric_ids 和可选 label。参数经 Pydantic strict / extra forbid 校验，只允许一个规划调用。它不是直接执行 SQL 的权限凭据；analytics_execution 重新检查角色，由专用 reader runtime 做 AST 白名单、只读事务、超时、行数与负载限制。合法模型 SQL 仍可能在指标或时间上不符合问题，工程安全检查不替代这类语义评估。
+
+执行结果保存 normalized_sql、columns、精确 rows、row_count、truncated 和 elapsed_ms。AnalyticsService 仅从这些行和登记口径构造 Markdown 与 query_rows 图表规范，response_generation 采用此报告，不追加自由文本 LLM 分析。validation 重新校验 QueryResult 和指标，再渲染并比较报告、analysis 与本轮执行事实；失败不能显示为成功结果。只读分析不经过 human_approval，不修改订单/退款，使用原有官方 Checkpoint、Task 和执行预算。
+
+steps 记录 SQL 规划和 execute_analytics_sql 的安全状态、耗时与错误；usage 包含路由/规划器实际供应商报告的 Token，不把本地 SQL 或确定性报告计作模型调用。无结果、NULL 分母和截断均保留，不推断缺失销售额、未返回部分总量或业务变化原因。`result.analysis.chart` 仅为后续前端的数据协议，尚无可交互图表。
 
 ## 人工确认与恢复
 
@@ -91,10 +104,10 @@ steps 记录节点、业务工具名、耗时和安全错误；usage 累计实�
 
 ## 模型配置与边界
 
-HTTPX发送OpenAI兼容Chat Completions，校验消息、工具白名单、JSON参数、finish_reason和usage，不安装OpenAI SDK或跟随重定向。默认deepseek-flash，thinking.type=disabled、temperature=0、非流式。route_task、rewrite_query、select_knowledge_quotes这三个控制节点使用named tool_choice确保返回结构化选择；业务工具仍为auto。[DeepSeek API契约](https://api-docs.deepseek.com/api/create-chat-completion/)为协议来源。
+HTTPX 发送 OpenAI 兼容 Chat Completions，校验消息、工具白名单、JSON 参数、finish_reason 和 usage，不安装 OpenAI SDK 或跟随重定向。默认 deepseek-flash，thinking.type=disabled、temperature=0、非流式。route_task、rewrite_query、select_knowledge_quotes 和 plan_analytics_sql 控制节点使用 named tool_choice，业务工具仍为 auto。[DeepSeek API 契约](https://api-docs.deepseek.com/api/create-chat-completion/)为协议来源。
 
 EA_LLM_ENABLED模板默认false；未配置时不创建真实聊天Client，发消息503。图回归测试中的ScriptedChatModel与[真实在线补充](../evals/results/phase4-live/report.md)分开记录。5个手选烟测用于发现和修复问题，不证明开放式意图、参数与语义质量。
 
 Phase 5 的独立 stdio MCP Server 已复用 BusinessTools 的 get_order、get_logistics、get_refund_policy，提供 query_order、query_logistics、query_refund_policy。客户端发现和调用由官方 SDK 执行；身份由 MCP 启动环境中的 JWT 逐次认证，协议参数不进入 AgentContext 或图 State。当前图仍无 MCP 分支，退款准备和确认继续使用已有可信工作流，详见[Phase 5](phase-5.md)。
 
-后续分析分支要另加只读账号、授权视图、SQL AST 和执行限额，当前不执行模型 SQL。
+分析仅访问 ea_analytics 的聚合数据。MCP 仍仅复用普通业务工具，独立 Client / Server 排除分析凭据并关闭分析 runtime；不会将模型产生的 SQL 经 MCP 转发绕过分析检查。

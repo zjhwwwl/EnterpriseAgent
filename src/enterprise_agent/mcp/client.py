@@ -209,6 +209,9 @@ def main(argv: list[str] | None = None) -> int:
             test_database_url=None,
             test_migration_database_url=None,
             redis_url=None,
+            analytics_enabled=False,
+            analytics_database_url=None,
+            test_analytics_database_url=None,
         )
         # Windows subprocess pipes require a Proactor loop. The API/PG server
         # uses Selector in its separate process, without changing this client.

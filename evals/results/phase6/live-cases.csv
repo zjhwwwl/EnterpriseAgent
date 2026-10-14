@@ -1,0 +1,5 @@
+id,executed,passed,reason,request_elapsed_ms,model_calls,prompt_tokens,completion_tokens,total_tokens
+paid_sales_last_seven_days,True,True,ordered_columns_and_rows_match_real_reader_reference,2179.018,2,1811,199,2010
+refund_rate_month_cohort,True,True,ordered_columns_and_rows_match_real_reader_reference,1846.521,2,1850,238,2088
+compare_complete_seven_day_periods,True,True,ordered_columns_and_rows_match_real_reader_reference,2012.834,2,1868,321,2189
+product_sales_top_five,True,True,ordered_columns_and_rows_match_real_reader_reference,1843.253,2,1898,261,2159

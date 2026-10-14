@@ -96,8 +96,8 @@ def test_two_access_tokens_have_distinct_ids(auth_settings):
 @pytest.mark.parametrize(
     "changes",
     [
-        {"exp": datetime.now(UTC) - timedelta(seconds=1)},
-        {"iat": datetime.now(UTC) + timedelta(minutes=10)},
+        {"exp": timedelta(seconds=-1)},
+        {"iat": timedelta(minutes=10)},
         {"iss": "other-issuer"},
         {"aud": "other-audience"},
         {"sub": "0"},
@@ -125,7 +125,13 @@ def test_two_access_tokens_have_distinct_ids(auth_settings):
     ],
 )
 def test_invalid_signed_claims_are_not_accepted(changes, auth_settings):
-    assert_unauthenticated(sign(claims(**changes), auth_settings), auth_settings)
+    # Resolve offsets at execution; collection may precede this test by minutes.
+    now = datetime.now(UTC)
+    resolved = {
+        key: now + value if isinstance(value, timedelta) else value
+        for key, value in changes.items()
+    }
+    assert_unauthenticated(sign(claims(**resolved), auth_settings), auth_settings)
 
 
 @pytest.mark.parametrize("missing", ["sub", "ver", "iat", "exp", "iss", "aud", "jti"])

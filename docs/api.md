@@ -1,6 +1,6 @@
 # API 契约
 
-**当前版本 0.5.0 / Phase 5。** 已有健康、认证、订单、退款、知识库及 LangGraph 会话、任务、人工确认和恢复 HTTP 接口，新增独立 stdio MCP 三个只读工具。MCP 不注册 HTTP 路由，OpenAPI 仅覆盖 HTTP；分析与 Vue 尚未提供。当前契约以实际代码和 OpenAPI 为准，Phase 5 验收见[阶段记录](phase-5.md)。此前[517 项完整复验](../evals/results/phase4-live/verification.json)与真实 DeepSeek 5 场景烟测保留为历史证据，不代表完整模型质量。
+**当前版本 0.6.0 / Phase 6。** 已有健康、认证、订单、退款、知识库、LangGraph 会话与审批，以及授权聚合运营分析 HTTP 接口。MCP 保留独立 stdio 三个只读工具，不注册 HTTP 路由，OpenAPI 仅覆盖 HTTP；Vue 尚未提供。当前契约以实际代码和 OpenAPI 为准，阶段验收见[Phase 6](phase-6.md)，旧测试与在线烟测不改写为本阶段成绩。
 
 ## 基础接口与认证
 
@@ -8,13 +8,13 @@
 
 | 方法 | 路径 | 成功码 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/` | 200 | 名称、版本、phase=5、文档及健康入口 |
+| GET | `/` | 200 | 名称、版本、phase=6、文档及健康入口 |
 | GET | `/health/live` | 200 | HTTP 进程存活 |
 | GET | `/health/ready` | 200 / 503 | 实际数据库与已配置 Redis 的就绪检查 |
 | POST | `/api/v1/auth/login` | 200 | JSON 账号密码，返回 JWT |
 | GET | `/api/v1/auth/me` | 200 | 需要 Bearer Token，返回当前用户 |
 
-就绪响应的 `checks` 包含 application、database；配置 Redis 时包含 redis，启用 RAG 时包含 knowledge，建立 Agent 持久化时包含 agent_checkpoint。数据库检查 Alembic 当前 head、业务必需权限和普通运行账号；库/表 owner、超级用户、public CREATE、订单状态 UPDATE 或审计 UPDATE/DELETE 等超额权限被拒绝。knowledge 检查固定本地模型文件及 Chroma 心跳，agent_checkpoint 检查官方 schema 版本与受限权限。健康不调用 DeepSeek，不代表模型配置或在线可用、所有文档已索引或每个问题都有答案。
+就绪响应的 `checks` 包含 application、database；配置 Redis 时包含 redis，启用 RAG 时包含 knowledge，建立 Agent 持久化时包含 agent_checkpoint，启用分析时包含 analytics。数据库检查 Alembic 当前 head、业务必需权限和普通运行账号；库/表 owner、超级用户、public CREATE、订单状态 UPDATE 或审计 UPDATE/DELETE 等超额权限被拒绝。knowledge 检查固定本地模型文件及 Chroma 心跳，agent_checkpoint 检查官方 schema 版本与受限权限，analytics 检查专用角色、聚合视图、schema marker 与严格授权。健康不调用 DeepSeek，不代表模型配置或在线可用、所有文档已索引或每个问题都有答案。
 
 登录请求：
 
@@ -273,9 +273,60 @@ Swagger 可用 admin 账号执行文件上传。生成真实文件并检查返�
 
 底层解析错误不回显上传内容；上传、删除、索引开始、发布及失败记录必要审计。Chroma 客户端版本/距离配置不匹配时也会拒绝使用，不默默切到其他向量实现。
 
+## 运营分析接口
+
+两个接口都需要 Bearer Token，当前数据库角色必须为 analyst / admin。customer / support 返回 `analytics_forbidden`，JWT 中的声称不能代替实时数据库角色。接口与 Agent 分析分支复用 AnalyticsService；以下直接查询不发送聊天模型请求，也不修改业务记录。
+
+| 方法 | 路径 | 成功码 | 返回 |
+| --- | --- | --- | --- |
+| GET | `/api/v1/analytics/catalog` | 200 | 视图列与类型、指标口径、上海日期及服务端时间窗口 |
+| POST | `/api/v1/analytics/query` | 200 | 实际 SQL 结果、确定性 Markdown 报告和图表规范 |
+
+catalog 的静态目录不代表分析数据库就绪。它提供 `as_of_utc`、`today`、`business_timezone=Asia/Shanghai` 和左闭右开日期窗口：最近七天含今天、本月截至今天，以及用于比较的最近两个连续完整七天。今天不是完整自然日；完整七天窗口以今天为右端点，不是按周一划分的自然周。
+
+query 请求使用 SQLPlan：sql 为 1–8000 字符，metric_ids 为 1–4 个 `paid_sales` / `refund_rate` / `order_count` / `product_sales`，label 可省略、最长 120 字符。strict / extra forbid 拒绝类型转换、额外参数和身份字段。label 不授予权限或改变 SQL 结果。
+
+以下是固定日期的请求格式示例，**不是预填执行结果**；相对日期应使用当前 catalog 窗口：
+
+```json
+{
+  "sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE)",
+  "metric_ids": ["paid_sales"],
+  "label": "七天毛实付销售额"
+}
+```
+
+授权来源只有 `ea_analytics.daily_orders` 与 `ea_analytics.daily_product_sales`，完整字段见 catalog。daily_orders 的支付订单计数应使用 `SUM(paid_order_count)`；`COUNT(*)` 统计视图行数，不能替代订单数。退款率示例表达式为 `SUM(completed_refund_order_count)::numeric / NULLIF(SUM(paid_order_count), 0)`，保留零分母 NULL。金额原始单位为人民币分，gross 包含运费且不扣退款；商品销售仅商品实付。退款率按所选支付日期订单群的当前模拟完成状态计算，不是期间退款发生次数 / 期间订单数。
+
+SQL 必须是一个授权视图上的单条 PostgreSQL SELECT，显式写出合法字段。允许条件、有限算术、CASE、GROUP BY / HAVING / ORDER BY / LIMIT，以及 SUM、COUNT、AVG、MIN、MAX、ROUND、NULLIF、COALESCE 和有限 DATE / NUMERIC / 整数 CAST。聚合与计算结果须有独立有效别名。禁止其他表或系统目录、JOIN、CTE、子查询、UNION、窗口函数、多语句、写操作、锁、任意函数、SELECT *、SQL 注释；COUNT(*) 是唯一星号例外。AST 检查通过只证明受限执行边界，指标和时间范围是否符合问题仍需核对。
+
+成功返回：
+
+| 字段 | 实际含义 |
+| --- | --- |
+| answer | 从真实行、SQL 与登记口径构造的 Markdown；不新增自由文本模型分析 |
+| query.normalized_sql | AST 验证后实际执行的 SQL，含服务端行数限制 |
+| query.columns / rows | 原始结果列与受限数据；NUMERIC 为精确十进制字符串，日期为 ISO 字符串 |
+| query.row_count / truncated | 返回行数与是否检测到超过上限；更小的用户 LIMIT 不推断完整总量 |
+| query.elapsed_ms | 本次数据库执行路径耗时，不是模型或端到端耗时 |
+| metric_ids / metric_definitions | 选择的登记指标及其口径；不自动证明 SQL 与指标语义匹配 |
+| chart | 可为空；type 为 line / bar，labels、series、source=query_rows 来自实际 rows |
+
+默认最多返回 100 行、20 列，配置可将行数调至最多 500；服务端最多读取上限加一行以判断截断。字符串单元格最多 512 字符，行数据 JSON 预算 100 KiB，超限明确拒绝。报告正文最多展示 20 行，完整受限结果保留在 query.rows。空结果不推断销量为零，截断不作为完整汇总。图表选首个非数值列或列名以 `_id` 结尾的列作为维度，维度可在后续列；所有 `_id` 列不加入数值 series。纯数值宽表保留全部可用 series，标签使用返回行序号；ISO 日期标签生成 line，其余为 bar，没有可用数值时 chart 为 null。该规范不包含 Vue 渲染、自动业务原因或语义指标识别。
+
+| HTTP 状态 | code | 场景 |
+| --- | --- | --- |
+| 403 | analytics_forbidden | 当前用户不具备 analyst/admin 角色 |
+| 422 | analytics_sql_rejected / analytics_metric_invalid | SQL 执行边界或指标不合法 |
+| 422 | analytics_result_too_large | 单元格、列数或负载超出展示预算 |
+| 503 | analytics_unavailable / analytics_query_failed | 未启用、权限/视图未就绪或安全执行失败 |
+| 504 | analytics_query_timeout | statement / lock / 总时间预算耗尽 |
+
+自然语言入口沿用 `POST /api/v1/agent/sessions/{id}/messages`，例如 `{"message":"本月退款率是多少？"}`。模型路由到 analytics 后通过 named `plan_analytics_sql` 返回严格 SQLPlan；后端授权、验证并执行，再将报告同步到 Task 的 `result.analysis`。普通消息中的用户/角色/当前日期声明不能替代服务端身份与时间。该路径需要实际聊天模型配置；直接 SQL 查询不需要 Key。分析是只读，不进入退款人工确认节点，仍使用同一私有会话、官方 Checkpoint、步数和有限重试规则。
+
 ## MCP stdio 契约
 
-独立入口为 `python -m enterprise_agent.mcp.server` 或安装后的 `enterprise-agent-mcp`。官方 SDK 1.30.0 通过 stdin/stdout 传输 JSON-RPC，客户端先 initialize，再 tools/list 与 tools/call；该入口没有 HTTP 地址、OpenAPI 页面或 OAuth 服务。Server 启动需要进程环境中的普通 `EA_DATABASE_URL`、`EA_JWT_SECRET`、`EA_MCP_ACCESS_TOKEN`；不读取 `.env`。政策证据还需要启用并准备 RAG。
+独立入口为 `python -m enterprise_agent.mcp.server` 或安装后的 `enterprise-agent-mcp`。官方 SDK 1.30.0 通过 stdin/stdout 传输 JSON-RPC，客户端先 initialize，再 tools/list 与 tools/call；该入口没有 HTTP 地址、OpenAPI 页面或 OAuth 服务。Server 启动需要进程环境中的普通 `EA_DATABASE_URL`、`EA_JWT_SECRET`、`EA_MCP_ACCESS_TOKEN`；不读取 `.env`，不传递分析数据库凭据或启用分析 runtime。政策证据还需要启用并准备 RAG。
 
 | MCP 工具 | arguments | 共享入口 | 返回 data |
 | --- | --- | --- | --- |

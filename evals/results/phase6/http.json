@@ -1,0 +1,168 @@
+{
+  "checked_at_utc": "2026-10-14T08:11:53.735571+00:00",
+  "api": "http://127.0.0.1:8000",
+  "health": {
+    "status": "ok",
+    "service": "EnterpriseAgent",
+    "version": "0.6.0",
+    "phase": 6,
+    "checks": {
+      "application": "ok",
+      "database": "ok",
+      "redis": "ok",
+      "knowledge": "ok",
+      "agent_checkpoint": "ok",
+      "analytics": "ok"
+    }
+  },
+  "authenticated_mock_role": "analyst",
+  "catalog": {
+    "schema": "ea_analytics",
+    "views": {
+      "daily_orders": {
+        "business_date": "DATE",
+        "paid_order_count": "BIGINT",
+        "goods_revenue_cents": "NUMERIC",
+        "shipping_revenue_cents": "NUMERIC",
+        "gross_revenue_cents": "NUMERIC",
+        "completed_refund_order_count": "BIGINT",
+        "completed_refund_cents": "NUMERIC"
+      },
+      "daily_product_sales": {
+        "business_date": "DATE",
+        "product_id": "BIGINT",
+        "product_name": "TEXT",
+        "category": "TEXT",
+        "units_sold": "BIGINT",
+        "goods_revenue_cents": "NUMERIC"
+      }
+    },
+    "metric_definitions": {
+      "paid_sales": "按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。",
+      "refund_rate": "所选支付日期订单群截至查询时 completed_simulated 的退款订单数 / 已支付订单数；不是所选期间发生的退款事件率；分母为零时返回 NULL。",
+      "order_count": "按 Asia/Shanghai 支付日期计算的已支付订单数，不包含未支付或已取消订单。",
+      "product_sales": "按支付日期统计商品实付金额，单位分，不含运费、不扣退款；名称和类目使用订单明细快照，历史名称不同会分组展示。"
+    },
+    "business_timezone": "Asia/Shanghai",
+    "as_of_utc": "2026-10-14T08:11:53.612026+00:00",
+    "today": "2026-10-14",
+    "date_windows": {
+      "last_seven_days_including_today": {
+        "start_inclusive": "2026-10-08",
+        "end_exclusive": "2026-10-15"
+      },
+      "this_month_to_date": {
+        "start_inclusive": "2026-10-01",
+        "end_exclusive": "2026-10-15"
+      },
+      "previous_complete_week": {
+        "start_inclusive": "2026-09-30",
+        "end_exclusive": "2026-10-07"
+      },
+      "latest_complete_week": {
+        "start_inclusive": "2026-10-07",
+        "end_exclusive": "2026-10-14"
+      }
+    },
+    "notes": [
+      "时间窗口采用左闭右开；今天的数据截至实际查询时间，非完整自然日。",
+      "退款状态为模拟完成；查询时可能变化，毛销售额不扣除退款。",
+      "商品名称和类目来自订单明细快照，跨历史名称可出现不同分组。"
+    ]
+  },
+  "query_result": {
+    "answer": "运营查询结果\n\n实际返回 1 行。\n\n指标口径：\n- 按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。\n\n| sales_cents |\n| --- |\n| 991510 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT COALESCE(SUM(gross_revenue_cents), 0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101\n```",
+    "query": {
+      "normalized_sql": "SELECT COALESCE(SUM(gross_revenue_cents), 0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-08' AS DATE) AND business_date < CAST('2026-10-15' AS DATE) LIMIT 101",
+      "columns": [
+        "sales_cents"
+      ],
+      "rows": [
+        [
+          "991510"
+        ]
+      ],
+      "row_count": 1,
+      "truncated": false,
+      "elapsed_ms": 37.426
+    },
+    "chart": {
+      "type": "bar",
+      "labels": [
+        "1"
+      ],
+      "series": [
+        {
+          "name": "sales_cents",
+          "column_index": 0,
+          "data": [
+            "991510"
+          ]
+        }
+      ],
+      "source": "query_rows"
+    },
+    "metric_ids": [
+      "paid_sales"
+    ],
+    "metric_definitions": {
+      "paid_sales": "按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。"
+    }
+  },
+  "wide_numeric_report": {
+    "answer": "运营查询结果\n\n实际返回 1 行。\n\n指标口径：\n- 按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。\n\n| goods_cents | shipping_cents |\n| --- | --- |\n| 35809275 | 305200 |\n\n金额原始指标以人民币分计，派生比例与范围以执行 SQL 为准。\n查询结果只反映记录，不能据此推断业务变化原因。\n\n执行 SQL：\n```sql\nSELECT SUM(goods_revenue_cents) AS goods_cents, SUM(shipping_revenue_cents) AS shipping_cents FROM ea_analytics.daily_orders LIMIT 101\n```",
+    "query": {
+      "normalized_sql": "SELECT SUM(goods_revenue_cents) AS goods_cents, SUM(shipping_revenue_cents) AS shipping_cents FROM ea_analytics.daily_orders LIMIT 101",
+      "columns": [
+        "goods_cents",
+        "shipping_cents"
+      ],
+      "rows": [
+        [
+          "35809275",
+          "305200"
+        ]
+      ],
+      "row_count": 1,
+      "truncated": false,
+      "elapsed_ms": 6.323
+    },
+    "chart": {
+      "type": "bar",
+      "labels": [
+        "1"
+      ],
+      "series": [
+        {
+          "name": "goods_cents",
+          "column_index": 0,
+          "data": [
+            "35809275"
+          ]
+        },
+        {
+          "name": "shipping_cents",
+          "column_index": 1,
+          "data": [
+            "305200"
+          ]
+        }
+      ],
+      "source": "query_rows"
+    },
+    "metric_ids": [
+      "paid_sales"
+    ],
+    "metric_definitions": {
+      "paid_sales": "按 Asia/Shanghai 的支付日期统计，订单 paid_at 非空且状态为 paid、shipped、delivered；gross_revenue_cents 为实际支付金额，含运费、不扣退款，单位分。"
+    }
+  },
+  "authorization_checks": {
+    "base_table_sql_status": 422,
+    "customer_query_status": 403
+  },
+  "model_calls": 0,
+  "provider_token_usage": null,
+  "purpose": "actual_direct_sql_http_without_model",
+  "utf8_chinese_verified": true
+}

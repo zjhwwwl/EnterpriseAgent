@@ -1,0 +1,37 @@
+{
+  "scope": "four_handpicked_schema_guided_development_smoke_cases_not_blind_evaluation",
+  "cases": [
+    {
+      "id": "paid_sales_last_seven_days",
+      "message": "统计最近七天销售额（含今天、含运费、不扣退款，以 sales_cents 返回一行）。",
+      "metric_ids": ["paid_sales"],
+      "columns": ["sales_cents"],
+      "numeric_columns": ["sales_cents"],
+      "reference_sql": "SELECT COALESCE(SUM(gross_revenue_cents),0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '{seven_start}' AND business_date < DATE '{tomorrow}'"
+    },
+    {
+      "id": "refund_rate_month_cohort",
+      "message": "本月退款率是多少？按支付日期订单群统计截至查询时的已完成模拟退款，返回退款百分数 refund_rate_percent，保留两位小数；分母为零返回 NULL。",
+      "metric_ids": ["refund_rate"],
+      "columns": ["refund_rate_percent"],
+      "numeric_columns": ["refund_rate_percent"],
+      "reference_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count),0),2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= DATE '{month_start}' AND business_date < DATE '{tomorrow}'"
+    },
+    {
+      "id": "compare_complete_seven_day_periods",
+      "message": "对比最近两周已支付订单量（排除今天）：前七天为 previous_week，后七天为 latest_week。返回 period、paid_order_count 两列，按 period 升序排列。",
+      "metric_ids": ["order_count"],
+      "columns": ["period", "paid_order_count"],
+      "numeric_columns": ["paid_order_count"],
+      "reference_sql": "SELECT CASE WHEN business_date < DATE '{latest_start}' THEN 'previous_week' ELSE 'latest_week' END AS period, SUM(paid_order_count) AS paid_order_count FROM ea_analytics.daily_orders WHERE business_date >= DATE '{previous_start}' AND business_date < DATE '{today}' GROUP BY period ORDER BY period"
+    },
+    {
+      "id": "product_sales_top_five",
+      "message": "最近七天（含今天）哪些商品销售额最高？返回 product_id、product_name、goods_revenue_cents 前五名，商品销售额不含运费、不扣退款；按销售额降序、product_id 和 product_name 升序排列。",
+      "metric_ids": ["product_sales"],
+      "columns": ["product_id", "product_name", "goods_revenue_cents"],
+      "numeric_columns": ["product_id", "goods_revenue_cents"],
+      "reference_sql": "SELECT product_id, product_name, SUM(goods_revenue_cents) AS goods_revenue_cents FROM ea_analytics.daily_product_sales WHERE business_date >= DATE '{seven_start}' AND business_date < DATE '{tomorrow}' GROUP BY product_id, product_name ORDER BY goods_revenue_cents DESC, product_id ASC, product_name ASC LIMIT 5"
+    }
+  ]
+}

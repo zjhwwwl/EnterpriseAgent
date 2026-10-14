@@ -33,6 +33,7 @@ def service(request: Request):
         request.app.state.agent_model,
         request.app.state.rag,
         request.app.state.clock,
+        analytics_runtime=request.app.state.analytics,
     )
 
 

@@ -2,7 +2,7 @@
 
 ## 当前实现
 
-Phase 5 / 0.5.0 在既有 FastAPI、PostgreSQL、真实本地 RAG 与 LangGraph 工作流外增加独立 stdio MCP Server / Client。官方 SDK 1.30.0 负责协议、发现与进程生命周期，三个只读入口复用现有 BusinessTools 与 Service，并逐次重新认证 JWT。直接知识接口仍返回 evidence_only；Agent 通过原文抽取回答知识问题、通过 Service 事实报告订单结果。Phase 4 [517 项完整复验](../evals/results/phase4-live/verification.json)与真实 DeepSeek 5 场景烟测保留原始证据；Phase 5 不发送云模型请求，当前验收见[阶段记录](phase-5.md)。NL SQL、Vue、独立 Worker 与 Langfuse 尚未实现。
+Phase 6 / 0.6.0 在同一张 LangGraph 图中新增运营分析分支，使用两个授权聚合视图、独立数据库 reader、SQLGlot AST 白名单、只读事务与执行限额。模型只规划 SQL，AnalyticsService 根据实际返回的行生成报告和图表数据；HTTP 直接查询与 Agent 复用此 Service。MCP 保留三个只读业务工具，不获得分析连接或新增图分支。当前阶段验收见[Phase 6](phase-6.md)，[Phase 5 的 614 项测试](../evals/results/phase5/verification.json)及此前在线烟测保留历史证据。Vue、独立 Worker 与 Langfuse 尚未实现。
 
 采用模块化单体：API、Service、Repository、Schemas、Agents、Tools 分工明确，模型和前端不能自行修改订单状态或替换当前用户身份。图随请求执行，人工等待写入 Checkpoint；没有任务队列 Worker。
 
@@ -35,6 +35,12 @@ flowchart TD
     TOOLS --> KNOW
     GRAPH --> CHECKPOINT["官方 AsyncPostgresSaver"]
     CHECKPOINT --> DB
+    API --> ANALYTICS["AnalyticsService：可信 analyst/admin"]
+    GRAPH --> ANALYTICS
+    ANALYTICS --> AST["SQLGlot：单条 SELECT / 单视图"]
+    AST --> READONLY["AnalyticsRuntime：独立 reader / 只读事务"]
+    READONLY --> VIEWS["ea_analytics 两个聚合视图"]
+    VIEWS --> DB
     MCPCLIENT["官方 ClientSession / 本机 stdio"] --> MCP["独立 MCP Server"]
     MCP --> MAUTH["每次调用 JWT / 当前数据库身份"]
     MAUTH --> TOOLS
@@ -57,14 +63,16 @@ flowchart TD
 | Agents checkpoint | 官方 PostgreSQL saver、私有 thread advisory lock、安全序列化 |
 | Tools | 参数白名单、可信身份注入、复用业务 Service，模型不能确认写入 |
 | MCP | 官方低层协议适配、三个只读工具发现、每次调用认证与共享参数校验、stdio 生命周期 |
+| Analytics catalog/sql | 固定聚合视图、业务指标口径、PostgreSQL AST 节点与列白名单 |
+| Analytics runtime/Service | 专用连接池与权限就绪检查、只读事务/超时、精确受限结果与确定性报告 |
 
-`application.create_app` 为可注入工厂；导入不会创建运行实例或提前读取用户环境。生命周期按配置建立数据库、Redis、RAG、Checkpoint 与可选模型 Client，关闭时释放 HTTP/数据库连接并等待实际推理线程。根目录 `main.py` 使用项目 CLI、JSON 日志及 Windows Selector 事件循环。
+`application.create_app` 为可注入工厂；导入不会创建运行实例或提前读取用户环境。生命周期按配置建立数据库、Redis、RAG、Checkpoint、分析连接池与可选模型 Client，关闭时释放 HTTP/数据库连接并等待实际推理线程。根目录 `main.py` 使用项目 CLI、JSON 日志及 Windows Selector 事件循环。
 
 知识索引在 HTTP 请求或 CLI 中执行，没有 Redis 工作队列。解析、分块及模型/向量工作通过 Runtime 工作线程与统一容量/超时执行；一次允许一个实际任务，外层超时后线程仍持有容量，直至实际结束，避免连续超时创建无限线程。
 
 ## 数据与实体
 
-15 张业务表来自 `0001_ecommerce`，`0002_knowledge` 增加索引发布状态和政策来源保护，`0003_agent` 补充会话任务状态、审批任务唯一绑定和官方 Checkpointer 的 `ea_checkpoint` schema，`0004_agent_role` 固定会话创建角色；另有 Alembic 版本表。官方 Checkpoint 的四张内部表不当成额外业务实体。
+15 张业务表来自 `0001_ecommerce`，`0002_knowledge` 增加索引发布状态和政策来源保护，`0003_agent` 补充会话任务状态、审批任务唯一绑定和官方 Checkpointer 的 `ea_checkpoint` schema，`0004_agent_role` 固定会话创建角色，`0005_analytics` 建立 `ea_analytics` 的两个视图与版本标记；另有 Alembic 版本表。官方 Checkpoint 的四张内部表和分析视图不当成额外业务实体。
 
 | 表 | 关键内容 |
 | --- | --- |
@@ -116,6 +124,20 @@ erDiagram
 
 `ea_checkpoint` 仅由 `0003_agent` 建立并保存 SDK schema 版本。运行账号具有 schema USAGE、检查点数据表 SELECT/INSERT/UPDATE、版本表 SELECT，没有 schema CREATE、DDL、检查点 DELETE 或版本变更权限；应用不调用 saver.setup()。
 
+## 运营视图、指标与 SQL 边界
+
+`ea_analytics.daily_orders` 按 `(paid_at AT TIME ZONE 'Asia/Shanghai')::date` 聚合，仅包括有支付时间且状态为 paid / shipped / delivered 的订单。输出支付订单数、商品实付、运费、毛实付以及模拟完成退款订单数和金额。退款先按订单聚合，再与订单连接，避免退款历史记录放大销售金额。收入不扣退款；完成退款率属于支付日期 cohort，完成日期不作为分组日期，不能解释成某期间的退款事件率。
+
+`daily_product_sales` 按支付日期、product_id、交易时商品名称和类目快照聚合件数及商品实付，不含运费。相同商品的不同历史名称可能分组出现，商品金额不因当前 products 名称变更而变化。两个视图都不暴露用户、订单号、地址或密码哈希。
+
+迁移账号拥有视图，显式设置 security_barrier=true / security_invoker=false，reader 通过视图 owner 的基表权限读取聚合结果。`ea_analytics_reader` 只获开发项目库 CONNECT，`ea_test_analytics_reader` 只获测试项目库 CONNECT；两项目库之间不可交叉连接。专用角色没有角色成员关系、对象 ownership、schema CREATE、基表/列或 sequence 权限，只显式授予分析 schema USAGE 与两个视图 SELECT。初始化撤销两项目库 PUBLIC TEMP，保留已有 PUBLIC public-schema USAGE 以及系统数据库的默认权限；数据库身份仍可读取部分系统元数据，SQL AST 再限制应用查询来源。
+
+分析入口限 analyst / admin，身份取自共享实时认证，普通客服不因能读取订单就获得分析权限。运行池与业务池分开，reader 默认只读；每次查询再设置 READ ONLY、statement_timeout、lock_timeout、上海时区和 pg_catalog search_path。就绪检查核对精确角色、库名、schema marker、视图列类型、限定授权及无危险 ownership/成员关系。reader 不获得 `public.alembic_version`，业务 Database 单独验证全局迁移 head。
+
+SQLGlot 30.22.0 解析 PostgreSQL 方言，按精确 AST 类型白名单接受单条 SELECT，显式引用一个授权视图及已登记列。禁止 JOIN、CTE、子查询、UNION、窗口函数、写入、锁、任意函数与其他 schema；星号仅允许 COUNT(*)。允许有限聚合、算术、条件、分组、排序和指定类型转换，详见[API](api.md)。这层约束控制执行能力，不能证明指标、日期范围或模型语义正确。
+
+默认返回最多 100 行、20 列，SQL 使用上限加一行探测截断；调用方更小的 LIMIT 保留。金额的 PostgreSQL NUMERIC 转为精确十进制字符串，不先转换浮点；单个字符串单元格最多 512 字符，行数据 JSON 预算 100 KiB。超时和异常退出事务，底层 SQL/DSN 异常不回显。报告只使用执行结果，正文展示前 20 行，保留完整受限 query.rows；无结果和截断有明确提示，不自动补零或推断业务原因。图表仅返回可验证的数据规范，尚无 Vue 图表页面。
+
 ## 解析、模型和检索
 
 PDF 使用 pypdf 文本层，空白/扫描件明确拒绝，不包含 OCR。DOCX 使用 python-docx 正文和表格，包括嵌套表格；页眉页脚、修订文本和文本框不在当前范围。TXT/Markdown 仅严格 UTF-8，支持 BOM；不猜 GBK，不用替换字符掩盖编码失败。文件格式与内容匹配、ZIP 展开/成员/XML 大小、DTD/实体、重复路径、宏包均有检查。
@@ -142,7 +164,7 @@ Chroma 使用官方 1.5.9 SDK，针对其 HTTP session 的窄兼容桥在首次�
 
 ## 健康与部署
 
-当前运行分布为 Windows Python API/ONNX，Linux PostgreSQL、Redis 和 Chroma 容器，数据与模型优先 D 盘。健康区分进程存活与依赖就绪：数据库检查迁移/权限，Redis 配置后 PING，RAG 启用后校验模型文件与 Chroma 心跳，建立 Agent Checkpoint 后检查其版本和受限权限。健康不发送模型请求，也不能证明在线模型可用、所有文档已索引或所有查询正确。
+当前运行分布为 Windows Python API/ONNX，Linux PostgreSQL、Redis 和 Chroma 容器，数据与模型优先 D 盘。健康区分进程存活与依赖就绪：数据库检查迁移/权限，Redis 配置后 PING，RAG 启用后校验模型文件与 Chroma 心跳，建立 Agent Checkpoint 后检查其版本和受限权限，启用分析时检查专用 reader、视图和权限。健康不发送模型请求，也不能证明在线模型可用、所有文档已索引或所有查询正确。
 
 ## Agent 一致性与恢复
 
@@ -158,10 +180,10 @@ Principal 放在可信 `AgentContext`，不从模型参数、图 State 或 resum
 
 每个 Server 进程从 `EA_MCP_ACCESS_TOKEN` 获取一名用户的 JWT。每次工具调用都由 AuthService 校验签名、期限和数据库当前启用状态、token_version、角色，再把 Principal 交给 BusinessTools；arguments 和 `_meta` 不能授予身份。客户只能查所属订单，客服/管理员按现有 Service 权限查询，分析员不能读取订单明细。政策查询限定订单适用政策文档，返回真实资格和检索证据；存在适用政策但 RAG 未启用时返回 rag_not_enabled，不假造引用。
 
-Client/Server 均不读取 `.env`，示例白名单仅向子进程传递必要普通数据库、JWT、用户 Token 和 RAG 配置。MCP 使用已有受限业务数据库账号，没有新建数据库只读账号或迁移；该账号仍保有其他业务流程所需 DML，MCP 的三个入口不暴露写操作。stdout 只用于 JSON-RPC，业务日志写 stderr，仅保存安全工具名、结果、错误码和耗时。
+Client/Server 均不读取 `.env`，示例白名单仅向子进程传递必要普通数据库、JWT、用户 Token 和 RAG 配置，排除分析连接并禁用分析 runtime。MCP 使用已有受限业务数据库账号，Phase 6 的专用 reader 仅供分析入口；业务账号仍保有其他流程所需 DML，MCP 的三个入口不暴露写操作。stdout 只用于 JSON-RPC，业务日志写 stderr，仅保存安全工具名、结果、错误码和耗时。
 
 每次认证及业务执行默认总预算 15 秒，客户端示例默认总预算 60 秒。官方异步上下文负责关闭 Session、stdin 与实际子进程；Windows Client 使用 Proactor，数据库 Server 使用 Selector。没有 MCP HTTP/OAuth、Token 自动续期、写入工具或 Agent 图内 MCP 分支。完整协议与运行命令见[API](api.md)、[部署](deployment.md)和[Phase 5](phase-5.md)。
 
 ## 后续架构
 
-Phase 6 的分析使用独立只读账号/视图/AST；Phase 7 实现五页 Vue 后台。任务调度、应用镜像、CI 和 tracing 在确有实现及验证后加入文档，不把目标图当作当前运行能力。
+Phase 7 实现五页 Vue 后台和实际图表展示。任务调度、应用镜像、CI 和 tracing 在确有实现及验证后加入文档，不把目标图当作当前运行能力。

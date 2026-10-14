@@ -1,0 +1,85 @@
+{
+    "phase":  6,
+    "generated_at":  "2026-10-14T08:20:33.3102553Z",
+    "tests":  883,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "elapsed_seconds":  697.865,
+    "required_postgres":  true,
+    "required_rag":  true,
+    "checks":  {
+                   "ruff_lint":  "passed",
+                   "ruff_format":  "passed",
+                   "formatted_files":  153,
+                   "pip_check":  "passed"
+               },
+    "initial_full_run":  {
+                             "tests":  879,
+                             "passed":  878,
+                             "failures":  1,
+                             "errors":  0,
+                             "skipped":  0,
+                             "elapsed_seconds":  667.484,
+                             "reason":  "collection_time_future_iat_expired_during_long_suite",
+                             "fixed_only_in_test":  true
+                         },
+    "focused_post_fix_tests":  122,
+    "pytest_warnings":  {
+                            "count":  85,
+                            "category":  "DeprecationWarning",
+                            "message":  "Chroma legacy embedding function config",
+                            "unresolved":  true
+                        },
+    "live_smoke":  {
+                       "passed":  4,
+                       "total":  4,
+                       "model_call_attempts":  8,
+                       "prompt_tokens":  7427,
+                       "completion_tokens":  1019,
+                       "total_tokens":  8446,
+                       "scope":  "four_schema_guided_development_smoke_cases_not_blind_evaluation",
+                       "artifact":  "live-results.json"
+                   },
+    "sql_fixtures":  {
+                         "passed":  24,
+                         "total":  24,
+                         "matched_queries":  16,
+                         "expected_rejections":  8,
+                         "model_calls":  0,
+                         "provider_token_usage":  null,
+                         "source":  "human_authored_sql_fixtures",
+                         "artifact":  "sql-results.json"
+                     },
+    "archived_live_recheck":  {
+                                  "checked_at_utc":  "2026-10-14T08:19:04.305937+00:00",
+                                  "purpose":  "offline_revalidation_of_archived_live_results_with_final_renderer",
+                                  "new_model_calls":  0,
+                                  "new_provider_token_usage":  null,
+                                  "passed":  4,
+                                  "total":  4,
+                                  "dataset_and_evaluator_hashes_match":  true,
+                                  "cases":  [
+                                                {
+                                                    "id":  "paid_sales_last_seven_days",
+                                                    "passed":  true,
+                                                    "reason":  "ordered_columns_and_rows_match_real_reader_reference"
+                                                },
+                                                {
+                                                    "id":  "refund_rate_month_cohort",
+                                                    "passed":  true,
+                                                    "reason":  "ordered_columns_and_rows_match_real_reader_reference"
+                                                },
+                                                {
+                                                    "id":  "compare_complete_seven_day_periods",
+                                                    "passed":  true,
+                                                    "reason":  "ordered_columns_and_rows_match_real_reader_reference"
+                                                },
+                                                {
+                                                    "id":  "product_sales_top_five",
+                                                    "passed":  true,
+                                                    "reason":  "ordered_columns_and_rows_match_real_reader_reference"
+                                                }
+                                            ]
+                              }
+}

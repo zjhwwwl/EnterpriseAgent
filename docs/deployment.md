@@ -2,7 +2,7 @@
 
 ## 实际支持范围
 
-Phase 5 / 0.5.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio + Linux PostgreSQL / Redis / Chroma 容器**。当前 MCP 验证与边界见[Phase 5](phase-5.md)。Phase 4 [517 项完整复验](../evals/results/phase4-live/verification.json)与真实 DeepSeek 5 场景烟测保留历史结果，仍无完整模型质量评估。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
+Phase 6 / 0.6.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio / 只读运营分析 + Linux PostgreSQL / Redis / Chroma 容器**。当前阶段验证状态见[Phase 6](phase-6.md)，历史 MCP 与在线 Agent 结果保留。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
 
 默认仅绑定 loopback，使用虚构数据与公开演示账号。没有真实支付、退款或付费云资源。
 
@@ -24,12 +24,15 @@ Python 3.13 项目虚拟环境须先可用。bootstrap 按 requirements/dev.lock
 
 Phase 5 固定官方 mcp 1.30.0，并安装 Windows stdio 子进程所需 pywin32。两份 lock 是本机 Windows 解析结果，其中 pywin32 没有平台 marker；不能直接拿该 lock 安装 Linux 应用镜像，Phase 9 需重新解析并验证目标平台依赖。
 
+Phase 6 固定 SQLGlot 30.22.0，使用 PostgreSQL AST 白名单；显式依赖 tzdata 以支持 Windows 的 ZoneInfo / Asia/Shanghai。依赖锁保持已固定版本，新增依赖仍通过哈希校验；不能仅据锁文件声称完成 Linux 应用安装。
+
 ## 首次启动
 
 ```powershell
 Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 .\scripts\bootstrap.ps1
 .\scripts\init-infra.ps1
+.\scripts\init-analytics.ps1
 .\scripts\migrate.ps1
 .\scripts\migrate.ps1 -TestDatabase
 .\scripts\seed.ps1
@@ -43,17 +46,22 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 | 脚本 | 实际行为 |
 | --- | --- |
 | bootstrap | 校验 Python 3.13、哈希安装、可编辑安装、pip check |
-| init-infra | 创建未存在的本地随机秘密，启动基础设施；保留已有配置 |
+| init-infra | 创建未存在的本地随机秘密，启动基础设施；保留原配置，仅同步两个分析连接字段 |
+| init-analytics | 从容器挂载秘密初始化/旋转两个专用 reader；不重置数据库或修改业务/owner 密码 |
 | migrate | 开发库升级 head；-TestDatabase 处理专用测试库；-Check 检查模型差异 |
 | seed | 虚构业务数据、默认当天 UTC/seed42/500订单；不覆盖已 seed 库 |
 | prepare-rag | 显式准备固定模型文件与 manifest，首次可联网下载公开文件 |
 | index-knowledge | 普通应用连接+模拟 admin，复用 Service 索引已登记文档；兼容活动索引跳过 |
 | evaluate-rag | 普通应用连接+模拟 customer，固定 corpus 的真实检索对照 |
+| evaluate-analytics | 专用测试 reader 真实执行人工 SQL，迁移账号只读取得独立基表参考；不调用模型 |
+| evaluate-analytics-live.py | 显式 --allow-live 后通过 loopback API 跑四个模型规划开发烟测，保存实际 Task / 参考行 / usage |
 | check | 默认 require-postgres / require-rag，Ruff、pytest、pip check、JSON/JUnit |
-| run | 注入应用配置、显式启用 RAG、移除迁移/测试 URL，再运行 main.py |
+| run | 注入应用及专用分析配置，显式启用 RAG/analytics、移除迁移/测试 URL，再运行 main.py |
 | mcp-demo | 注入普通业务配置，在 loopback API 登录公开模拟客户，经官方 stdio Client 调用三个只读工具 |
 
 当前索引脚本没有选择单文档参数，处理所有未删除的登记文档；要强制重索引某篇已兼容文档，可用 admin 的 reindex API。
+
+从已有 Phase 5 工作区升级，先用 `scripts/stop.ps1` 或 Ctrl+C 停止本项目 API，再执行 init-infra → init-analytics → migrate（开发与测试库），随后重启。新 Compose secret 挂载可能重建 PostgreSQL 容器，持久数据目录保留；不要使用 down -v 或删除数据目录。reader 在迁移前已存在时，0005 自动授予两个视图的读取权限；若先迁移，可再幂等运行 init-analytics 补授已存在视图。脚本不自动回滚业务数据或降级迁移。
 
 ## 模型准备与离线使用
 
@@ -92,6 +100,47 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 API 没有订单状态/金额写权限，政策只能读，审计仅追加。确认、退款、工单、幂等、agent_tasks/agent_sessions 具有迁移明确授予的 DML。Phase 3 另授权知识登记 INSERT/UPDATE 和 Chunk INSERT/DELETE，政策来源仍被独立 trigger 保护。0003_agent 由迁移账号建立官方 Checkpoint schema 与版本记录；运行账号不能 DDL、删除检查点或变更 SDK 版本，应用不调用 saver.setup()。
 
 Redis 与 Chroma 当前没有公网认证方案，仅 loopback 隔离。需要公网部署时必须另行完成生产配置与验证，不能直接使用公开模拟账号。文档、脚本及日志不打印真实 URL、JWT Secret、模型 Key 或完整环境。
+
+## 运营分析配置与账号
+
+`EA_ANALYTICS_ENABLED` 在 Settings/模板中默认 false，`run.ps1` 显式启用。启用时必须配置专用 `EA_ANALYTICS_DATABASE_URL`；业务数据库、reader 视图或授权不满足要求时，就绪失败并拒绝查询，不回退到普通业务/迁移账号。直接分析 API 无需 DeepSeek，Agent 自然语言规划仍需真实模型配置。
+
+| 变量 | 默认值 / 范围 |
+| --- | --- |
+| EA_ANALYTICS_ENABLED | false，建立专用分析 runtime |
+| EA_ANALYTICS_DATABASE_URL | 空，开发库 ea_analytics_reader 的 postgresql+psycopg URL |
+| EA_TEST_ANALYTICS_DATABASE_URL | 空，专用测试库 ea_test_analytics_reader；不注入运行 API/MCP |
+| EA_ANALYTICS_STATEMENT_TIMEOUT_MS | 5000，范围 100–10000 ms |
+| EA_ANALYTICS_MAX_ROWS | 100，范围 1–500 |
+| EA_ANALYTICS_MAX_SQL_CHARS | 8000，范围 128–16000；API/Agent SQLPlan 另有固定 8000 输入上限 |
+
+`init-infra.ps1` 在 D 盘项目 `var/infra/` 创建 postgres-analytics-password / postgres-test-analytics-password，只在文件不存在时生成 64 字符随机 hex；同步 ignored `var/infra-secrets.env` 的两个分析 DSN，保留其余已有字段与注释。Compose 把密码文件只读挂载给 PostgreSQL，`init-analytics.ps1` 通过 psql stdin 与 pg_read_file 读取，密码不进入 CLI 参数或输出。
+
+专用账号分别获得两个项目库的 CONNECT，不允许交叉连接开发/测试库；只显式授权 ea_analytics schema USAGE 和 daily_orders / daily_product_sales SELECT。它们无角色成员关系、owner、超级用户、建库/建角色、schema CREATE、基表/列和 sequence 权限。默认事务只读、statement_timeout=5s、lock_timeout=1s、idle_in_transaction_session_timeout=10s；查询 runtime 再施加本次限制。初始化撤销这两个项目库 PUBLIC TEMP，保留既有 public schema PUBLIC USAGE 和系统数据库默认权限。系统元数据仍有 PostgreSQL 的默认可见性，应用层 AST 只接受两个授权聚合视图。
+
+旋转专用密码时仅替换对应 ignored hex 文件，再运行 init-infra 同步 DSN/挂载、init-analytics 更新专用角色并重启 API；不要修改业务/owner 密码文件或打印配置。新旧已有数据库都不清空，重复初始化按当前密码文件与明确 ACL 幂等执行。
+
+分析输出按上海支付日期统计；退款为查询时模拟完成状态，不是历史时间点快照。普通报表金额精确保留十进制字符串。返回图表 spec 和数据，尚未提供 Vue 图表渲染或浏览器验收。
+
+## 运营分析评估命令
+
+先完成专用测试库迁移及 `check.ps1` 的固定模拟数据准备，再运行人工 SQL 对照；它不 seed、不清空数据库、不读项目 .env 或调用聊天模型：
+
+```powershell
+.\scripts\evaluate-analytics.ps1 -Output 'var/evaluation/sql-review'
+```
+
+脚本仅保留本次需要的测试 reader 与迁移参考连接，参考读取也受事务/超时限制，退出时恢复原进程 EA 配置。产物为指定目录的 results.json / report.md，包含实际结果、独立基表参考、数据指纹、拒绝和耗时。人工 SQL 的匹配率不是自然语言转 SQL 分数。
+
+真实在线开发烟测使用已经启动并配置模型的本机 API，必须显式传 `--allow-live`；这会触发现有 Agent 的实际供应商调用。运行前核对 PyCharm 对 main.py 配置的 Python 3.13 项目 SDK，使用项目 `.venv`，不安装或切换全局解释器：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\evaluate-analytics-live.py --allow-live --model-label 'deepseek-flash' --output 'var/evals/analytics-live-review-1'
+```
+
+脚本只接受 loopback HTTP origin，不跟随重定向/环境代理，不通过 CLI 获取或打印 Key；在本机登录公开 demo_analyst，经 HTTP 创建自己的会话并调用现有 Agent。`--model-label` 只是操作者标签，不能证明 API 未暴露的供应商真实身份。输出必须是项目 var/evals 下新的目录，已有 results.json / cases.csv / report.md 会拒绝覆盖。实时 canonical SQL 与 Agent 请求不共享快照；业务日期漂移判失败，失败或不完整消费保留，不能补零 Token。
+
+固定 SQL 数据集为 [analytics-sql.json](../evals/datasets/analytics-sql.json)，四个 schema 输出合同场景为 [analytics-live-smoke.json](../evals/datasets/analytics-live-smoke.json)。它们是开发检查，不能冒称盲评或开放式模型质量。当前已归档结果及默认重试恢复记录见[Phase 6](phase-6.md)和[Evaluation](evaluation.md)。
 
 ## 知识检索配置
 
@@ -133,7 +182,7 @@ Redis 与 Chroma 当前没有公网认证方案，仅 loopback 隔离。需要�
 | EA_AGENT_MAX_RETRIES | 2，范围0–2，明确临时失败的有限重试 |
 | EA_AGENT_MAX_HISTORY_MESSAGES | 12，范围2–24，完整问答对 |
 
-HTTPX发送OpenAI兼容Chat Completions，Thinking disabled、非流式、temperature=0；三个控制工具使用named tool_choice，业务工具auto，不装OpenAI SDK。[DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)是协议来源。本机已用忽略的本地配置启用模型，真实有限烟测见[在线报告](../evals/results/phase4-live/report.md)；模板仍默认禁用，受控图测试不冒称在线结果。
+HTTPX 发送 OpenAI 兼容 Chat Completions，Thinking disabled、非流式、temperature=0；路由、改写、原文选择及 SQL 规划控制工具使用 named tool_choice，业务工具 auto，不装 OpenAI SDK。[DeepSeek Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)是协议来源。本机已用忽略的本地配置启用模型，历史烟测见[在线报告](../evals/results/phase4-live/report.md)，当前 NL SQL 验收另行记录；模板仍默认禁用，受控图测试不冒称在线结果。
 
 迁移包括 0003_agent 的官方 Checkpoint 与 0004_agent_role 的不可变会话创建角色。角色变化需新会话，恢复原相同角色后可访问原合法会话；服务端私有 thread 不能通过 HTTP 指定。Agent 随请求运行，无后台 Worker 或自动任务重领；中断后显式调用 recover 核对已提交业务。
 
@@ -180,7 +229,7 @@ MCP 采用本机 stdio，不开放端口。独立入口使用官方 mcp 1.30.0�
 
 Server 每次调用重新验证 JWT、启用状态、token_version 和当前角色；工具参数与 `_meta` 不授予身份。无权订单返回安全 404，新增写入工具名被拒绝。成功 data 由现有 BusinessTools / Service 产生；政策证据缺失仍显示 insufficient_evidence，存在适用政策但未启用 RAG 时返回 rag_not_enabled。
 
-Client 子进程环境白名单仅包含必要普通数据库、JWT、用户 Token、RAG、D 盘临时目录与 SDK 精选系统变量，不继承模型 Key、管理员/测试连接或 Redis。Server 显式禁用聊天模型、Agent Checkpoint 与上述非必要连接。MCP 使用已有受限业务账号，没有新增数据库角色或迁移；三工具只读并不表示该业务账号整体只有 SELECT 权限。
+Client 子进程环境白名单仅包含必要普通数据库、JWT、用户 Token、RAG、D 盘临时目录与 SDK 精选系统变量，不继承模型 Key、管理员/测试/分析连接或 Redis。Server 显式禁用聊天模型、Agent Checkpoint、分析 runtime 与上述非必要连接。MCP 使用已有受限业务账号，不使用 Phase 6 的专用 reader；三工具只读并不表示该业务账号整体只有 SELECT 权限。
 
 Client 默认整体预算 60 秒，内部 ClientSession 也配置有限读取超时。Windows Client 使用 Proactor 支持异步 subprocess，Server 使用 Selector 支持 psycopg。嵌套异步上下文先关闭 Session，再由官方 stdio transport 关闭 stdin、等待或终止实际子进程；服务日志写 stderr，stdout 只含 JSON-RPC。Demo 报告包含工具结果、成功状态及 provider_calls=0 / token_usage=null，不冒称线上 Token 用量。
 
@@ -202,7 +251,7 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/live'
 Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/ready'
 ```
 
-ready 要求 application、database、已配置 Redis、已启用 knowledge 和已建立 agent_checkpoint 通过。数据库验证当前迁移 head、必需权限及账号边界；knowledge 校验本地模型与 Chroma 心跳，checkpoint 检查官方 SDK 版本和运行账号权限。健康不验证每个语料活动索引、模型配置或 DeepSeek 在线状态。
+ready 要求 application、database、已配置 Redis、已启用 knowledge、已建立 agent_checkpoint 以及启用时的 analytics 通过。业务库验证当前迁移 head，分析库验证固定 schema marker、两个视图、专用角色和授权边界；knowledge 校验本地模型与 Chroma 心跳，checkpoint 检查官方 SDK 版本和运行账号权限。健康不验证每个语料活动索引、模型配置、DeepSeek 在线状态或模型 SQL 语义。
 
 完整检查结果保存本阶段var/test-results JSON/JUnit；Phase 4初验511项通过，零失败/错误/跳过，Ruff与pip check通过，公共证据见[验收记录](phase-4.md)及[验证摘要](../evals/results/phase4/verification.json)。检索评估输出路径仍由evaluate-rag配置，历史Phase 3原始JSON/CSV/报告保留，不作为Phase 4 Agent效果分数。依赖缺失的跳过不属于通过，SkipPostgres/SkipRag只用于局部开发。
 

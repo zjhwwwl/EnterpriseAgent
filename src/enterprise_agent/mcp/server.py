@@ -185,6 +185,9 @@ async def run(settings: Settings | None = None) -> None:
         test_database_url=None,
         test_migration_database_url=None,
         redis_url=None,
+        analytics_enabled=False,
+        analytics_database_url=None,
+        test_analytics_database_url=None,
     )
     _configure_protocol_logging(configured)
     async with _runtime(configured) as server, stdio_server() as (reader, writer):
