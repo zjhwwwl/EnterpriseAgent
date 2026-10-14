@@ -17,6 +17,7 @@ from enterprise_agent.api.upload_limit import UploadLimitMiddleware
 from enterprise_agent.config import Settings, get_settings
 from enterprise_agent.database import Database
 from enterprise_agent.logging_config import configure_logging
+from enterprise_agent.observability import TaskTraceRecorder
 from enterprise_agent.rag.runtime import RagRuntime
 from enterprise_agent.request_context import RequestContextMiddleware
 
@@ -39,6 +40,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         try:
+            application.state.trace_recorder = TaskTraceRecorder(resolved)
             if resolved.database_url is not None:
                 application.state.database = Database(resolved.database_url.get_secret_value())
                 await application.state.database.is_ready()
@@ -79,6 +81,8 @@ def create_app(
             yield
         finally:
             application.state.ready = False
+            if application.state.trace_recorder is not None:
+                application.state.trace_recorder.close()
             if application.state.agent_model is not None and agent_model is None:
                 await application.state.agent_model.aclose()
             if application.state.agent_checkpoint is not None and agent_checkpoint is None:
@@ -110,6 +114,7 @@ def create_app(
     application.state.agent_checkpoint = None
     application.state.agent_model = None
     application.state.analytics = None
+    application.state.trace_recorder = None
     application.state.clock = lambda: datetime.now(UTC)
     # add_middleware prepends each layer: RequestContext -> CORS -> UploadLimit.
     # CORS must also wrap UploadLimit's early responses before routing.

@@ -1,0 +1,22 @@
+{
+    "schema_version":  1,
+    "compared_at_utc":  "2026-10-14T19:14:17.9460324Z",
+    "covered_files":  80,
+    "original_run_before":  "source-before-live.json",
+    "original_run_after":  "source-after-live.json",
+    "original_live_source_identical":  true,
+    "release_after":  "source-after-release.json",
+    "changed_paths_after_original_live":  [
+                                              "src/enterprise_agent/evaluations/live.py"
+                                          ],
+    "release_equals_original_live":  false,
+    "reason":  "Future evaluation binding selection now requires observable logistics before choosing the owned logistics case. The original unobserved case and paid run grades remain unchanged.",
+    "final_targeted_regression":  "evaluation-unit.json",
+    "provider_requests_after_paid_run":  0,
+    "excluded_from_hash_scope":  [
+                                     "tests",
+                                     "frontend",
+                                     "documentation",
+                                     "public_evidence"
+                                 ]
+}

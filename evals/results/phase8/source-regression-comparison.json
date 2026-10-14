@@ -1,0 +1,14 @@
+{
+    "schema_version":  1,
+    "compared_at_utc":  "2026-10-14T19:04:18.0757398Z",
+    "covered_files":  80,
+    "before":  "source-before.json",
+    "after":  "source-after-regression.json",
+    "changed_paths":  [
+                          "src/enterprise_agent/evaluations/references.py"
+                      ],
+    "source_identical":  false,
+    "reason":  "Post-suite evaluation-only reference fix: a product query that does not project product_id must not include that role among numeric columns.",
+    "final_targeted_regression":  "evaluation-unit.json",
+    "live_source_freeze":  "pending"
+}

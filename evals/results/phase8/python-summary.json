@@ -1,0 +1,11 @@
+{
+    "phase":  8,
+    "generated_at":  "2026-10-14T18:59:12.0882601Z",
+    "tests":  1034,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "elapsed_seconds":  712.59,
+    "required_postgres":  true,
+    "required_rag":  true
+}

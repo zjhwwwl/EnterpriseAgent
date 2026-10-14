@@ -1,0 +1,18 @@
+{
+    "schema_version":  1,
+    "verification_kind":  "pytest_complete_regression",
+    "source":  "var/test-results/phase8.xml",
+    "source_sha256":  "e6ce3777cb9dafd85525ea745fde6399f4d7e4af43cf678d09fa86da92219bc0",
+    "tests":  1034,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "time_seconds":  712.59,
+    "timestamp":  "2026-10-15T02:47:18.323218+08:00",
+    "required_postgres":  true,
+    "required_rag":  true,
+    "limitations":  [
+                        "Complete suite ran before the evaluations/references.py column-role fix. The subsequent oracle-only regression contains 104 tests.",
+                        "Test doubles are explicit in relevant unit tests; live evaluations are archived separately."
+                    ]
+}

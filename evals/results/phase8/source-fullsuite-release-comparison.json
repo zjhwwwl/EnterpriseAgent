@@ -1,0 +1,14 @@
+{
+    "schema_version":  1,
+    "compared_at_utc":  "2026-10-14T19:14:17.9607399Z",
+    "covered_files":  80,
+    "full_suite_before":  "source-before.json",
+    "release_after":  "source-after-release.json",
+    "changed_paths":  [
+                          "src/enterprise_agent/evaluations/live.py",
+                          "src/enterprise_agent/evaluations/references.py"
+                      ],
+    "source_identical":  false,
+    "complete_suite_rerun_after_evaluation_only_fixes":  false,
+    "final_targeted_regression":  "evaluation-unit.json"
+}

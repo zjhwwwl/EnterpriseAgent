@@ -1,0 +1,16 @@
+{
+    "schema_version":  1,
+    "verification_kind":  "pytest_evaluation_oracle_fix_targeted_regression",
+    "source":  "var/test-results/phase8-evaluation-final.xml",
+    "source_sha256":  "a3db02c2fe59dd5ac1826b8886e5332e4547e30fa36074778510d6e548363f69",
+    "tests":  104,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "time_seconds":  2.909,
+    "timestamp":  "2026-10-15T02:59:29.401073+08:00",
+    "limitations":  [
+                        "Executed after the SQL reference column-role fix. Do not add count to complete-suite tests.",
+                        "Controlled tests include test doubles; this is not provider quality."
+                    ]
+}

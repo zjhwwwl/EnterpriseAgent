@@ -2,7 +2,7 @@
 
 ## 当前实现
 
-Phase 7 / 0.7.0 在现有模块化单体外增加 Vue 3 / TypeScript / Element Plus 管理后台，五个页面复用现有 FastAPI 契约。LangGraph 仍使用一张图，分析仍经独立 reader、授权聚合视图和 AST 校验；MCP 保留三个只读工具。前端展示真实回答、原始查询行、来源和人工确认，业务规则继续由后端执行。本阶段验证状态见[Phase 7](phase-7.md)，[Phase 6](phase-6.md)及更早证据保留历史边界。独立 Worker 与 Langfuse 尚未实现。
+Phase 8 / 0.8.0 在现有模块化单体、Vue 五页、单张 LangGraph 图、独立分析 reader 与只读 MCP 外新增评估合同和元数据追踪。评估器采集真实任务/授权业务参考，再执行显式证据检查；受控故障注入单独标记。追踪默认写本地白名单 JSONL，可选 LangSmith 摘要导出默认关闭。当前验证见[Phase 8](phase-8.md)，[Phase 7](phase-7.md)及更早证据保留历史边界；没有独立 Worker。
 
 采用模块化单体：API、Service、Repository、Schemas、Agents、Tools 分工明确，模型和前端不能自行修改订单状态或替换当前用户身份。图随请求执行，人工等待写入 Checkpoint；没有任务队列 Worker。
 
@@ -37,6 +37,9 @@ flowchart TD
     TOOLS --> KNOW
     GRAPH --> CHECKPOINT["官方 AsyncPostgresSaver"]
     CHECKPOINT --> DB
+    AGENT --> TRACE["TaskTraceRecorder：执行后元数据"]
+    TRACE --> JSONL["EA_DATA_DIR 下 JSONL"]
+    TRACE -. "显式配置" .-> SMITH["有限队列 LangSmith 摘要"]
     API --> ANALYTICS["AnalyticsService：可信 analyst/admin"]
     GRAPH --> ANALYTICS
     ANALYTICS --> AST["SQLGlot：单条 SELECT / 单视图"]
@@ -61,7 +64,8 @@ flowchart TD
 | RAG parsing/chunking | 真实文档解析、来源位置、字符预算与覆盖 |
 | RAG backends/runtime | 固定模型文件验证、CPU 推理、线程容量和超时 |
 | RAG store/ranking | Chroma SDK、中文字符/二元组 BM25 与 RRF |
-| Evaluation | 固定 corpus、文档级排序、门控、引用合法性和真实耗时 |
+| Evaluation / evaluations | 固定 corpus、严格案例合同、真实证据、SQL 独立基表参考、机器检查与人工复核状态 |
+| Observability | 显式字段白名单、累计 Task 快照、本地 JSONL、可选有界远端摘要队列 |
 | Agents graph | 状态、模型规划、一次检索改写、人工中断、执行预算及结果验证 |
 | Agents llm | OpenAI 兼容 HTTP 协议、有限响应与超时、严格 Tool Call / usage 校验 |
 | Agents checkpoint | 官方 PostgreSQL saver、私有 thread advisory lock、安全序列化 |
@@ -84,7 +88,7 @@ flowchart TD
 
 Markdown 使用 marked + DOMPurify，禁用远程图片、嵌入文档、表单和主动 HTML；引用原文采用文本插值。核验根据 chunk_id 构造认证 API 路径，不导航模型提供的任意 citation_url。历史任务中的来源快照与当前引用 API 的合法性分别展示，不能把已保存原文当作刚完成的权限或版本核验。图表从后端 `query_rows` 规范读取，精确十进制值保留于表格和提示，比例绘图不补 NULL 为零。
 
-前端行为由 43 项受控单元/组件测试验证；21 项 API 回归核对本版本契约。真实 Edge 另外连接专用测试业务数据库、只读 reader、真实 CPU 检索和配置聊天模型完成 14 个检查点，包含真实 Checkpoint 跨服务重启后的人工确认。该流程只操作虚构测试记录，不代替完整模型质量、负载或生产部署验证；失败轮次与消费保留，详见[Phase 7](phase-7.md)。
+Phase 7 时前端行为由 43 项受控单元/组件测试验证，21 项 API 回归核对当时 0.7.0 契约；真实 Edge 另行连接专用业务数据库、reader、CPU 检索和配置模型完成 14 个检查点，包含 Checkpoint 跨服务重启后的确认。该历史流程只操作虚构记录，不代替模型质量或部署证明。本阶段重跑 43 项前端检查及实际后端套件，新的测试与模型范围见[Phase 8](phase-8.md)，历史浏览器失败/消费仍见[Phase 7](phase-7.md)。
 
 ## 数据与实体
 
@@ -202,4 +206,14 @@ Client/Server 均不读取 `.env`，示例白名单仅向子进程传递必要�
 
 ## 后续架构
 
-Phase 8 扩展独立评估与可选 tracing；Phase 9 交付应用镜像、CI 和干净环境启动。当前五页 Vue 后台的真实浏览器与构建证据见阶段记录，任务调度、应用镜像和 tracing 在确有实现及验证后加入文档。
+Phase 9 交付应用镜像、CI 和干净环境启动。当前五页 Vue 后台的真实浏览器与构建证据见 Phase 7；本阶段评估与元数据追踪边界见 Phase 8。任务调度和应用镜像尚未交付。
+
+## 评估与追踪数据流
+
+`evaluations/dataset.py` 用 Pydantic 严格加载案例，拒绝未知字段、非白名单预期与不可信订单绑定；`checks.py` 对采集证据给出 `pass`、`fail` 或 `manual_review`，缺少证据不能默认成功。`references.py` 将受支持 SQL 指标/时间范围 AST 合同与独立基表事实结果配合使用，不复用模型 SQL 作事实标准，也不是通用 SQL 等价证明器。`boundaries.py` 运行生产图与 InMemorySaver，模型和业务响应是声明的故障输入，不接数据库或供应商。
+
+`AgentService` 在主动执行结束后记录 Task DTO 的白名单投影，应用 lifespan 统一管理记录器与可选导出线程。`trace_id` 和 root span 关联 Task UUID，每次 send/resume/recover 有独立 segment；节点记录来自 Task 的累计 steps。Token、耗时与步骤保持累计快照语义，汇总按 Task 取最新值；节点 span 为结束后的观察，不能推导真实并行关系或逐节点起止时间。
+
+记录器不序列化完整 Task、消息、回复、工具参数、SQL、文档内容、用户/订单字段或密钥，request ID 保存 SHA256。节点/工具/状态/错误均白名单处理，未知值使用固定类别。本地 I/O 和远端摘要失败只记录安全错误，不改变业务结果；队列有上限，关闭不等待清空全队列。进程内锁没有跨进程日志互斥或轮转，因此本地 JSONL 不能称生产日志管道。
+
+本阶段实际在线运行的 17 个 Task 有 17 条本地快照，核对 request hash、状态、安全错误和累计 usage 与 DTO 一致，见[追踪证据](../evals/results/phase8/observability/verification.json)。该账本与在线 39440 Token 相同，不重复汇总；LangSmith 远端未连接验收，步骤快照也不当作实时分布式时序。

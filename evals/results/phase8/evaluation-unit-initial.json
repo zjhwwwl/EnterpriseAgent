@@ -1,0 +1,16 @@
+{
+    "schema_version":  1,
+    "verification_kind":  "pytest_evaluation_focused_regression",
+    "source":  "var/test-results/phase8-evaluation-unit.xml",
+    "source_sha256":  "59a98e076c0ab086f45bf8c6626836a26a7b7d378cdf20cc4b7bb0a8a421eca2",
+    "tests":  103,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "time_seconds":  2.929,
+    "timestamp":  "2026-10-15T02:02:17.092173+08:00",
+    "limitations":  [
+                        "Controlled tests include test doubles. This record is not a model quality score.",
+                        "Not added to full-suite count; evaluation-focused tests may also appear in the complete regression."
+                    ]
+}

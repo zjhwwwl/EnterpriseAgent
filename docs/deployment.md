@@ -2,7 +2,7 @@
 
 ## 实际支持范围
 
-Phase 7 / 0.7.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio / 只读运营分析 / Vue 管理后台 + Linux PostgreSQL / Redis / Chroma 容器**。当前前端构建与浏览器验证状态见[Phase 7](phase-7.md)，历史 MCP、SQL 与在线 Agent 结果保留。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
+Phase 8 / 0.8.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio / 只读运营分析 / Vue 管理后台 / 评估与元数据追踪 + Linux PostgreSQL / Redis / Chroma 容器**。本阶段证据见[Phase 8](phase-8.md)，前端浏览器及历史 MCP、SQL 和在线 Agent 结果保留。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
 
 默认仅绑定 loopback，使用虚构数据与公开演示账号。没有真实支付、退款或付费云资源。
 
@@ -72,7 +72,7 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 .\scripts\frontend.ps1 -Mode Run
 ```
 
-访问 `http://127.0.0.1:5173`，使用 README 中的公开模拟账号。`Install` 根据锁文件安装依赖；`Run` 启动 Vite；`Check` 执行格式检查、Vitest、TypeScript/Vite 构建和生产依赖 audit，测试 JSON 写入 `var/test-results/phase7-frontend-unit.json`：
+访问 `http://127.0.0.1:5173`，使用 README 中的公开模拟账号。`Install` 根据锁文件安装依赖；`Run` 启动 Vite；`Check` 执行格式检查、Vitest、TypeScript/Vite 构建和生产依赖 audit，测试 JSON 写入 `var/test-results/phase8-frontend-unit.json`：
 
 ```powershell
 .\scripts\frontend.ps1 -Mode Check
@@ -232,6 +232,62 @@ HTTPX 发送 OpenAI 兼容 Chat Completions，Thinking disabled、非流式、te
 
 Chroma SDK 1.5.9 使用窄适配桥，将实际 HTTP session timeout 在初始网络调用前设置；connect/pool 最多3秒，read/write 使用配置秒数。它是各阶段超时，不是整次多请求操作总耗时保证；外层还有 RAG 时间预算。客户端升级需要复查适配和真实 HTTP 测试，不用不存在的 SDK 配置键假装限制请求。
 
+## Phase 8 评估入口
+
+先完成本机基础设施、专用测试库迁移与本地模型准备。默认命令运行明确受控故障集，不连接供应商或数据库；`Prepare` 使用专用测试库准备虚构数据和真实 CPU/Chroma 索引，不发聊天请求：
+
+```powershell
+.\scripts\evaluate-phase8.ps1
+.\scripts\evaluate-phase8.ps1 -Mode Boundaries
+.\scripts\evaluate-phase8.ps1 -Mode Prepare
+```
+
+`Prepare` 调用 seed_demo，基准 UTC 2026-10-12、seed=42、500 订单；已有种子保持原记录，不 reset。实际 API 使用当前 UTC 判断退款期限，固定数据仍会随日期超期，须由执行前真实订单资格检查决定可绑定订单。隔离数据目录为 `var/evaluation-test`、Chroma 前缀 `ea_phase8_eval`，与前端验收集合分开；Redis 使用 DB 2。模型缓存继续共享经 SHA256 校验的 D 盘只读文件。
+
+显式在线入口将使用已配置的真实 DeepSeek，可能消耗余额；不准备云资源、不确认退款：
+
+```powershell
+.\scripts\evaluate-phase8.ps1 -Mode Live -AllowLive
+# 已有 preparation.json 且核对真实隔离条件后，可跳过本轮准备
+.\scripts\evaluate-phase8.ps1 -Mode Live -AllowLive -Prepared
+```
+
+包装脚本拒绝已有 8002 监听，不停止未知进程；启动 `127.0.0.1:8002` 的当前 API，并在 finally 核对自身 executable/main.py 后结束记录的子进程。API 使用 enterprise_agent_test 的 ea_test_app 与 ea_test_analytics_reader，不继承 owner 或其他测试 DSN；参考采集另用受守卫的 ea_local_admin 连接，以只读事务核对基表事实。配置 LangSmith 强制关闭，付款仅来自明确的 Agent messages 调用。
+
+Live 每轮创建 `var/evaluation/phase8/live/<UTC>` 新目录，保存 results.json、cases.csv、report.md 和日志。JWT Secret 另存 ignored `private-jwt-secret`，不要分享整个原始运行目录。模型返回的真实 Task 在继续核验前先持久到报告，消息异常时只查持久任务，不自动重发、recover 或确认退款。返回码 0 表示评估完成和结果已记录，fail/manual_review 不会被当作基础设施异常或隐藏。
+
+本次首次 UTC 目录 `20261014T1904572830729Z` 的原始评估公开到[在线报告](../evals/results/phase8/live/report.md)：18 案例为 5 pass/3 fail/9 manual_review/1 unobserved，17 Task、36 次实际模型尝试、39440 Token。validation 13 条为 4/2/7；冻结结果没有改题、事后调分或删除失败，首物流样本因独立参考 404 在消息前停止。结果不代表全量模型质量通过或重试后的最终源码在线验收。
+
+模块调用要求调用进程已经通过项目基础设施脚本配置所需专用测试 URL，且正确隔离 API 已运行；建议日常使用包装脚本。PyCharm 为 main.py 配置的项目 Python 3.13 可直接运行：
+
+```powershell
+.\.venv\Scripts\python.exe -m enterprise_agent.evaluations.live --mode live --allow-live --base-url 'http://127.0.0.1:8002' --output 'var/evaluation/phase8/live/manual-run-1'
+```
+
+模块仅接受原始产物位于项目 var 下；手动复跑请选新的输出目录，包装脚本自动创建新 UTC 路径。每条消息前验证新 session 确实存在于专用测试库，按真实数据选择自己/他人/可退款订单。最终选样最多验证 100 个拥有订单的物流：实际 200 才用于读取案例，404 跳过，其他错误立即停止；没有可用物流时在付费消息前拒绝。首次已归档运行发生在这项选样修正前，原未观察案例不改分或复跑。运行日期漂移、基表变化、源码变化、未知消费和未观察到任务均保留记录。更早手选烟测不能替代这套冻结合同，当前结果见[Phase 8](phase-8.md)。
+
+## 本地元数据追踪与可选 LangSmith
+
+应用创建 `TaskTraceRecorder`，默认在 `EA_DATA_DIR/observability/agent-traces.jsonl` 追加 UTF-8 JSONL；数据目录仍优先项目 D 盘并由 Git 忽略。设置 `EA_OBSERVABILITY_ENABLED=false` 可关闭本地写入，它与远端开关分别控制。执行后保存的快照包含累计 Token/耗时/steps，应按 Task ID 选择最新快照，不能把 send、resume 和 recover 的累计 DTO 相加。
+
+| 配置 | 默认值与边界 |
+| --- | --- |
+| EA_OBSERVABILITY_ENABLED | true；本地白名单元数据 JSONL |
+| EA_LANGSMITH_ENABLED | false；只开启显式摘要导出 |
+| EA_LANGSMITH_API_KEY | 空；启用远端时必须在本地秘密配置填写 |
+| EA_LANGSMITH_ENDPOINT | 空；启用时必须显式提供 origin |
+| EA_LANGSMITH_PROJECT | 空；启用时必须提供 1–80 位 ASCII 项目名 |
+| EA_LANGSMITH_TIMEOUT_SECONDS | 2；范围 0.1–5，SDK connect/read 有限超时 |
+| EA_LANGSMITH_QUEUE_SIZE | 16；范围 1–64，满时安全记录丢弃 |
+
+允许的 endpoint 为 loopback origin，或官方 HTTPS `api.smith.langchain.com` / `eu.api.smith.langchain.com` 的默认 443 origin；拒绝凭据、路径、query 和 fragment。项目名以 ASCII 字母/数字开头，后续仅字母/数字/点/下划线/短横线。SDK Client 不继承环境代理或 netrc，不跟随重定向、不开自动批量和请求重试，目的 origin 不允许改变。不要把 SDK 自动 tracing 环境变量当作此功能配置，LangGraph 主动调用保持 `tracing_context(enabled=False)`。
+
+摘要不含问题、答案、工具参数、SQL、文档、用户/订单字段，root 记录任务累计元数据，segment 记录请求片段，steps 为执行后观察而非真实 span 起止时序。本阶段 LangSmith 默认关闭，SDK 合同使用受控 requests transport 检查；没有提供云凭据，也没有真实云导出或公网接收端成绩。是否向自己的 LangSmith 项目导出需要自行明确配置，不能根据健康接口推导出口在线。
+
+本地写入失败和远端异常只记录安全错误，不使业务任务失败；有界 daemon worker 不提供 durable delivery，退出不等待队列清空。当前没有自动轮转、文件清理、跨进程日志锁或生产 trace collector。真实评估器的原始 Task 证据与这里的精简追踪是不同产物，分享原始评估文件前仍需检查内容和秘密。
+
+本次 17 Task/17 本地快照的真实校验见[观测证据](../evals/results/phase8/observability/verification.json)，状态、错误、request hash 和累计 usage 与 DTO 相符。39440 Token/36 次调用属于同一线上账本，不再次计费汇总；LangSmith 配置关闭且没有云凭据，这不是网络抓包或远端发送验收。
+
 ## MCP Server 与 Client
 
 MCP 采用本机 stdio，不开放端口。独立入口使用官方 mcp 1.30.0，三个工具查询普通业务数据库及已有政策知识；不发送 DeepSeek 请求。Python 模块与安装入口分别为：
@@ -296,6 +352,8 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/ready'
 ```
 
 ready 要求 application、database、已配置 Redis、已启用 knowledge、已建立 agent_checkpoint 以及启用时的 analytics 通过。业务库验证当前迁移 head，分析库验证固定 schema marker、两个视图、专用角色和授权边界；knowledge 校验本地模型与 Chroma 心跳，checkpoint 检查官方 SDK 版本和运行账号权限。健康不验证每个语料活动索引、模型配置、DeepSeek 在线状态或模型 SQL 语义。
+
+本阶段[重启后的 HTTP 证据](../evals/results/phase8/demo-ready.json)记录后端 0.8.0/phase=8、六项 ready 检查通过、Vite 5173 返回 200 且健康代理一致。该检查新增模型请求 0，只证明对应本机启动状态，没有执行新一轮浏览器业务流程、Linux 应用镜像或公网部署。
 
 完整检查结果保存本阶段var/test-results JSON/JUnit；Phase 4初验511项通过，零失败/错误/跳过，Ruff与pip check通过，公共证据见[验收记录](phase-4.md)及[验证摘要](../evals/results/phase4/verification.json)。检索评估输出路径仍由evaluate-rag配置，历史Phase 3原始JSON/CSV/报告保留，不作为Phase 4 Agent效果分数。依赖缺失的跳过不属于通过，SkipPostgres/SkipRag只用于局部开发。
 

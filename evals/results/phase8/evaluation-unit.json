@@ -1,0 +1,17 @@
+{
+    "schema_version":  1,
+    "verification_kind":  "pytest_evaluation_final_release_regression",
+    "source":  "var/test-results/phase8-evaluation-release.xml",
+    "source_sha256":  "46476d6f057eb985ec4d78af1d5adfe2b3d8ae58f73a8ce9dff75e6a2e696ddc",
+    "tests":  112,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "time_seconds":  2.898,
+    "timestamp":  "2026-10-15T03:12:47.086558+08:00",
+    "limitations":  [
+                        "Final targeted evaluation regression after reference role and logistics binding fixes.",
+                        "Do not add 112 to full 1034 or previous 103/104 targeted runs.",
+                        "New sampling tests use explicit API fixtures; paid live dataset was not rerun."
+                    ]
+}

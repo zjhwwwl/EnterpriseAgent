@@ -4,6 +4,7 @@ import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
 from time import perf_counter
+from uuid import uuid4
 
 from langgraph.errors import GraphRecursionError
 from langgraph.types import Command
@@ -13,6 +14,7 @@ from sqlalchemy import select
 from enterprise_agent.agents.graph import AgentContext, build_graph, initial_state
 from enterprise_agent.domain_errors import BusinessError
 from enterprise_agent.models import ApprovalRequest, AuditLog, IdempotencyRecord
+from enterprise_agent.observability import TaskTraceRecorder
 from enterprise_agent.repositories.agent import ACTIVE_TASK_STATUSES, AgentRepository
 from enterprise_agent.schemas.agent import (
     MessageInput,
@@ -41,6 +43,7 @@ class AgentService:
         rag_runtime=None,
         clock=lambda: datetime.now(UTC),
         analytics_runtime=None,
+        trace_recorder=None,
     ):
         self.sessions, self.settings, self.checkpoint, self.model = (
             sessions,
@@ -55,6 +58,9 @@ class AgentService:
             else None
         )
         self.graph = build_graph(checkpoint.saver) if checkpoint is not None else None
+        # CLI/test Services write local snapshots. Remote export requires an
+        # explicitly supplied shared recorder with application-managed lifecycle.
+        self.trace_recorder = trace_recorder or TaskTraceRecorder(settings, allow_remote=False)
 
     async def _session(self, actor, identifier, *, lock=False, session=None):
         if session is None:
@@ -377,6 +383,7 @@ class AgentService:
 
     async def _run(self, actor, record, task_id, graph_input):
         started = perf_counter()
+        segment_id, started_at = uuid4(), datetime.now(UTC)
         try:
             async with self.sessions() as session, session.begin():
                 task = await self._task(actor, task_id, lock=True, session=session)
@@ -410,7 +417,7 @@ class AgentService:
         except asyncio.CancelledError:
             # The request can die after a business commit. Leave this owned task
             # reserved for explicit recovery instead of starting a duplicate turn.
-            await asyncio.shield(
+            response = await asyncio.shield(
                 self._interrupted(
                     actor,
                     record,
@@ -420,6 +427,7 @@ class AgentService:
                     cancelled=True,
                 )
             )
+            self.trace_recorder.record(response, segment_id=segment_id, started_at=started_at)
             raise
         except Exception as error:
             code = (
@@ -450,4 +458,5 @@ class AgentService:
                 "elapsed_ms": response.elapsed_ms,
             },
         )
+        self.trace_recorder.record(response, segment_id=segment_id, started_at=started_at)
         return response

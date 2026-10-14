@@ -34,6 +34,7 @@ def service(request: Request):
         request.app.state.rag,
         request.app.state.clock,
         analytics_runtime=request.app.state.analytics,
+        trace_recorder=request.app.state.trace_recorder,
     )
 
 

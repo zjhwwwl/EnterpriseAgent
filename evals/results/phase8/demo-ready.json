@@ -1,0 +1,44 @@
+{
+    "checked_at_utc":  "2026-10-14T19:13:38.8953273Z",
+    "status":  "passed",
+    "backend_origin":  "http://127.0.0.1:8000",
+    "frontend_origin":  "http://127.0.0.1:5173",
+    "metadata":  {
+                     "name":  "EnterpriseAgent",
+                     "version":  "0.8.0",
+                     "phase":  8,
+                     "docs_url":  "/docs",
+                     "health_url":  "/health/ready"
+                 },
+    "readiness":  {
+                      "status":  "ok",
+                      "service":  "EnterpriseAgent",
+                      "version":  "0.8.0",
+                      "phase":  8,
+                      "checks":  {
+                                     "application":  "ok",
+                                     "database":  "ok",
+                                     "redis":  "ok",
+                                     "knowledge":  "ok",
+                                     "agent_checkpoint":  "ok",
+                                     "analytics":  "ok"
+                                 }
+                  },
+    "frontend_status_code":  200,
+    "frontend_health_proxy":  {
+                                  "status":  "ok",
+                                  "service":  "EnterpriseAgent",
+                                  "version":  "0.8.0",
+                                  "phase":  8,
+                                  "checks":  {
+                                                 "application":  "ok",
+                                                 "database":  "ok",
+                                                 "redis":  "ok",
+                                                 "knowledge":  "ok",
+                                                 "agent_checkpoint":  "ok",
+                                                 "analytics":  "ok"
+                                             }
+                              },
+    "model_requests":  0,
+    "scope":  "Loopback HTTP metadata, six readiness checks and Vite health proxy after verified project API restart; not a new browser workflow or production deployment test"
+}

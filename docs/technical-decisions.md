@@ -1,12 +1,12 @@
 # 技术决策
 
-当前 Phase 7 / 0.7.0 在既有 LangGraph 单 Agent、Agentic RAG、MCP、人工审批与受限分析外增加 Vue 五页后台。前端复用实际 API 契约和后端业务规则，展示持久化任务、来源与真实结果；确定性报告保留原始查询行与指标口径。当前验收见[Phase 7](phase-7.md)，此前阶段结果保持历史记录，工程安全、组件测试和受控流程不替代实际浏览器、数据库或模型语义质量。
+当前 Phase 8 / 0.8.0 在既有 LangGraph 单 Agent、Agentic RAG、MCP、人工审批、受限分析与 Vue 五页外增加可复现证据检查和安全元数据追踪。执行状态、精确业务/SQL 行、工具参数和引用结构可以由程序核对，语义充分性仍需人工标签。当前验收见[Phase 8](phase-8.md)，此前阶段保持历史结果，工程检查和受控流程不替代数据库、浏览器或线上模型证据。
 
 ## 模块化单体，单 Agent 多工具
 
 API、Service、Repository、Schemas、RAG、Agents、Tools、MCP 和 CLI 在同一包内维护。索引与图通过请求/CLI执行，人工等待持久化；MCP 为独立协议进程但复用同包 Service，不增加独立 Worker 框架、微服务、Kubernetes 或通用规则引擎。
 
-当前一张 LangGraph 图按任务分支编排，分析只增加 planner / execution 节点，复用同一会话与 Checkpoint。MCP Client / Server 直接调用 BusinessTools，不额外设计 Agent 或 MCP 图分支；没有多 Agent 协商、自动任务调度或 tracing。
+当前一张 LangGraph 图按任务分支编排，分析只增加 planner / execution 节点，复用同一会话与 Checkpoint。MCP Client / Server 直接调用 BusinessTools，不额外设计 Agent 或 MCP 图分支；没有多 Agent 协商或自动任务调度。执行后追踪通过 AgentService 的独立记录器完成，不增加图内规划节点。
 
 ## Python 3.13 与哈希锁
 
@@ -128,9 +128,28 @@ JWT 保存于内存，刷新后重新登录，避免演示 Key/Token 进入持�
 
 受控 UI 测试与真实浏览器流程分开归档。最终浏览器三个引导式任务通过，但多意图退款前轮曾只查询政策而未准备审批；明确记录该失败和实际 Token，不把改写提示后的通过解释成模型泛化改进。跨重启恢复待审批任务时按 Task ID 取最新累计 usage，避免把同一任务先前模型调用重复计算。测试库使用独立 Chroma 前缀、数据目录和 Redis DB；这提供本机验证隔离，不等于生产多租户方案。
 
+## 明确评估合同，保留未知和失败
+
+本阶段新增 `evaluations` 包，不复制业务规则，也不让评估器通过特殊接口绕过确认。严格 Pydantic 合同冻结可核对的状态、工具、参数、引用、SQL 和预期拒绝，缺证据标为 `manual_review` 或失败。18 条自编场景分 development/regression/validation 呈现，validation 在首次在线运行前冻结；编写者知晓代码和语料，不称外部独立盲评。历史多意图退款失败纳入 regression，不通过事后改题或删除失败提高成绩。
+
+引用当前版本校验、连续原文结构验证和片段语义足够是不同判断。工具名称和部分 DTO 参数也不能证明原始模型参数完整正确；只在实际采集原始调用后做 schema 检查，无法取得证据时保留复核状态。人工 review 未执行时不伪造标签或把 `manual_review` 算通过。
+
+SQL 输出使用语义列角色与精确 Decimal 单元格核对，参考从真实订单/明细/退款基表独立计算，不通过生成 SQL 或相同 API 结果自我证明。AST 合同限定受支持表达式的指标、日期、聚合和排序；数学等价但不在评估器识别范围的 SQL 标为复核，而不是谎称通用等价证明或放宽产品授权边界。
+
+重试、预算与人工中断使用明确受控故障输入直接执行生产 LangGraph；模型与 Service 是测试 fixture，Checkpoint 为内存，不依赖付费网络来稳定制造故障。结果标记 `controlled_fault_injection`、provider usage N/A，fixture 计账不进入在线消费。真实数据库与持久 Checkpoint 的安全仍由原有 PostgreSQL 集成测试验证。
+
+## 选择 LangSmith 摘要与默认本地追踪
+
+项目已有 LangGraph 依赖链中的 `langsmith==0.14.8`，本阶段选择它实现可选摘要出口，不再额外引入 Langfuse 服务、数据库或另一套 SDK。选择依据是复用现有稳定锁和满足当前作品集范围，不能把两个产品的名字互换，或把 SDK 存在当作云导出已验收。
+
+本地 JSONL 采用显式元数据字段白名单，不序列化完整状态再尝试遮盖。保留 Task/segment UUID、固定节点与工具名、安全错误、耗时、累计 Token 和未知消费；不记录问题、回复、工具参数、SQL、文档、用户/订单数据。request ID 仅保存 SHA256。默认本地开启，远端需要项目专用开关、key、endpoint、project 全部显式配置；应用调用仍关闭 LangGraph 自动 tracing，避免继承 ambient 配置上传完整 prompt。
+
+远端 SDK Client 禁用环境代理/netrc、重定向和自动 retry/batching，限制目的 origin、connect/read 时间和有限队列；元数据导出失败不改变业务结果。root/segment 关联用于查看累计状态，步骤 span 明确为执行后快照而非真实时序。此实现没有 durable queue、日志轮转、跨进程文件锁或发送保证，本阶段也没有真实 LangSmith 云端发送凭据与成绩。
+
+实际冻结 18 案例的 5 pass/3 fail/9 manual_review/1 unobserved 保留，不为了展示成功改写失败。复杂退款未准备审批和知识规划失败揭示模型限制；退款“比例”对 percent oracle 的歧义与双周相同值/不同形状揭示 judge 范围。缺完整原始模型参数和人工语义标签时，schema/来源结构通过不能推导需求质量。修复评估参照和后续物流选样只改善软件证据采集，不把旧 run 改称新的模型成绩；完整 1034、参照专项 104 与最终定向 112 不累加，最后源码并未再跑全量或模型。详见[验收报告](../evals/results/phase8/report.md)。
+
 ## 后续边界
 
-- Phase8：生成忠实度/任务/工具/SQL评估与可选Langfuse；目前没有tracing集成。
 - Phase9：应用镜像、Linux锁验证、全栈Compose、CI与干净启动。
 
 当前只验证本地模拟系统，不推送密钥、不接真实支付、不未经授权公开部署。

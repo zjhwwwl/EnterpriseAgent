@@ -1,0 +1,19 @@
+{
+    "checked_at_utc":  "2026-10-14T19:25:49.6882629Z",
+    "secret_scan":  {
+                        "scanned_file_count":  384,
+                        "status":  "passed",
+                        "hits":  0,
+                        "configured_secret_count":  9,
+                        "scope":  "Git-visible files, production frontend assets, Phase 8 evaluation and trace files, Phase 8 test and runtime logs; exact currently available credentials only; private credential files excluded from scanned/public artifacts; no universal detection claim"
+                    },
+    "markdown_local_links":  {
+                                 "scope":  "Local file existence; anchors and remote URLs not checked",
+                                 "status":  "passed",
+                                 "missing":  0,
+                                 "checked_links":  313
+                             },
+    "git_diff_check":  {
+                           "status":  "passed"
+                       }
+}

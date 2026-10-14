@@ -74,6 +74,15 @@ class Settings(BaseSettings):
     analytics_statement_timeout_ms: int = Field(default=5000, ge=100, le=10000)
     analytics_max_rows: int = Field(default=100, ge=1, le=500)
     analytics_max_sql_chars: int = Field(default=8000, ge=128, le=16000)
+    observability_enabled: bool = True
+    langsmith_enabled: bool = False
+    langsmith_api_key: SecretStr | None = None
+    langsmith_endpoint: AnyHttpUrl | None = None
+    langsmith_project: str | None = Field(
+        default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+    )
+    langsmith_timeout_seconds: float = Field(default=2, ge=0.1, le=5)
+    langsmith_queue_size: int = Field(default=16, ge=1, le=64)
 
     @field_validator("log_level", mode="before")
     @classmethod
@@ -91,6 +100,7 @@ class Settings(BaseSettings):
         "mcp_access_token",
         "analytics_database_url",
         "test_analytics_database_url",
+        "langsmith_api_key",
         mode="before",
     )
     @classmethod
@@ -98,6 +108,11 @@ class Settings(BaseSettings):
         if isinstance(value, str) and not value.strip():
             return None
         return value
+
+    @field_validator("langsmith_endpoint", "langsmith_project", mode="before")
+    @classmethod
+    def empty_trace_configuration_is_none(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value
 
     @field_validator("mcp_access_token")
     @classmethod
@@ -139,8 +154,36 @@ class Settings(BaseSettings):
             raise ValueError("The model URL must not contain credentials, query, or fragment")
         return value
 
+    @field_validator("langsmith_endpoint")
+    @classmethod
+    def validate_langsmith_url(cls, value: AnyHttpUrl | None) -> AnyHttpUrl | None:
+        if value is None:
+            return value
+        if any(
+            part is not None
+            for part in (value.username, value.password, value.query, value.fragment)
+        ):
+            raise ValueError("LangSmith endpoint must not contain credentials, query, or fragment")
+        local = value.host in {"127.0.0.1", "localhost", "[::1]", "::1"}
+        hosted = value.host in {"api.smith.langchain.com", "eu.api.smith.langchain.com"}
+        if value.path not in (None, "/") or not (
+            local or (hosted and value.scheme == "https" and value.port in (None, 443))
+        ):
+            raise ValueError(
+                "LangSmith endpoint must be a loopback origin or an official HTTPS API origin"
+            )
+        return value
+
     @model_validator(mode="after")
     def validate_llm_configuration(self) -> Self:
+        if self.langsmith_enabled and (
+            self.langsmith_api_key is None
+            or self.langsmith_endpoint is None
+            or self.langsmith_project is None
+        ):
+            raise ValueError(
+                "Explicit LangSmith API key, endpoint and project are required when enabled"
+            )
         if self.llm_enabled and self.deepseek_api_key is None:
             raise ValueError("EA_DEEPSEEK_API_KEY is required when EA_LLM_ENABLED is true")
         if self.analytics_enabled and self.analytics_database_url is None:
@@ -195,6 +238,7 @@ class Settings(BaseSettings):
             self.mcp_access_token,
             self.analytics_database_url,
             self.test_analytics_database_url,
+            self.langsmith_api_key,
         ):
             if secret is not None:
                 raw = secret.get_secret_value()

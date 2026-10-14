@@ -1,6 +1,6 @@
 # LangGraph 工作流
 
-当前 Phase 7 / 0.7.0 使用一张 LangGraph 图，复用 OrderService、RefundService、KnowledgeService 和 AnalyticsService。模型负责路由、工具规划、有限检索改写、引用原文选择与受限 SQL 规划；后端决定权限、业务规则、确认和实际执行。Vue 对话和任务历史消费持久任务契约，提供显式确认与恢复界面，不增加第二个 Agent 或自由文本模型报告节点。当前验收见[Phase 7](phase-7.md)，[Phase 6](phase-6.md)及更早验证保持历史边界。
+当前 Phase 8 / 0.8.0 使用一张 LangGraph 图，复用 OrderService、RefundService、KnowledgeService 和 AnalyticsService。模型负责路由、工具规划、有限检索改写、引用原文选择与受限 SQL 规划；后端决定权限、业务规则、确认和实际执行。Vue 和评估器消费持久任务契约，新增严格证据检查与执行后元数据快照，不增加第二个 Agent 或自由文本报告节点。当前验收见[Phase 8](phase-8.md)，[Phase 7](phase-7.md)及更早结果保持历史边界。
 
 ## 当前图
 
@@ -123,3 +123,15 @@ EA_LLM_ENABLED模板默认false；未配置时不创建真实聊天Client，发�
 Phase 5 的独立 stdio MCP Server 已复用 BusinessTools 的 get_order、get_logistics、get_refund_policy，提供 query_order、query_logistics、query_refund_policy。客户端发现和调用由官方 SDK 执行；身份由 MCP 启动环境中的 JWT 逐次认证，协议参数不进入 AgentContext 或图 State。当前图仍无 MCP 分支，退款准备和确认继续使用已有可信工作流，详见[Phase 5](phase-5.md)。
 
 分析仅访问 ea_analytics 的聚合数据。MCP 仍仅复用普通业务工具，独立 Client / Server 排除分析凭据并关闭分析 runtime；不会将模型产生的 SQL 经 MCP 转发绕过分析检查。
+
+## Phase 8 评估与执行快照
+
+冻结案例对 `task_type`、`status`、错误、必需/禁止工具、绑定订单参数、当前引用、审批金额/政策及 SQL 指标/时间范围分别约束。Task completed 仍只是工作流结束；某个必需工具缺失、引用无效、业务事实不一致或禁止操作执行，评估均可失败。知识原文结构验证不能代替回答相关性，未人工复核的语义项保持 `manual_review`。
+
+故障注入直接执行 `build_graph`，声明模型事件、Service 结果和内存 Checkpoint，覆盖严格参数、身份注入、工具/步数预算、有限重试/终止以及审批 interrupt/replay。它验证控制逻辑；真实 PostgreSQL、CPU RAG 和官方持久 Checkpoint 仍由原有集成测试独立验证，不能把故障集的 fixture usage 列为真实供应商消费。
+
+应用在每次主动执行结束时记录元数据 segment。Task UUID 为 trace/root，segment UUID 标识本次请求；记录的 steps 与 Token 是累计值，步骤 span 标明 `post_execution_snapshot`。同一任务多次恢复只按最新累计值计账，不把旧步骤当作新工具执行。LangGraph 调用继续使用 `tracing_context(enabled=False)`，环境中的自动 tracing 开关不能替代项目显式摘要开关。
+
+本阶段在线评估只生成待人工确认的退款预览，不调用 resume/confirm；运行前后核对真实退款、工单和订单状态。待审批不是已退款，评估状态也不改变业务权限或后端规则。
+
+实际首次 18 条冻结场景得到 5 pass/3 fail/9 manual_review/1 unobserved，17 Task、36 次真实尝试、39440 Token；本地 17 条安全累计快照与任务一致。复杂退款 Task completed 但未准备审批仍为需求合同失败，优惠券任务规划失败保留；退款比例/百分比 oracle 歧义与周比较同义结果形状在报告单列，不事后调分。完整结果见[Phase 8](phase-8.md)与[在线报告](../evals/results/phase8/live/report.md)，未复核原始参数或语义不能称全量工具/模型正确。

@@ -1,6 +1,6 @@
 # API 契约
 
-**当前版本 0.7.0 / Phase 7。** Vue 五页后台消费现有健康、认证、订单、退款、知识库、LangGraph 会话与审批，以及授权聚合运营分析 HTTP 接口；本阶段不新增绕过 Service 的业务写入口。MCP 保留独立 stdio 三个只读工具，不注册 HTTP 路由，OpenAPI 仅覆盖 HTTP。当前契约以实际代码和 OpenAPI 为准，本阶段验收见[Phase 7](phase-7.md)，历史测试与在线烟测不改写为本阶段成绩。
+**当前版本 0.8.0 / Phase 8。** 现有健康、认证、订单、退款、知识库、LangGraph 会话/审批与授权运营分析接口供 Vue 和评估器使用；新增评估合同与执行后元数据追踪，不增加通用评估执行/日志下载 HTTP 路由。MCP 保留独立 stdio 三个只读工具，OpenAPI 仅覆盖 HTTP。当前契约以实际代码和 OpenAPI 为准，验证见[Phase 8](phase-8.md)，历史测试与烟测保持原始边界。
 
 ## 浏览器集成约定
 
@@ -16,7 +16,7 @@ Agent 深链接支持 `/agent?session=<UUID>`；`message` 只预填最多 2000 �
 
 | 方法 | 路径 | 成功码 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/` | 200 | 名称、版本、phase=7、文档及健康入口 |
+| GET | `/` | 200 | 名称、版本、phase=8、文档及健康入口 |
 | GET | `/health/live` | 200 | HTTP 进程存活 |
 | GET | `/health/ready` | 200 / 503 | 实际数据库与已配置 Redis 的就绪检查 |
 | POST | `/api/v1/auth/login` | 200 | JSON 账号密码，返回 JWT |
@@ -147,6 +147,10 @@ $result | Select-Object status, replayed, refund
 框架错误使用大写 code，业务拒绝使用明确的小写 code。输入校验 details 仅含 loc 和 type，不回显原始输入；未知异常不暴露栈、配置或连接信息。健康 503 使用健康响应模型；CORS 预检错误是中间件协议响应。
 
 日志 JSON 记录必要字段和请求 ID，不记录请求体、查询字符串、Authorization 或全量配置。审计仅保存必要变更摘要。CORS 使用精确 Origin，不能代替认证与归属校验。
+
+Phase 8 的本地 Task 追踪为单独 JSONL 白名单元数据：任务关联、状态、节点/工具名、安全错误、耗时和累计 usage。不会增加公开日志读取 API，也不把问题、答案、工具参数、SQL 或个人字段导出到 LangSmith。任务原有 `steps`、`result` 和 `token_usage` 仍由各角色自己的任务接口读取；累计 DTO 或 trace 快照不可跨 resume/recover 相加。`manual_review` 是评估产物状态，不是新增 `Task.status`，详见[评估](evaluation.md)和[部署配置](deployment.md)。
+
+本阶段在线结果观察 17 个 Task 与 17 条白名单 trace 快照相符，但冻结 18 场景仍有真实失败和未复核项；HTTP 200 或 Task completed 不代表其问题合同通过。最新准确计数与原因见[Phase 8](phase-8.md)，不能以追踪账本一致推导线上模型语义正确。
 
 ## Agent 会话与任务
 

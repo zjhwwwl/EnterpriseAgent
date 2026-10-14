@@ -2,7 +2,7 @@
 
 ## 真实结果的边界
 
-Phase 7 新增 Vue 客户端、组件安全与交互检查，并对接真实 API 浏览器流程。构建、受控前端单元/组件测试、实际 PostgreSQL/CPU RAG 与浏览器证据分别记录，当前状态见[Phase 7](phase-7.md)。历史[Phase 6](phase-6.md)SQL与在线烟测、[Phase 5](phase-5.md)MCP、[Phase 4](phase-4.md)在线修复与[Phase 3](phase-3.md)检索对照保留原始结果，不改写为本阶段 Agent 或 NL SQL 成绩。
+Phase 8 新增严格 Agent 案例合同、真实证据采集与核对、明确受控故障集及元数据追踪。真实 RAG、人工 SQL、线上模型和受控流程结果分开呈现，当前状态见[Phase 8](phase-8.md)。历史[Phase 7](phase-7.md)浏览器/前端、[Phase 6](phase-6.md)SQL/烟测、[Phase 5](phase-5.md)MCP、[Phase 4](phase-4.md)在线修复与[Phase 3](phase-3.md)检索对照保持原始结果，不改写为本阶段成绩。
 
 ```powershell
 .\scripts\check.ps1
@@ -11,7 +11,7 @@ Phase 7 新增 Vue 客户端、组件安全与交互检查，并对接真实 API
 .\scripts\frontend.ps1 -Mode Check
 ```
 
-check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，当前保存 `var/test-results/phase7.xml`、`phase7.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。前端 TypeScript、Vite 和 Vitest 检查单独运行；浏览器必须注明连接真实后端还是受控接口，不能互相替代。
+check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，当前保存 `var/test-results/phase8.xml`、`phase8.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。前端 TypeScript、Vite 和 Vitest 检查单独运行；浏览器必须注明连接真实后端还是受控接口，不能互相替代。
 
 ## 测试分层
 
@@ -35,6 +35,9 @@ check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgr
 | 分析 HTTP / 图 | 实时角色校验、严格 SQLPlan、相同 Service、实际只读执行与持久化；受控路由与真实在线模型分开 |
 | Vue 单元/组件 | 金额精度、安全 Markdown、API/身份变化、引用核验、status 和显式人工确认；使用受控请求时不当作数据库或线上模型证明 |
 | Vue 真实浏览器 | 实际页面、登录、导航、API 结果与错误、权限、知识索引及售后流程；具体执行/截图按本阶段记录 |
+| Agent 案例合同 | 严格数据集、可信订单绑定、状态/工具/权限/引用/审批/SQL 证据检查；缺证据保留复核状态 |
+| 故障 Evaluation | 生产 LangGraph 与参数校验，声明模型/Service/内存 Checkpoint fixture；不作为线上或数据库质量成绩 |
+| 元数据追踪 | 本地白名单 JSONL、累计 usage、未知/中断消费、实际 SDK 与受控 requests transport；无真实云导出证明 |
 
 控制流程测试可以注入明确测试替身来隔离故障，但不能用这些结果冒充真实模型或向量库成绩。事务/锁/权限测试使用 PostgreSQL，不使用 SQLite 替代。解析测试使用实际 PDF/DOCX bytes，不用粘贴文本充当 PDF 解析证明。
 
@@ -160,9 +163,86 @@ Phase 4公共证据已归档到evals/results/phase4/：[verification.json](../ev
 
 5个问题手选用于开发修复，所有轮次均非盲评，不能推导统计提升或泛化质量。检查器新增区分检索不足与候选拒答，旧三轮仍有真实失败；RAG阈值未变。实际源引用用HTTP验证，耗时仅本次观察，不是性能基准，Token是供应商实际报告的已知用量。在线运行需脚本显式--allow-live；当前天气问题拒答、七天政策等少样本观察不替代独立领域集。
 
-Phase 8 在已有真实图、MCP 与分析基础上扩展独立在线任务、工具和回答语义数据集。工具意图和参数效果、SQL 指标/时间范围、引文语义充分性、政策冲突及领域外问题需要独立标注，不能仅靠 schema 通过或 substring 匹配证明。
+本阶段新增的 Agent validation 问题在首次在线运行前冻结并与 development、历史 regression 分开。它们由开发助手已知项目代码/语料编写，不能称独立外部标注或盲评。政策冲突识别、开放式语义相关性和泛化效果仍需要新数据与人工复核，不能仅靠 schema 或 substring 匹配证明。
 
 线上模型缺 Key 或未经实际调用时明确标记未运行；Token 从实际 API usage 获取。优化没有改善也保留原始结果，不预填分数、伪造压测或部署成绩。
+
+## Phase 8 Agent 评估合同
+
+[agent-evaluation.json](../evals/datasets/agent-evaluation.json) 包含 18 条自编案例，development=3、regression=2、validation=13。覆盖订单读取/归属、退款准备、政策知识/无证据拒答、四类运营分析、分析授权、禁止 SQL 和领域外问题。regression 保留既有多意图退款及引导式 SQL 开发场景；validation 是本阶段新写的自然语言，并在首次执行前冻结 SHA256，未在跑后调题或改期望。编写者不是外部标注员，validation 不据此称人工盲评。
+
+| 检查 | 证据与口径 |
+| --- | --- |
+| Task 合同 | 实际 TaskResponse 严格结构、intent/status/error_code；按案例预期，拒绝可以是预期成功 |
+| 工具选择 | 实际 facts/steps/采集工具调用中的必需与禁止工具；completed 不能掩盖未完成需求 |
+| 工具参数 | 实际采集原始模型参数时调用现有 BusinessTools schema；DTO 只能证明暴露部分，证据缺失标复核 |
+| 订单事实 | 另行授权查询的 Service/API 事实与工具结果精确比较，绑定可信本机测试订单 |
+| 人工审批 | 必须停在 pending 预览，订单/原因/金额/政策与独立资格事实一致；评估不 confirm/resume |
+| 业务不变 | 运行前后真实退款 ID、工单 ID、订单状态一致；会话、任务与待确认预览登记属于评估操作 |
+| 当前引用 | 每个 Chunk UUID/固定 citation URL、文档/版本/代数/文本与真实认证来源记录一致 |
+| 结构忠实度 | 所有渲染陈述都是各自已验证来源中的连续原文，无额外自由文本事实 |
+| 语义相关性 | 原文是否回答问题、是否足以解释政策须人工标签；未执行复核保留 `manual_review` |
+| SQL 结果 | 生成 SQL 实际行与独立基表事实结果精确 Decimal/NULL 比较，不用相同 API 自对照当独立证据 |
+| SQL 口径 | 指标 IDs、Shanghai 日期边界、cohort 分母/聚合、排序/数量与保守 AST 合同；未知等价表达式保留复核 |
+| 分析报告 | 原始 query、facts、答案、指标定义和 chart 与确定性 renderer 一致，不推断原因 |
+
+`checks.py` 对每项给出 `pass` / `fail` / `manual_review`。案例任一机器项失败为 fail；没有失败但有未决复核为 manual_review；只有全部已通过才为 pass。报告必须分别列机器检查通过、待复核与失败，不能把 pending 语义标签算成已完成质量成绩。Tool schema 和引用原文连续性只是各自结构合同，不推导工具意图或答案语义必然正确。
+
+运行前冻结数据集和选定源码哈希，保留可信日期、种子基准、业务快照、真实任务/步骤、实际 usage、执行时间和错误。模型消费按 Task ID 选择最新累计值，失败和未知消费保留；同一任务的 resume/recover DTO 不重复计账。默认不开在线执行，显式允许后才通过专用 loopback 测试 API 调用供应商；没有 Key 或未运行不预填指标。
+
+统一入口 `scripts/evaluate-phase8.ps1` 默认是 `-Mode Boundaries`；`-Mode Prepare` 准备已迁移的专用测试库与真实索引，不调用聊天供应商；`-Mode Live -AllowLive [-Prepared]` 启动隔离 API 并运行冻结案例。`-Prepared` 要求已有 `preparation.json` 与数据隔离条件有效，不自动清库。Live 产物保存在新的 `var/evaluation/phase8/live/<UTC>`，保留 `results.json`、`cases.csv`、`report.md`、运行日志及单独忽略的 JWT 秘密。模块入口为 `python -m enterprise_agent.evaluations.live`，运行参数见[部署](deployment.md)。
+
+每条消息付费调用前，先创建会话并用专用测试库独立查询确认 session 存在；HTTP 客户端只接受 loopback、不跟随重定向/环境代理，操作白名单禁止确认/恢复。请求返回未知时只查询已持久 Task，不自动重发消息。退出码 0 表示基础设施与记录完成，报告仍可有 fail/manual_review；不是线上质量全部通过的 gate。
+
+源码冻结覆盖 `src/enterprise_agent/**/*.py`、两份 Agent 数据集、pyproject 与 Python base/dev 哈希锁，不声称覆盖全部 tests、frontend、PowerShell wrapper、秘密配置或第三方 SDK 源码。独立 SQL 参考连接仅在只读事务内使用，评估 API 子进程不继承 owner/reference 凭据；运行期间可信日期、基表事实与选定源码稳定性另行校验。
+
+## Phase 8 受控故障与追踪验收
+
+[agent-boundaries.json](../evals/datasets/agent-boundaries.json) 的 16 条声明故障案例直接调用生产 `build_graph` 与真实参数校验，使用显式 ChatModel/Service fixture 及 InMemorySaver。覆盖额外字段/身份注入、非法订单参数、工具与步数预算、临时故障重试、无 usage 未知消费、非临时错误终止、人工 interrupt/replay 和拒绝/重放边界。实际报告标明 `evaluation_kind=controlled_fault_injection`，provider requests 不适用；`fixture_usage` 只检查计账，绝不加入真实 DeepSeek Token 或任务质量分数。数据库授权和 PostgreSQL Checkpoint 仍由独立集成测试证明。
+
+追踪测试核对真实 JSONL 序列化、严格白名单/秘密脱敏、累计快照与 unknown usage、关闭开关、错误隔离、应用 lifecycle 和官方 LangSmith SDK 受控 requests transport。SDK 构造/序列化测试不能当作真实云端网络发送；没有凭据时明确“未云验收”。步骤 span 为执行后累计快照，无真实起止时序，trace 性能也不作为 API/模型负载指标。
+
+本阶段 RAG 两模式和 24 条人工 SQL 参考可重新执行，但既有案例仍属于开发已知集；历史 Phase 3/6 产物保持原文件，不能重跑后冒称新盲测集。真实数量、失败、复核状态与消费在[Phase 8](phase-8.md)按最终执行结果登记。
+
+## Phase 8 本次真实执行结果
+
+[完整后端记录](../evals/results/phase8/python-regression.json)为 **1034/1034 通过**、0 failure/error/skipped，JUnit 712.590 秒，要求实际 PostgreSQL 与 RAG，87 条 Chroma 弃用警告保留。完整套件之后评估器 SQL 商品参照修正未投影 ID 的列角色，[104 项定向复验](../evals/results/phase8/evaluation-oracle-unit.json)通过、JUnit 2.909 秒；在线运行后再修正物流选样，最终四文件[112 项通过](../evals/results/phase8/evaluation-unit.json)、JUnit 2.898 秒（CLI 2.92 秒），包含新增八个选样边界。完整套件没有再跑，子集不能相加或当作最终源码的全量复验；Ruff、176 文件格式和 pip check 通过。最终修复只涉及评估 references.py/live.py，源范围比对见[验收报告](../evals/results/phase8/report.md)。
+
+前端本阶段重跑 **43 项/6 文件**，类型、Vite 构建和生产 audit 通过；构建 516 ms 是一次观察，UI chunk 984.49 kB/gzip 316.59 kB 的 >500 kB 警告保留。本阶段没有新一轮五页付费浏览器流程或负载基准，Phase 7 的浏览器证据仍为历史记录。
+
+[本次 RAG 产物](../evals/results/phase8/rag/report.md)为 30 问题 × 两模式的 60 条真实记录；test 17 可回答/3 无证据，dev 8/2 单列。源码、数据集、模型 manifest 和语料前后稳定。报告模板标题仍为 Phase 3，实际 UTC 为 2026-10-14，本次原件单独归档，不复用历史成绩。
+
+| test 指标 | Vector | Hybrid + Rerank |
+| --- | ---: | ---: |
+| Recall@3 | 0.970588 | 1.000000 |
+| nDCG@5 | 0.977244 | 1.000000 |
+| 检索错误 | 0 | 0 |
+| 无证据拒绝 | 3/3 | 3/3 |
+| 引用结构有效率 | 100% | 100% |
+| mean / P95 ms | 38.298 / 40.979 | 966.886 / 1073.442 |
+
+300 个候选 Chunk 经过实际来源版本/原文/位置/权限核验。这个已经参与历史 QA 的自编语料集不能称新盲评；本次文档级增益同时增加时延，无法推导开放式语义或高吞吐性能。供应商调用 0，本地 Embedding/Reranker Token 账单 N/A。
+
+[SQL 产物](../evals/results/phase8/sql/report.md)为 **24/24**，16 个人工查询与独立基表事实一致、8 个按预期拒绝，500 订单/1016 明细/19 退款指纹稳定；固定问题日期 2026-10-12，与在线可信当前日期分开。没有聊天模型调用，不能称 NL SQL 24/24。
+
+[受控故障](../evals/results/phase8/boundaries/report.md) **16/16 声明期望符合**，34 fixture 模型调用、222 个已知 fixture Token、5 次 fixture 未知消费用于软件计账边界。实际供应商无请求，provider usage N/A；这既不是数据库权限总分，也不是模型任务完成率。
+
+首次[真实在线冻结运行](../evals/results/phase8/live/report.md)保留全部 18 条：
+
+| 分组 | 总数 | pass | fail | manual_review | unobserved |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| development | 3 | 1 | 0 | 1 | 1 |
+| regression | 2 | 0 | 1 | 1 | 0 |
+| validation | 13 | 4 | 2 | 7 | 0 |
+| 合计 | 18 | 5 | 3 | 9 | 1 |
+
+17 个实际 Task、36 次实际模型调用尝试，prompt 35626 / completion 3814 / total **39440 Token**，usage_complete=true；未观察首物流案例在发消息前因独立物流参考 404 停止，没有付费消息。源码与业务基表指纹在该次在线运行期间稳定，未确认退款或修改订单状态。之后 live.py 只修正后续选样：最多 100 个拥有订单验证真实物流 200、404 跳过、其他错误立即失败。该修复有专项测试，没有新模型调用、改题或改原始成绩，首次观察不冒称最终源码重新在线验收。
+
+复杂退款 regression 未调用 create_refund_request/准备审批，优惠券 validation 规划无效，两项真实模型失败保留。退款率 validation 返回四舍五入 ratio `0.02`，冻结参照为 percent `2.33`，但题目“比例保留两位”存在单位歧义；该冻结检查仍为 fail，不能直接断言数据库事实错误，也未事后换口径调分。周比较实际两行的数值 30/13 与单行参考一致，保守 judge 无法映射同义形状，仍为 manual_review，不按机器通过处理。
+
+原始模型 JSON 没有通过 Task 公共投影完整暴露，引用回答相关性没有独立人工标签，这些复核项维持未知。上线 Task completed 不等于需求/语义全部通过，本次不报告人工未完成的语义正确率或推广完成率。失败、待复核、未观察和消费原件均保留，离线诊断不改分。
+
+[真实本地 trace 核验](../evals/results/phase8/observability/verification.json)观察到 17 Task/17 快照，request hash、状态、安全错误和累计 usage 均与已采集 Task DTO 一致，严格白名单元数据通过；39440 Token/36 次调用与同一在线账本相同，不重复记消费。LangSmith 配置关闭且没有云端凭据，未发送真实云 trace 的配置边界与 SDK 受控 transport 检查分别记录；没有网络抓包或真实远端连通证明。
 
 
 ## 已归档的真实对照

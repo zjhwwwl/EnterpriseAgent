@@ -1,0 +1,31 @@
+{
+  "checked_at_utc": "2026-10-14T19:11:31.680388+00:00",
+  "status": "passed",
+  "evaluation_run": "20261014T1904572830729Z",
+  "observed_tasks": 17,
+  "matched_snapshots": 17,
+  "latest_unique_tasks": 17,
+  "request_hash_status_and_usage_match": true,
+  "explicit_field_allowlist_verified": true,
+  "task_usage_ledger": {
+    "prompt_tokens": 35626,
+    "completion_tokens": 3814,
+    "total_tokens": 39440,
+    "model_calls": 36,
+    "unknown_usage_calls": 0
+  },
+  "usage_scope": "Cross-check of the same 17 Task ledger; not additional calls or tokens",
+  "langsmith_remote_enabled": false,
+  "langsmith_remote_live_verification": "not_run_no_credentials",
+  "scope": "Saved local post-execution metadata and DTO correspondence; not a network traffic capture or semantic answer score",
+  "excluded_fields": [
+    "message",
+    "answer",
+    "arguments",
+    "sql",
+    "document",
+    "user_id",
+    "role",
+    "secrets"
+  ]
+}

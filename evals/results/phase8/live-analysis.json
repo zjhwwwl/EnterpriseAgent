@@ -1,0 +1,83 @@
+{
+    "schema_version":  1,
+    "verification_kind":  "offline_analysis_of_preserved_evidence",
+    "source":  "live/results.json",
+    "generated_at_utc":  "2026-10-14T19:10:05.8786390Z",
+    "raw_result_changed":  false,
+    "provider_requests_added":  0,
+    "aggregate":  {
+                      "case_total":  18,
+                      "pass":  5,
+                      "fail":  3,
+                      "manual_review":  9,
+                      "unobserved":  1,
+                      "message_attempts":  17,
+                      "unique_task_count":  17,
+                      "raw_task_statuses":  [
+                                                {
+                                                    "Name":  "completed",
+                                                    "Count":  13
+                                                },
+                                                {
+                                                    "Name":  "failed",
+                                                    "Count":  3
+                                                },
+                                                {
+                                                    "Name":  "waiting_approval",
+                                                    "Count":  1
+                                                }
+                                            ],
+                      "provider_usage":  {
+                                             "prompt_tokens":  35626,
+                                             "completion_tokens":  3814,
+                                             "total_tokens":  39440,
+                                             "model_calls":  36,
+                                             "unknown_usage_calls":  0,
+                                             "unique_task_count":  17,
+                                             "incomplete_task_ids":  [
+
+                                                                     ],
+                                             "messages_without_observed_task":  0,
+                                             "usage_complete":  true,
+                                             "actual_total_tokens":  39440,
+                                             "scope":  "Provider cumulative Task ledger, latest per unique Task ID; no fixture tokens"
+                                         },
+                      "data_stable":  true,
+                      "source_stable":  true,
+                      "source_hash_covered_files":  80
+                  },
+    "diagnoses":  [
+                      {
+                          "case_id":  "dev_own_logistics",
+                          "finding":  "Reference collection GET logistics returned HTTP 404 for the initially selected owned order. The reference failed before session creation and provider message submission; no saved Task DTO can be recovered.",
+                          "original_outcome":  "unobserved",
+                          "saved_dto_recovery_possible":  false,
+                          "cause_confirmed":  true,
+                          "cause_evidence":  {
+                                                 "verification_source":  "Parent agent read the ignored local API JSONL; no raw private logs published",
+                                                 "event_time_utc":  "2026-10-14T19:05:04.465Z",
+                                                 "operation":  "independent_logistics_reference",
+                                                 "http_status":  404,
+                                                 "message_attempted":  false,
+                                                 "provider_requests_added":  0
+                                             }
+                      },
+                      {
+                          "case_id":  "validation_refund_rate",
+                          "finding":  "Actual ROUND(ratio,2)=0.02 versus frozen reference ROUND(100*ratio,2)=2.33. Unit and rounding contract differs; raw frozen-check failure is preserved.",
+                          "original_outcome":  "fail",
+                          "requires_human_contract_review":  true
+                      },
+                      {
+                          "case_id":  "validation_order_week_comparison",
+                          "finding":  "Saved actual period rows contain latest=13, previous=30; independent reference single row contains previous=30, latest=13. Conservative mapping and AST evidence remain manual_review.",
+                          "original_outcome":  "manual_review",
+                          "automated_grade_changed":  false
+                      }
+                  ],
+    "limitations":  [
+                        "Author-curated, corpus-aware small dataset; not independent blind evaluation.",
+                        "A raw Task status completed is not counted as semantic task success.",
+                        "Missing original model arguments and missing human quote relevance review remain manual_review."
+                    ]
+}

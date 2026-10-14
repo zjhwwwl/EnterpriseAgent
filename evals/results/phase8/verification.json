@@ -1,0 +1,389 @@
+{
+    "schema_version":  1,
+    "phase":  8,
+    "version":  "0.8.0",
+    "generated_at_utc":  "2026-10-14T19:21:10.1808359Z",
+    "status":  "completed_with_explicit_evaluation_findings",
+    "report":  "report.md",
+    "engineering":  {
+                        "complete_python_regression":  {
+                                                           "schema_version":  1,
+                                                           "verification_kind":  "pytest_complete_regression",
+                                                           "source":  "var/test-results/phase8.xml",
+                                                           "source_sha256":  "e6ce3777cb9dafd85525ea745fde6399f4d7e4af43cf678d09fa86da92219bc0",
+                                                           "tests":  1034,
+                                                           "failures":  0,
+                                                           "errors":  0,
+                                                           "skipped":  0,
+                                                           "time_seconds":  712.59,
+                                                           "timestamp":  "2026-10-15T02:47:18.323218+08:00",
+                                                           "required_postgres":  true,
+                                                           "required_rag":  true,
+                                                           "limitations":  [
+                                                                               "Complete suite ran before the evaluations/references.py column-role fix. The subsequent oracle-only regression contains 104 tests.",
+                                                                               "Test doubles are explicit in relevant unit tests; live evaluations are archived separately."
+                                                                           ]
+                                                       },
+                        "final_evaluation_targeted_regression":  {
+                                                                     "schema_version":  1,
+                                                                     "verification_kind":  "pytest_evaluation_final_release_regression",
+                                                                     "source":  "var/test-results/phase8-evaluation-release.xml",
+                                                                     "source_sha256":  "46476d6f057eb985ec4d78af1d5adfe2b3d8ae58f73a8ce9dff75e6a2e696ddc",
+                                                                     "tests":  112,
+                                                                     "failures":  0,
+                                                                     "errors":  0,
+                                                                     "skipped":  0,
+                                                                     "time_seconds":  2.898,
+                                                                     "timestamp":  "2026-10-15T03:12:47.086558+08:00",
+                                                                     "limitations":  [
+                                                                                         "Final targeted evaluation regression after reference role and logistics binding fixes.",
+                                                                                         "Do not add 112 to full 1034 or previous 103/104 targeted runs.",
+                                                                                         "New sampling tests use explicit API fixtures; paid live dataset was not rerun."
+                                                                                     ]
+                                                                 },
+                        "counts_are_added_across_runs":  false,
+                        "frontend_unit":  {
+                                              "artifact":  "frontend-unit.json",
+                                              "test_files":  6,
+                                              "tests":  43,
+                                              "passed":  43,
+                                              "failed":  0,
+                                              "pending":  0,
+                                              "todo":  0,
+                                              "success":  true
+                                          },
+                        "frontend_format_typecheck_production_build":  {
+                                                                           "status":  "passed",
+                                                                           "build_elapsed_ms":  516,
+                                                                           "production_audit_vulnerabilities":  0,
+                                                                           "source":  "Parent agent observed native scripts/frontend.ps1 -Mode Check completion"
+                                                                       },
+                        "python_lint_format_dependency_check":  {
+                                                                    "ruff_lint":  "passed",
+                                                                    "ruff_format":  "passed",
+                                                                    "formatted_file_count":  176,
+                                                                    "pip_check":  "passed",
+                                                                    "source":  "Parent agent observed native release checks"
+                                                                },
+                        "complete_suite_console_warning_count":  87
+                    },
+    "controlled_boundary_evaluation":  {
+                                           "artifact":  "boundaries/results.json",
+                                           "summary":  {
+                                                           "cases":  16,
+                                                           "passed":  16,
+                                                           "failed":  0,
+                                                           "controlled_expectation_pass_rate":  1.0,
+                                                           "elapsed_ms":  821.565,
+                                                           "categories":  {
+                                                                              "bounded_retry":  3,
+                                                                              "human_approval":  4,
+                                                                              "termination_budget":  2,
+                                                                              "timeout":  1,
+                                                                              "tool_parameters":  4,
+                                                                              "trusted_identity":  1,
+                                                                              "unsupported_task":  1
+                                                                          }
+                                                       },
+                                           "fixture_usage":  {
+                                                                 "model_calls":  34,
+                                                                 "prompt_tokens":  139,
+                                                                 "completion_tokens":  83,
+                                                                 "total_tokens":  222,
+                                                                 "unknown_usage_calls":  5
+                                                             },
+                                           "provider_usage":  null,
+                                           "provider_usage_status":  "not_applicable_no_provider_requests"
+                                       },
+    "rag_evaluation":  {
+                           "artifact":  "rag/results.json",
+                           "run_status":  "complete",
+                           "records":  60,
+                           "distinct_dataset_queries":  30,
+                           "corpus_changed":  false,
+                           "summary":  {
+                                           "dev":  {
+                                                       "vector":  {
+                                                                      "recall_at_1":  0.8125,
+                                                                      "recall_at_3":  1.0,
+                                                                      "recall_at_5":  1.0,
+                                                                      "mrr":  0.9375,
+                                                                      "ndcg_at_5":  0.9538662191964322,
+                                                                      "queries":  10,
+                                                                      "answerable_queries":  8,
+                                                                      "off_topic_queries":  2,
+                                                                      "execution_success_rate":  1,
+                                                                      "errors":  0,
+                                                                      "answerable_gate_accept_rate":  1,
+                                                                      "off_topic_rejection_rate":  1,
+                                                                      "gate_accuracy":  1,
+                                                                      "checked_citations":  50,
+                                                                      "citation_validity_rate":  1,
+                                                                      "mean_latency_ms":  38.769239999965066,
+                                                                      "p95_latency_ms":  42.62630000084755,
+                                                                      "llm_calls":  0,
+                                                                      "llm_input_tokens":  0,
+                                                                      "llm_output_tokens":  0,
+                                                                      "embedding_provider_token_usage":  null,
+                                                                      "reranker_provider_token_usage":  null
+                                                                  },
+                                                       "hybrid_rerank":  {
+                                                                             "recall_at_1":  0.8125,
+                                                                             "recall_at_3":  1.0,
+                                                                             "recall_at_5":  1.0,
+                                                                             "mrr":  0.9375,
+                                                                             "ndcg_at_5":  0.9538662191964322,
+                                                                             "queries":  10,
+                                                                             "answerable_queries":  8,
+                                                                             "off_topic_queries":  2,
+                                                                             "execution_success_rate":  1,
+                                                                             "errors":  0,
+                                                                             "answerable_gate_accept_rate":  1,
+                                                                             "off_topic_rejection_rate":  1,
+                                                                             "gate_accuracy":  1,
+                                                                             "checked_citations":  50,
+                                                                             "citation_validity_rate":  1,
+                                                                             "mean_latency_ms":  925.8494200003042,
+                                                                             "p95_latency_ms":  989.7268999993685,
+                                                                             "llm_calls":  0,
+                                                                             "llm_input_tokens":  0,
+                                                                             "llm_output_tokens":  0,
+                                                                             "embedding_provider_token_usage":  null,
+                                                                             "reranker_provider_token_usage":  null
+                                                                         }
+                                                   },
+                                           "test":  {
+                                                        "vector":  {
+                                                                       "recall_at_1":  0.9411764705882353,
+                                                                       "recall_at_3":  0.9705882352941176,
+                                                                       "recall_at_5":  0.9705882352941176,
+                                                                       "mrr":  1.0,
+                                                                       "ndcg_at_5":  0.9772439525156152,
+                                                                       "queries":  20,
+                                                                       "answerable_queries":  17,
+                                                                       "off_topic_queries":  3,
+                                                                       "execution_success_rate":  1,
+                                                                       "errors":  0,
+                                                                       "answerable_gate_accept_rate":  1,
+                                                                       "off_topic_rejection_rate":  1,
+                                                                       "gate_accuracy":  1,
+                                                                       "checked_citations":  100,
+                                                                       "citation_validity_rate":  1,
+                                                                       "mean_latency_ms":  38.298174999545154,
+                                                                       "p95_latency_ms":  40.97940000065137,
+                                                                       "llm_calls":  0,
+                                                                       "llm_input_tokens":  0,
+                                                                       "llm_output_tokens":  0,
+                                                                       "embedding_provider_token_usage":  null,
+                                                                       "reranker_provider_token_usage":  null
+                                                                   },
+                                                        "hybrid_rerank":  {
+                                                                              "recall_at_1":  0.9411764705882353,
+                                                                              "recall_at_3":  1.0,
+                                                                              "recall_at_5":  1.0,
+                                                                              "mrr":  1.0,
+                                                                              "ndcg_at_5":  1.0,
+                                                                              "queries":  20,
+                                                                              "answerable_queries":  17,
+                                                                              "off_topic_queries":  3,
+                                                                              "execution_success_rate":  1,
+                                                                              "errors":  0,
+                                                                              "answerable_gate_accept_rate":  1,
+                                                                              "off_topic_rejection_rate":  1,
+                                                                              "gate_accuracy":  1,
+                                                                              "checked_citations":  100,
+                                                                              "citation_validity_rate":  1,
+                                                                              "mean_latency_ms":  966.8859550001798,
+                                                                              "p95_latency_ms":  1073.4421999986807,
+                                                                              "llm_calls":  0,
+                                                                              "llm_input_tokens":  0,
+                                                                              "llm_output_tokens":  0,
+                                                                              "embedding_provider_token_usage":  null,
+                                                                              "reranker_provider_token_usage":  null
+                                                                          }
+                                                    }
+                                       },
+                           "semantics":  "Document-level binary relevance; author-curated small corpus-aware set; citation validity is structural, not semantic answer relevance"
+                       },
+    "independent_sql_evaluation":  {
+                                       "artifact":  "sql/results.json",
+                                       "summary":  {
+                                                       "total":  24,
+                                                       "passed":  24,
+                                                       "failed":  0,
+                                                       "correct_query_total":  16,
+                                                       "correct_query_passed":  16,
+                                                       "rejection_total":  8,
+                                                       "rejection_passed":  8,
+                                                       "reference_match_rate":  1.0,
+                                                       "rejection_rate":  1.0
+                                                   },
+                                       "data_stable":  true,
+                                       "model_calls":  0,
+                                       "provider_token_usage":  null,
+                                       "semantics":  "Human-written SQL versus independent base-table aggregations; not NL-to-SQL accuracy"
+                                   },
+    "live_evaluation":  {
+                            "artifact":  "live/results.json",
+                            "analysis":  "live-analysis.json",
+                            "status":  "completed_with_explicit_check_results",
+                            "case_outcomes":  {
+                                                  "case_total":  18,
+                                                  "pass":  5,
+                                                  "fail":  3,
+                                                  "manual_review":  9,
+                                                  "unobserved":  1,
+                                                  "message_attempts":  17,
+                                                  "unique_task_count":  17,
+                                                  "raw_task_statuses":  [
+                                                                            {
+                                                                                "Name":  "completed",
+                                                                                "Count":  13
+                                                                            },
+                                                                            {
+                                                                                "Name":  "failed",
+                                                                                "Count":  3
+                                                                            },
+                                                                            {
+                                                                                "Name":  "waiting_approval",
+                                                                                "Count":  1
+                                                                            }
+                                                                        ],
+                                                  "provider_usage":  {
+                                                                         "prompt_tokens":  35626,
+                                                                         "completion_tokens":  3814,
+                                                                         "total_tokens":  39440,
+                                                                         "model_calls":  36,
+                                                                         "unknown_usage_calls":  0,
+                                                                         "unique_task_count":  17,
+                                                                         "incomplete_task_ids":  [
+
+                                                                                                 ],
+                                                                         "messages_without_observed_task":  0,
+                                                                         "usage_complete":  true,
+                                                                         "actual_total_tokens":  39440,
+                                                                         "scope":  "Provider cumulative Task ledger, latest per unique Task ID; no fixture tokens"
+                                                                     },
+                                                  "data_stable":  true,
+                                                  "source_stable":  true,
+                                                  "source_hash_covered_files":  80
+                                              },
+                            "summary":  {
+                                            "splits":  {
+                                                           "development":  {
+                                                                               "total":  3,
+                                                                               "pass":  1,
+                                                                               "fail":  0,
+                                                                               "manual_review":  1,
+                                                                               "not_executed_or_unobserved":  1
+                                                                           },
+                                                           "regression":  {
+                                                                              "total":  2,
+                                                                              "pass":  0,
+                                                                              "fail":  1,
+                                                                              "manual_review":  1,
+                                                                              "not_executed_or_unobserved":  0
+                                                                          },
+                                                           "validation":  {
+                                                                              "total":  13,
+                                                                              "pass":  4,
+                                                                              "fail":  2,
+                                                                              "manual_review":  7,
+                                                                              "not_executed_or_unobserved":  0
+                                                                          }
+                                                       },
+                                            "provider_usage":  {
+                                                                   "prompt_tokens":  35626,
+                                                                   "completion_tokens":  3814,
+                                                                   "total_tokens":  39440,
+                                                                   "model_calls":  36,
+                                                                   "unknown_usage_calls":  0,
+                                                                   "unique_task_count":  17,
+                                                                   "incomplete_task_ids":  [
+
+                                                                                           ],
+                                                                   "messages_without_observed_task":  0,
+                                                                   "usage_complete":  true,
+                                                                   "actual_total_tokens":  39440,
+                                                                   "scope":  "Provider cumulative Task ledger, latest per unique Task ID; no fixture tokens"
+                                                               },
+                                            "check_counts":  {
+                                                                 "pass":  219,
+                                                                 "fail":  8,
+                                                                 "manual_review":  15
+                                                             }
+                                        },
+                            "raw_task_status_completed_is_semantic_success":  false,
+                            "dataset_is_independent_blind_evaluation":  false,
+                            "data_stable":  true,
+                            "source_stable_during_original_run":  true,
+                            "original_case_grades_changed_after_diagnosis":  false,
+                            "provider_requests_after_original_run":  0
+                        },
+    "observability":  {
+                          "artifact":  "observability/verification.json",
+                          "snapshot_artifact":  "observability/snapshots.jsonl",
+                          "status":  "passed",
+                          "matched_tasks":  17,
+                          "matched_snapshots":  17,
+                          "request_hash_status_usage_match":  true,
+                          "allowlist_verified":  true,
+                          "ledger_is_same_live_usage":  true,
+                          "additional_model_calls":  0,
+                          "langsmith_remote_enabled":  false,
+                          "langsmith_live_verification":  "not_run_no_credentials",
+                          "scope":  "Saved local post-execution metadata and DTO correspondence; not a network traffic capture or semantic answer score"
+                      },
+    "source_scope":  {
+                         "covered_files":  80,
+                         "original_live_before_after_identical":  true,
+                         "changed_after_original_live":  [
+                                                             "src/enterprise_agent/evaluations/live.py"
+                                                         ],
+                         "changed_between_full_suite_and_final_release":  [
+                                                                              "src/enterprise_agent/evaluations/live.py",
+                                                                              "src/enterprise_agent/evaluations/references.py"
+                                                                          ],
+                         "complete_suite_rerun_after_evaluation_only_fixes":  false,
+                         "comparison_after_full":  "source-fullsuite-release-comparison.json",
+                         "comparison_after_live":  "source-postrun-comparison.json",
+                         "excluded_from_hash_scope":  [
+                                                          "tests",
+                                                          "frontend",
+                                                          "documentation",
+                                                          "public_evidence"
+                                                      ]
+                     },
+    "demo":  {
+                 "artifact":  "demo-ready.json",
+                 "status":  "passed",
+                 "version":  "0.8.0",
+                 "phase":  8,
+                 "frontend_http_status":  200,
+                 "model_requests":  0,
+                 "scope":  "Loopback HTTP metadata, six readiness checks and Vite health proxy after verified project API restart; not a new browser workflow or production deployment test"
+             },
+    "public_release_checks":  {
+                                  "artifact":  "release-checks.json",
+                                  "exact_secret_scan_status":  "passed",
+                                  "exact_secret_match_hits":  0,
+                                  "local_file_link_status":  "passed",
+                                  "missing_local_file_links":  0,
+                                  "git_diff_check_status":  "passed",
+                                  "final_coverage_counts":  "Read release-checks.json; parent refreshes coverage after final public files freeze"
+                              },
+    "provenance":  "artifact-sources.json",
+    "limitations":  [
+                        "Complete suite ran before two evaluation-only fixes; final targeted regression has 112 tests, not a new complete-suite run.",
+                        "The live run retains 5 fully verified, 3 fail, 9 manual_review and 1 pre-provider unexecuted case out of 18.",
+                        "Original model JSON and independent human quote-relevance labels are not available for automatic PASS.",
+                        "Refund rate ratio versus percent/rounding ambiguity and equivalent SQL output-shape conservatism require explicit review.",
+                        "Complex refund planning and coupon answer-plan failures remain observed defects.",
+                        "The failed logistics reference binding was repaired for future sampling with explicit fixtures; paid evaluation was not rerun.",
+                        "LangSmith remote integration was not verified because credentials were unavailable; local metadata and controlled SDK checks are separate.",
+                        "This is loopback Windows development verification, not Linux images, full-stack Compose, GitHub Actions or public deployment proof.",
+                        "Exact known-secret matching is not a general leakage guarantee."
+                    ],
+    "public_deployment_performed":  false,
+    "paid_cloud_resources_created":  false
+}

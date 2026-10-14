@@ -756,7 +756,9 @@ langgraph-sdk==0.4.7 \
 langsmith==0.14.8 \
     --hash=sha256:667d0e69efb64b3ed3a9e1686e5246e4f9f46aacfba8c644d41e7e74bcd4eb37 \
     --hash=sha256:bda7ec3d74bc5af3244c90920e924efcf99a700638860bf87d0231bfdb4f4ce4
-    # via langchain-core
+    # via
+    #   enterprise-agent (pyproject.toml)
+    #   langchain-core
 loguru==0.7.3 \
     --hash=sha256:19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6 \
     --hash=sha256:31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c

@@ -2,7 +2,7 @@
 
 基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手，面向中国大陆 AI Agent 开发工程师求职展示。项目使用虚构电商数据，以业务规则、权限、事务、可追溯检索和真实验证为重点，分阶段交付。
 
-**当前开发阶段 0.7.0 / Phase 7：Vue 管理后台与真实 API 集成。** 新增 Agent 对话、订单与售后、企业知识库、运营分析、任务历史五个页面，使用 Vue 3、TypeScript、Vite 和 Element Plus。页面读取现有认证接口，展示真实任务状态、引用、执行步骤、查询结果与图表；退款、审核、删除和重新索引均提供显式核对界面。43 项前端单元/组件测试、21 项 API 回归及真实 Edge 全流程的 14 个检查点通过，详见[阶段记录](docs/phase-7.md)与[验证报告](evals/results/phase7/report.md)。这些开发检查不等同盲评或完整模型质量成绩；[Phase 6 的 883 项测试](evals/results/phase6/verification.json)保留为历史结果，本阶段未重跑完整套件。
+**当前开发阶段 0.8.0 / Phase 8：可复现评估与安全追踪。** 新增严格任务/工具/权限/SQL 合同、受控 LangGraph 故障集和累计 Task 元数据追踪。真实在线冻结评估 18 条结果为 **5 pass / 3 fail / 9 manual_review / 1 unobserved**，实际供应商消费 **39440 Token**；不把未复核语义算通过。工程检查、检索增益/时延与失败分别保存于[验收报告](evals/results/phase8/report.md)和[阶段记录](docs/phase-8.md)。已有[Phase 7 浏览器证据](evals/results/phase7/report.md)及更早结果保持历史记录，不改写为新成绩。
 
 ## 功能与技术栈
 
@@ -19,7 +19,8 @@
 | MCP | 官方 SDK 1.30.0、独立 stdio Server / Client、工具发现、三个只读工具、每次调用重新认证 |
 | 运营分析 | 单图 NL SQL、SQLGlot 30.22.0、独立 reader、两个聚合视图、真实查询报告和图表数据 |
 | Vue 管理后台 | 五个业务页面、JWT 内存会话、按角色显示操作、Markdown 安全渲染、引用核验、人工确认与 SVG 图表 |
-| 评估 | 30 条中文 dev/test 数据集、真实向量与混合重排对照 CLI、JSON / CSV / Markdown |
+| 评估 | 30 条 RAG 对照、24 条固定 SQL、18 条分组 Agent 案例、16 条明确故障注入；JSON / CSV / Markdown |
+| 日志与追踪 | 白名单元数据 JSONL、累计 Token/未知消费、执行片段关联、可选显式 LangSmith 摘要导出 |
 | 本地部署 | Windows Python 3.13 + Linux PostgreSQL / Redis / Chroma 容器，缓存与数据位于 D 盘 |
 
 AI 检索使用 **真实 CPU ONNX 推理**，通过 FastEmbed 和 ONNX Runtime 运行；模型固定仓库 revision、大小和 SHA256，启动与查询不隐式下载。具体版本见 [pyproject.toml](pyproject.toml)、[哈希锁文件](requirements/) 和模型 manifest。直接知识检索与业务 API 不需要聊天模型 Key；Agent 发消息与执行恢复需配置 DeepSeek，默认 `EA_LLM_ENABLED=false`。
@@ -54,6 +55,9 @@ flowchart TD
     APPROVAL --> BIZ
     AGENT --> CHECKPOINT["官方 PostgreSQL Checkpointer"]
     CHECKPOINT --> PG
+    AGENT --> TRACE["Task 元数据累计快照"]
+    TRACE --> LOCAL["本地 JSONL"]
+    TRACE -. "显式启用" .-> SMITH["LangSmith 摘要"]
     API --> ANALYSIS["AnalyticsService：analyst / admin"]
     AGENT --> ANALYSIS
     ANALYSIS --> SQLGUARD["SQLGlot AST 白名单与限额"]
@@ -85,10 +89,12 @@ EnterpriseAgent/
 │  ├─ rag/                       # parsing/chunking/ranking/backends/runtime/store
 │  ├─ knowledge_cli.py           # 复用 Service 索引已登记文档
 │  ├─ evaluation.py              # 真实检索对照
+│  ├─ evaluations/               # 严格案例合同、证据检查、SQL参考、故障注入
+│  ├─ observability.py           # 本地累计元数据；可选 LangSmith 摘要
 │  └─ seed.py
 ├─ alembic/                      # 0001_ecommerce → … → 0005_analytics
 ├─ data/knowledge/               # 5 篇模拟政策
-├─ evals/datasets/rag.json
+├─ evals/datasets/                # RAG、人工SQL、Agent与受控故障案例
 ├─ frontend/                     # Vue 五页、API client、认证内存状态、组件与前端测试
 ├─ scripts/                      # bootstrap/init/migrate/seed/prepare/index/eval/check/run/mcp-demo
 ├─ tests/                        # 单元、真实 PostgreSQL、真实模型、HTTP
@@ -214,11 +220,33 @@ Agent 对话展示已保存的多轮任务、实际回答、工具步骤和知�
 
 ## 测试与 Evaluation
 
+Phase 8 将机器可核对的任务状态、工具参数、订单归属、当前引用和精确 SQL 行与人工语义判断分开。18 条 Agent 案例由开发助手依据项目代码和模拟语料编写，包含 development、历史失败 regression 和本阶段新问题 validation；新问题冻结不等同外部独立标注或盲评。没有人工语义标签时保留 `manual_review`，不能按成功计入语义质量。16 条受控故障案例运行实际 LangGraph 与参数校验，模型/Service/内存 Checkpoint 为明确测试输入，不能当作线上模型、PostgreSQL 或真实退款成绩。执行协议见[评估](docs/evaluation.md)及[本阶段记录](docs/phase-8.md)。
+
+默认启用的本地追踪只记录 Task UUID、状态、白名单节点/工具名、安全错误码、耗时和累计 usage。文件位于 `EA_DATA_DIR/observability/agent-traces.jsonl`，不得跨 resume/recover 快照直接相加 Token。可选 LangSmith 使用显式 `EA_LANGSMITH_*` 配置，默认关闭；本阶段没有云端凭据或真实云导出验收，不自动上传问题、答案、工具参数、SQL、文档或个人字段。步骤是执行后的累计快照，不是实时 span 时序，详见[部署配置](docs/deployment.md)。
+
+本次真实在线运行的 17 个 Task 对应 17 条本地快照，白名单字段以及 request hash、状态、错误和累计 usage 与 DTO 匹配；快照中的 39440 Token/36 次调用属于同一线上账本，不能再次加到消费总量。验证记录见[追踪证据](evals/results/phase8/observability/verification.json)，它不是网络抓包或 LangSmith 远端连接证明。
+
+先准备专用测试库与真实本地检索，再显式运行付费模型评估：
+
+```powershell
+.\scripts\evaluate-phase8.ps1 -Mode Prepare
+.\scripts\evaluate-phase8.ps1 -Mode Live -AllowLive -Prepared
+```
+
+`Prepare` 保留已有虚构测试数据，不重置库；`Live` 启动隔离 `127.0.0.1:8002` API，每轮写新的 UTC 目录，并保留失败与待复核结果。它只准备退款预览，不自动确认。退出码成功表示执行/记录完成，不代表模型质量全部通过；配置与原始产物说明见[部署](docs/deployment.md)和[Phase 8](docs/phase-8.md)。
+
 ```powershell
 .\scripts\check.ps1
 .\scripts\evaluate-rag.ps1
 .\scripts\frontend.ps1 -Mode Check
+.\scripts\evaluate-phase8.ps1 -Mode Boundaries
 ```
+
+本阶段完整后端回归 **1034 项通过，0 失败/错误/跳过**，强制真实 PostgreSQL/RAG，JUnit 712.590 秒；87 条 Chroma 弃用警告保留。之后修正评估 SQL 参照与物流选样，最终专项 **112 项通过，JUnit 2.898 秒**；此前 104 项专项保留，没有重跑完整套件或将子集累加。前端 **43 项/6 文件**、严格类型、构建及生产依赖 audit 通过；构建 516 ms 为单次观察，984.49 kB UI chunk（gzip 316.59 kB）的警告仍在。最新修复范围与测试证据见[验收报告](evals/results/phase8/report.md)。
+
+真实本地 RAG 对照重新执行 60 条模式记录，test 文档级 Recall@3 从 **0.970588 → 1.000000**，nDCG@5 从 **0.977244 → 1.000000**，平均耗时从 **38.298 → 966.886 ms**。这是开发已接触的历史 QA 集和单次本机观察，增益同时伴随时延，不声称盲评或性能优化。独立基表 SQL 对照 **24/24**，受控故障期望 **16/16**，两者均无供应商调用。各层结果与边界见[评估](docs/evaluation.md)。
+
+在线首次冻结运行的 validation 13 条为 **4 pass / 2 fail / 7 manual_review**。复杂退款未准备审批、优惠券知识任务规划失败、退款“比例”与 oracle 百分比口径歧义均保留；首条物流在消息前因为选到无物流订单失败，没有模型调用。双周比较返回两行，值与独立参考一致但 judge 未识别其映射，保留复核。评估器缺少原始模型参数和人工语义标签，不伪填任务完成率；17 个实际 Task、36 次实际尝试、prompt 35626 / completion 3814 / total **39440 Token**，消费完整。冻结结果未因后续评估器修复改分或复跑，详见[在线结果](evals/results/phase8/live/report.md)。
 
 check默认传`--require-postgres --require-rag`，执行Ruff、格式、pytest与pip check。Phase 4初验**511项通过、0失败/错误/跳过**，JUnit524.068秒、81条Chroma弃用警告保留；真实Uvicorn重启后仅创建一条退款和工单。初验主服务五项健康通过，尚未配置模型时503且零任务。[验证摘要](evals/results/phase4/verification.json)、[重启](evals/results/phase4/http-restart.json)和[主HTTP](evals/results/phase4/demo-http.json)保留原始`online_deepseek_tested=false`。在线修复后110项核心测试通过，[517项完整复验通过](evals/results/phase4-live/verification.json)；历史初验不冒称最新代码验收。
 
@@ -267,7 +295,6 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 
 | 阶段 | 内容 |
 | --- | --- |
-| Phase 8 | 扩展 Agent、工具、SQL 与回答忠实度评估；可选追踪 |
 | Phase 9 | 应用/前端镜像、全栈 Compose、GitHub Actions、干净环境验证 |
 
 每阶段提供代码、适用检查、真实问题、清晰本地 Git Commit 与下一阶段范围。后续设计见 [工作流](docs/agent-workflow.md) 和 [技术决策](docs/technical-decisions.md)。
@@ -279,7 +306,8 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 - PDF 只读已有文本层，无 OCR；DOCX 覆盖正文与表格，不包含页眉页脚、修订文本及文本框；TXT/MD 仅 UTF-8。
 - 默认 Chunk 为 500 **字符**、重叠 80；模型输入上限 512 Token，字符不等于 Token，较长内容会被模型截断。
 - 本地 CPU 推理、同步请求/CLI 索引，不是独立持久队列或高吞吐生产服务；向量清理失败可能留下旧条目，未知数据库提交结果可能留下未登记原件，没有自动清理工具。
-- DeepSeek 历史结果为手选开发烟测，仍无独立完整模型质量或负载评估，没有 Langfuse tracing 集成。
+- Agent 评估仍为小型自编模拟问题集，无外部独立标注或完整模型质量/负载评估；结构忠实度与问题语义充分性分别报告，当前 9 条复核和 1 条未观察案例不算通过。
+- 本地追踪为累计元数据快照，没有日志轮转或跨进程文件锁；LangSmith 摘要导出默认关闭，尚无真实云端验收，队列满或发送失败可能丢弃摘要。
 - 分析仅支持一个授权聚合视图上的受限 SELECT，不支持 JOIN、CTE、子查询、窗口函数或自由数据源。AST 证明执行边界，不能证明模型选择了正确指标或时间范围。
 - 图表只展示前 30 行的相对数值和原始值悬停提示，完整受限结果见表格；截断结果不能作为完整总量，指标口径与执行 SQL 都需要核对。
 - MCP 仅本机 stdio、每进程一个 JWT 身份、三个只读工具；没有网络 MCP/OAuth、Token 自动续期或 Agent 图内 MCP 调用分支。stdin 来自可信本机 Client，尚未提供恶意大帧内存隔离或生产负载评估。
@@ -294,6 +322,6 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 
 ## 文档与许可证
 
-[架构](docs/architecture.md) · [API](docs/api.md) · [Agent 工作流](docs/agent-workflow.md) · [Evaluation](docs/evaluation.md) · [部署](docs/deployment.md) · [技术决策](docs/technical-decisions.md) · [Phase 1](docs/phase-1.md) · [Phase 2](docs/phase-2.md) · [Phase 3](docs/phase-3.md) · [Phase 4](docs/phase-4.md) · [Phase 5](docs/phase-5.md) · [Phase 6](docs/phase-6.md) · [Phase 7](docs/phase-7.md)
+[架构](docs/architecture.md) · [API](docs/api.md) · [Agent 工作流](docs/agent-workflow.md) · [Evaluation](docs/evaluation.md) · [部署](docs/deployment.md) · [技术决策](docs/technical-decisions.md) · [Phase 1](docs/phase-1.md) · [Phase 2](docs/phase-2.md) · [Phase 3](docs/phase-3.md) · [Phase 4](docs/phase-4.md) · [Phase 5](docs/phase-5.md) · [Phase 6](docs/phase-6.md) · [Phase 7](docs/phase-7.md) · [Phase 8](docs/phase-8.md)
 
 代码采用 [MIT License](LICENSE)。
