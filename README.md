@@ -1,5 +1,7 @@
 # EnterpriseAgent
 
+[![EnterpriseAgent CI](https://github.com/zjhwwwl/EnterpriseAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/zjhwwwl/EnterpriseAgent/actions/workflows/ci.yml)
+
 基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手。项目使用虚构电商数据，以业务规则、权限、事务、可追溯检索和真实验证为重点，分阶段交付。
 
 最近交互改进：演示密码与登录页预填值一致，知识库标题可点击弹窗查看全文，查找选项使用直白中文。实现与专项验证见[知识库交互说明](docs/knowledge-usability.md)。
@@ -110,10 +112,16 @@ EnterpriseAgent/
 
 ## 快速启动
 
+获取源码：
+
+```powershell
+git clone https://github.com/zjhwwwl/EnterpriseAgent.git
+Set-Location .\EnterpriseAgent
+```
+
 Windows PowerShell 在项目根目录执行。需要 Python 3.13 虚拟环境与运行中的 Docker Desktop。首次克隆先在 PyCharm 创建项目 `.venv`；bootstrap 不安装 Python 或 Docker。
 
 ```powershell
-Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 .\scripts\bootstrap.ps1
 .\scripts\init-infra.ps1
 .\scripts\init-analytics.ps1
@@ -142,7 +150,7 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 
 `init-infra.ps1` 生成并保留本地随机 PostgreSQL/JWT 秘密，启动 PostgreSQL、Redis、Chroma，并同步两个专用分析连接字段；`init-analytics.ps1` 为新旧项目库初始化受限 reader，不重置数据。秘密位于被 Git 忽略的 `var/infra/` 和 `var/infra-secrets.env`。迁移和 seed 使用初始化账号；业务 API 与分析使用各自受限账号。API 启动不自动迁移、seed、下载模型或索引。详情见 [部署](docs/deployment.md)。
 
-项目、`.venv`、pip/TEMP/TMP、模型及报告使用 D 盘。Docker 程序位于 `D:\tools\DockerDesktop`，实际 Docker/WSL 数据盘位于 `D:\DockerData`，三个服务的数据目录位于该盘下；少量 Windows 配置可能仍位于 C 盘。
+本机验收环境中，项目、`.venv`、pip/TEMP/TMP、模型及报告使用 D 盘。Docker 程序位于 `D:\tools\DockerDesktop`，实际 Docker/WSL 数据盘位于 `D:\DockerData`，三个服务的数据目录位于该盘下；少量 Windows 配置可能仍位于 C 盘。其他机器可使用自己的项目和 Docker 安装路径。
 
 启动后访问 [Swagger](http://127.0.0.1:8000/docs)、[服务信息](http://127.0.0.1:8000/)、[存活](http://127.0.0.1:8000/health/live)、[就绪](http://127.0.0.1:8000/health/ready)。重启前可运行 `scripts/stop.ps1` 停止本项目登记并验证身份的后台进程，交互式服务用 Ctrl+C 关闭。
 
@@ -162,7 +170,7 @@ Linux 容器回归使用 `full-stack.ps1 -Mode Test`，只重置独立测试库�
 
 ## Demo 与 API
 
-Windows 开发公开模拟账号共用密码 `DemoOnly!2026`；全栈容器账号使用本机生成的独立密码：
+Windows 开发与全栈容器的模拟账号默认共用演示密码 `DemoOnly!2026`；已有自定义容器密码时，以本机 `var/compose/secrets/demo-password` 为准：
 
 | 账号 | 权限 |
 | --- | --- |
@@ -318,7 +326,7 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 | --- | --- |
 | Phase 9（已完成） | 应用/前端镜像、全栈 Compose、GitHub Actions 工作流、本机 Linux 验证；平台 CI 尚未运行，实际边界见阶段记录 |
 
-原九阶段开发计划已完成。后续维护优先在指定 GitHub 仓库实际运行 CI，并用独立问题和人工语义标签复核保留的模型失败与待复核案例；当前不自动推送、发布或增加新阶段。设计依据见 [工作流](docs/agent-workflow.md) 和 [技术决策](docs/technical-decisions.md)。
+原九阶段开发计划已完成。后续维护优先在 GitHub 实际运行 CI，并用独立问题和人工语义标签复核保留的模型失败与待复核案例。公网部署与付费资源需另行确认。设计依据见 [工作流](docs/agent-workflow.md) 和 [技术决策](docs/technical-decisions.md)。
 
 ## 已知限制
 
