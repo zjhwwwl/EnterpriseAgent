@@ -29,6 +29,7 @@ COPY alembic ./alembic
 COPY data/knowledge ./data/knowledge
 COPY evals/datasets/rag.json ./evals/datasets/rag.json
 COPY scripts/prepare-rag-models.py ./scripts/prepare-rag-models.py
+COPY scripts/ci/check_startup.py ./scripts/ci/check_startup.py
 RUN mkdir -p /app/var/models/embedding /app/var/models/reranker \
        /app/var/models/runtime-cache /app/var/data /app/var/test-results \
     && chown -R 10001:10001 /app/var

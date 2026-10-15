@@ -426,7 +426,7 @@ docker compose --project-name enterpriseagent-full --env-file var/compose/compos
 
 [.github/workflows/ci.yml](../.github/workflows/ci.yml) 支持 push、pull_request 和手动触发，权限为 contents:read，Action 使用提交 SHA 固定。两个 job 都在 Ubuntu 24.04：frontend 使用固定 Node 24.19.0 跑 npm ci、格式、Vitest、TypeScript / Vite 与生产 audit；linux-stack 构建 full API / web / tests、显式准备和校验固定 ONNX 文件、启动 setup / readiness / 代理检查，再运行后端测试与离线评估。backend job 不注入真实 Key，模型缓存只包含公开资产。
 
-上传产物是选定前端 JUnit、Linux JUnit、脱敏 stack-smoke JSON、固定 SQL 和故障 JSON / 报告，保留 7 天；不上传 var/compose/secrets、完整运行目录或容器环境。失败和取消时停止本次项目服务，保留数据及已生成证据。工作流没有发布镜像、推送站点、远端迁移或云部署步骤。
+上传产物是选定前端 JUnit、Linux JUnit、脱敏 stack-smoke JSON、固定 SQL 和故障 JSON / 报告，保留 7 天；不上传 var/compose/secrets、完整运行目录或容器环境。宿主 runner 的 HTTP 检查报告写入 `var/test-results/stack-smoke.json`；容器测试结果留在归 UID 10001 所有的 `var/compose/test-output`，避免宿主写入容器专用目录时出现权限错误。初始化前以容器非 root 身份检查秘密文件可读、配置有效、固定模型完整性和运行目录可写，仅输出固定检查名称与布尔状态，不输出秘密值、异常正文或容器原始日志。失败和取消时停止本次项目服务，保留数据及已生成证据。工作流没有发布镜像、推送站点、远端迁移或云部署步骤。
 
 Linux 后端检查使用 `scripts/ci/check_backend.sh`：Ruff / 格式 / pip check、模型资产核验、强制真实 PostgreSQL / RAG 的 pytest，以及明确故障注入与固定 SQL 评估。模型 fixture 和真实供应商消费仍分开；CI 显式关闭聊天模型及云端追踪，不需要 DeepSeek Key。最终本机完整检查链退出 0：pytest **1097 / 1097**、受控故障 **16 / 16**、人工 SQL **24 / 24**；JUnit 621.404 秒、0 失败/错误/跳过，87 条 Chroma 弃用警告保留。
 

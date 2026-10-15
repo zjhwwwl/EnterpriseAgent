@@ -69,10 +69,12 @@ jobs:
           docker run --rm --user "$(id -u):$(id -g)" --entrypoint python \
             --mount "type=bind,source=$PWD/var/models,target=/app/var/models,readonly" \
             enterpriseagent-full-api:0.9.0 scripts/prepare-rag-models.py --verify-only
+      - name: Verify non-root startup access without exposing credentials
+        run: docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml run --rm --no-deps --entrypoint python setup scripts/ci/check_startup.py
       - name: Start and verify full local stack
         run: |
           docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml up --detach --wait --wait-timeout 300
-          python3 scripts/ci/check_stack.py
+          python3 scripts/ci/check_stack.py --output var/test-results/stack-smoke.json
       - name: Run required PostgreSQL, Redis, Chroma, RAG tests and offline evaluations
         run: docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml --profile test run --rm tests
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -80,7 +82,7 @@ jobs:
         with:
           name: linux-stack-test-reports
           path: |
-            var/compose/test-output/stack-smoke.json
+            var/test-results/stack-smoke.json
             var/compose/test-output/test-results/phase9-linux.xml
             var/compose/test-output/evaluation/phase9/boundaries/results.json
             var/compose/test-output/evaluation/phase9/boundaries/report.md
