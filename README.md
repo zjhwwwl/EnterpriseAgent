@@ -129,7 +129,7 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 
 首次模型准备显式下载固定版本公开文件，合计 **396,800,683 字节**；可使用可信离线副本与 `prepare-rag-models.py --offline-source`。模型推理只读取校验成功的本地文件。索引脚本处理已登记且未删除的文档，当前 fingerprint 已索引的文档会跳过。评估限定五篇种子文档，不把用户上传内容混入对照。
 
-使用 Agent 前在不提交的 `.env` 设置 `EA_LLM_ENABLED=true` 并填写自己的 `EA_DEEPSEEK_API_KEY`，随后重启。默认 `EA_DEEPSEEK_MODEL=deepseek-flash`，显式禁用 Thinking；Key 只留后端。未配置时发消息返回 `agent_model_not_configured`，不会用测试脚本伪装模型回答。完整配置见 [部署](docs/deployment.md)。
+原生开发模式使用 Agent 前，在不提交的 `.env` 设置 `EA_LLM_ENABLED=true` 并填写自己的 `EA_DEEPSEEK_API_KEY`，随后重启 API。容器后台（15173）不读取这份 `.env`：Key 需保存在 `var/compose/secrets/deepseek-api-key`，并在 `var/compose/compose.env` 设置 `EA_FULL_LLM_ENABLED=true` 后更新 API 容器。默认 `EA_DEEPSEEK_MODEL=deepseek-flash`，显式禁用 Thinking；Key 只留后端。未配置时发消息返回 `agent_model_not_configured`，不会用测试脚本伪装模型回答。完整配置见 [部署](docs/deployment.md)。
 
 在另一个 PowerShell 终端启动后台。需要 Node.js 24，前端依赖由提交的 `frontend/package-lock.json` 固定；不把 API Key、数据库连接或 JWT 秘密放进 Vite 配置。
 
