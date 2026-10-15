@@ -9,6 +9,7 @@ import type {
   SearchMode,
 } from "../api/business-types";
 import CitationList from "../components/CitationList.vue";
+import DocumentPreview from "../components/DocumentPreview.vue";
 import { auth } from "../stores/auth";
 import { dateTime as date } from "../utils/format";
 
@@ -33,6 +34,7 @@ const loading = ref(false);
 const listError = ref<VisibleError | null>(null);
 const downloadError = ref<VisibleError | null>(null);
 const downloading = ref<string | null>(null);
+const previewDocument = ref<KnowledgeDocument | null>(null);
 const uploadOpen = ref(false);
 const uploadTitle = ref("");
 const uploadVisibility = ref<"public" | "internal">("public");
@@ -65,16 +67,21 @@ const readyOnPage = computed(
     0,
 );
 const statusLabels: Record<string, string> = {
-  uploaded: "待索引",
-  indexing: "索引中",
-  indexed: "已索引",
-  failed: "索引失败",
+  uploaded: "待准备",
+  indexing: "准备中",
+  indexed: "可查询",
+  failed: "准备失败",
   deleted: "已删除",
 };
 const modeLabels: Record<SearchMode, string> = {
-  vector: "向量检索",
-  hybrid: "BM25 + 向量",
-  hybrid_rerank: "混合检索 + 重排",
+  vector: "按意思查找",
+  hybrid: "关键词与意思匹配",
+  hybrid_rerank: "智能查找（推荐）",
+};
+const modeDescriptions: Record<SearchMode, string> = {
+  vector: "根据问题的意思查找，用词不同也能匹配相关内容。",
+  hybrid: "同时参考问题中的关键词和意思查找相关内容。",
+  hybrid_rerank: "同时参考关键词和意思，再按与问题的相关程度排列结果。",
 };
 const extension = (type: string) => (type === "markdown" ? "md" : type);
 function isAbort(error: unknown) {
@@ -161,11 +168,11 @@ async function uploadDocument() {
     page.value = 1;
     if (result.status === "indexed" && !result.index_error_code)
       ElMessage.success(
-        `「${result.title}」已索引，生成 ${result.chunk_count} 个片段。`,
+        `「${result.title}」已可查询，整理出 ${result.chunk_count} 个知识片段。`,
       );
     else
       ElMessage.warning(
-        `原文已保存，索引状态为「${statusLabels[result.status] ?? result.status}」。请查看索引错误并重试。`,
+        `原文已保存，当前状态为「${statusLabels[result.status] ?? "状态未知"}」。请检查提示后重新准备搜索内容。`,
       );
     await loadDocuments();
   } catch (error) {
@@ -222,12 +229,10 @@ async function performAction() {
       );
       if (actor !== identity.value) return;
       if (result.status === "indexed" && !result.index_error_code)
-        ElMessage.success(
-          `重新索引完成，当前索引代次 ${result.index_generation}。`,
-        );
+        ElMessage.success(`「${result.title}」的搜索内容已更新。`);
       else
         ElMessage.warning(
-          `索引状态为「${statusLabels[result.status] ?? result.status}」，请检查错误信息。`,
+          `当前状态为「${statusLabels[result.status] ?? "状态未知"}」，请检查提示信息。`,
         );
     }
     knowledgeChanged.value = !!searchResult.value;
@@ -246,7 +251,7 @@ async function searchKnowledge() {
   const query = searchQuery.value.trim();
   if (!auth.user || searchBusy.value) return;
   if (query.length < 2) {
-    ElMessage.warning("请输入至少两个字符的检索问题。");
+    ElMessage.warning("请输入至少两个字符的问题。");
     return;
   }
   const sequence = ++searchSequence;
@@ -291,6 +296,7 @@ watch(
     searchError.value = listError.value = downloadError.value = null;
     searchBusy.value = false;
     downloading.value = null;
+    previewDocument.value = null;
     pendingAction.value = null;
     uploadOpen.value = false;
     lastUploaded.value = null;
@@ -307,7 +313,9 @@ onBeforeUnmount(stopReads);
     <div>
       <div class="eyebrow">ENTERPRISE KNOWLEDGE</div>
       <h1>企业知识库</h1>
-      <p class="muted">从原文到证据片段，建立可追溯、可维护的业务知识。</p>
+      <p class="muted">
+        查阅业务政策和操作说明，每条查询结果均可查看文档来源。
+      </p>
     </div>
     <el-button v-if="isAdmin" type="primary" @click="openUpload"
       >上传文档</el-button
@@ -324,16 +332,16 @@ onBeforeUnmount(stopReads);
       }}</small>
     </div>
     <div class="metric-card">
-      <span class="muted">当前页索引就绪</span
+      <span class="muted">当前页可查询文档</span
       ><strong
         >{{ documents ? readyOnPage : "—"
         }}<em v-if="documents"> / {{ documents.items.length }}</em></strong
-      ><small>失败重试保留原始文件与错误状态</small>
+      ><small>文档准备失败时，仍可查看或下载已保存的原文</small>
     </div>
     <div class="metric-card">
-      <span class="muted">检索方式</span
-      ><strong class="text-metric">混合检索 + 重排</strong
-      ><small>BM25、向量与本地 Reranker</small>
+      <span class="muted">查找方式</span
+      ><strong class="text-metric">{{ modeLabels[searchMode] }}</strong
+      ><small>{{ modeDescriptions[searchMode] }}</small>
     </div>
   </div>
   <el-alert
@@ -344,19 +352,20 @@ onBeforeUnmount(stopReads);
     class="upload-result"
     type="warning"
     :closable="true"
-    :title="`「${lastUploaded.title}」原文已保存，但索引需要处理`"
+    :title="`「${lastUploaded.title}」原文已保存，搜索内容尚未准备完成`"
     ><p>
-      状态：{{ statusLabels[lastUploaded.status] ?? lastUploaded.status }} ·
-      错误代码：{{
+      状态：{{ statusLabels[lastUploaded.status] ?? "状态未知" }} · 错误代码：{{
         lastUploaded.index_error_code ?? "无"
-      }}。上传成功不代表可检索，请刷新并在文档列表重新索引。
+      }}。请刷新列表；如未恢复，可点击“更新搜索内容”重试。
     </p></el-alert
   >
   <section class="panel">
     <div class="panel-header">
       <div>
         <h2>知识文档</h2>
-        <p class="muted">下载原文与索引状态均由后端返回。管理员可维护文档。</p>
+        <p class="muted">
+          点击标题阅读文档，或下载原文查看完整排版。管理员可上传和维护文档。
+        </p>
       </div>
       <el-button :loading="loading" @click="loadDocuments">刷新文档</el-button>
     </div>
@@ -386,14 +395,20 @@ onBeforeUnmount(stopReads);
     >
       <el-table-column label="文档" min-width="220"
         ><template #default="{ row }"
-          ><div class="document-title">{{ row.title }}</div>
+          ><el-button
+            link
+            type="primary"
+            class="document-title"
+            @click="previewDocument = row"
+            >{{ row.title }}</el-button
+          >
           <div class="muted document-meta">
-            {{ row.file_type.toUpperCase() }} · 文档 v{{ row.version }} ·
+            {{ row.file_type.toUpperCase() }} · 第 {{ row.version }} 版 ·
             {{ row.visibility === "public" ? "公开" : "内部" }}
           </div></template
         ></el-table-column
       >
-      <el-table-column label="索引状态" min-width="175"
+      <el-table-column label="查询状态" min-width="175"
         ><template #default="{ row }"
           ><el-tag
             :type="
@@ -403,27 +418,28 @@ onBeforeUnmount(stopReads);
                   ? 'success'
                   : 'warning'
             "
-            >{{ statusLabels[row.status] ?? row.status }}</el-tag
+            >{{ statusLabels[row.status] ?? "状态未知" }}</el-tag
           >
           <p v-if="row.index_error_code" class="index-error">
-            {{ row.index_error_code
-            }}<span v-if="row.status === 'indexed'"> · 保留上一有效索引</span>
+            搜索内容更新失败<span v-if="row.status === 'indexed'"
+              >，仍可查询之前准备的内容</span
+            >
           </p></template
         ></el-table-column
       >
-      <el-table-column label="片段 / 索引代次" min-width="125"
-        ><template #default="{ row }"
-          >{{ row.chunk_count }} / {{ row.index_generation }}</template
-        ></el-table-column
+      <el-table-column label="知识片段" min-width="105"
+        ><template #default="{ row }">{{
+          row.chunk_count
+        }}</template></el-table-column
       >
-      <el-table-column label="最近索引 · 北京时间" min-width="190"
+      <el-table-column label="搜索内容更新时间" min-width="190"
         ><template #default="{ row }">{{
           date(row.indexed_at)
         }}</template></el-table-column
       >
       <el-table-column
         label="操作"
-        :min-width="isAdmin ? 215 : 95"
+        :min-width="isAdmin ? 245 : 95"
         fixed="right"
         ><template #default="{ row }"
           ><el-button
@@ -439,7 +455,7 @@ onBeforeUnmount(stopReads);
               type="primary"
               :disabled="row.status === 'indexing' || actionBusy"
               @click="openAction(row, 'reindex')"
-              >重新索引</el-button
+              >更新搜索内容</el-button
             ><el-button
               link
               type="danger"
@@ -463,10 +479,10 @@ onBeforeUnmount(stopReads);
   <section class="panel search-panel">
     <div class="panel-header">
       <div>
-        <h2>检索证据</h2>
-        <p class="muted">直接查看检索片段与来源，不调用付费对话模型。</p>
+        <h2>查找业务知识</h2>
+        <p class="muted">输入问题，查看相关文档段落和出处。</p>
       </div>
-      <el-tag effect="plain" type="info">Evidence only</el-tag>
+      <el-tag effect="plain" type="info">文档原文</el-tag>
     </div>
     <form @submit.prevent="searchKnowledge">
       <el-input
@@ -476,12 +492,12 @@ onBeforeUnmount(stopReads);
         maxlength="500"
         show-word-limit
         placeholder="例如：商品签收后几天内可以申请无理由退货？"
-        aria-label="知识检索问题"
+        aria-label="知识查询问题"
       />
       <div class="toolbar search-toolbar">
         <el-select
           v-model="searchMode"
-          aria-label="检索模式"
+          aria-label="查找方式"
           :disabled="searchBusy"
           ><el-option
             v-for="(label, value) in modeLabels"
@@ -490,17 +506,18 @@ onBeforeUnmount(stopReads);
             :value="value" /></el-select
         ><el-select
           v-model="searchTopK"
-          aria-label="检索结果数量"
+          aria-label="显示结果数量"
           :disabled="searchBusy"
           ><el-option
             v-for="count in [3, 5, 10]"
             :key="count"
-            :label="`返回 ${count} 个片段`"
+            :label="`显示 ${count} 条结果`"
             :value="count" /></el-select
         ><el-button type="primary" native-type="submit" :loading="searchBusy"
-          >检索知识库</el-button
+          >查找知识</el-button
         >
       </div>
+      <p class="muted search-description">{{ modeDescriptions[searchMode] }}</p>
     </form>
     <el-alert
       v-if="searchError"
@@ -515,7 +532,7 @@ onBeforeUnmount(stopReads);
       v-if="knowledgeChanged"
       type="warning"
       :closable="false"
-      title="文档已更新，请重新检索并核验最新证据。"
+      title="文档已更新，请重新查找并核对最新内容。"
     />
     <template v-if="searchResult"
       ><el-alert
@@ -524,16 +541,22 @@ onBeforeUnmount(stopReads);
         :closable="false" />
       <div class="search-meta">
         <span>{{
-          searchResult.status === "evidence_found" ? "找到证据" : "证据不足"
+          searchResult.status === "evidence_found"
+            ? "找到相关内容"
+            : "暂无充分相关内容"
         }}</span
-        ><span>检索耗时 {{ searchResult.elapsed_ms.toFixed(1) }} ms</span
-        ><span>LLM 调用 {{ searchResult.llm_calls }} 次</span>
+        ><span
+          >查找用时 {{ (searchResult.elapsed_ms / 1000).toFixed(2) }} 秒</span
+        >
+        <span>{{
+          modeLabels[searchResult.mode as SearchMode] ?? "知识查找"
+        }}</span>
       </div>
       <CitationList :citations="searchResult.citations"
     /></template>
     <div v-else-if="!searchBusy && !searchError" class="search-empty">
       <span class="search-mark">⌕</span>
-      <p class="muted">输入业务问题，查看文档原文、位置与有效引用。</p>
+      <p class="muted">输入业务问题，查看相关内容及其文档出处。</p>
     </div>
   </section>
   <el-dialog
@@ -570,7 +593,8 @@ onBeforeUnmount(stopReads);
             @change="chooseFile"
           />
           <p class="muted">
-            PDF / DOCX / TXT / Markdown。大小由服务端校验，默认上限 8 MiB。
+            支持 PDF、Word 文档（DOCX）、纯文本（TXT）和 Markdown，默认最大 8
+            MB。
           </p>
           <p v-if="selectedFile" class="chosen-file">
             {{ selectedFile.name }} ·
@@ -582,7 +606,7 @@ onBeforeUnmount(stopReads);
     <el-alert
       type="info"
       :closable="false"
-      title="上传后解析、切分并生成索引，请等待后端返回状态。"
+      title="上传后会自动整理文档，准备好后即可查询。请等待完成提示。"
     />
     <el-alert
       v-if="uploadError"
@@ -603,13 +627,15 @@ onBeforeUnmount(stopReads);
         :loading="uploadBusy"
         :disabled="!selectedFile || !uploadTitle.trim()"
         @click="uploadDocument"
-        >确认上传并索引</el-button
+        >确认上传</el-button
       ></template
     >
   </el-dialog>
   <el-dialog
     :model-value="!!pendingAction"
-    :title="pendingAction?.kind === 'delete' ? '确认删除文档' : '确认重新索引'"
+    :title="
+      pendingAction?.kind === 'delete' ? '确认删除文档' : '确认更新搜索内容'
+    "
     width="min(590px, 94vw)"
     :close-on-click-modal="!actionBusy"
     :close-on-press-escape="!actionBusy"
@@ -622,21 +648,18 @@ onBeforeUnmount(stopReads);
   >
     <template v-if="pendingAction"
       ><h3>{{ pendingAction.document.title }}</h3>
-      <p class="muted">
-        文档 v{{ pendingAction.document.version }} · 当前索引代次
-        {{ pendingAction.document.index_generation }}
-      </p>
+      <p class="muted">文档第 {{ pendingAction.document.version }} 版</p>
       <el-alert
         :type="pendingAction.kind === 'delete' ? 'warning' : 'info'"
         :closable="false"
         :title="
           pendingAction.kind === 'delete'
-            ? '删除后不再用于检索，关联历史引用可能失效。已发布退款政策的来源文档由后端保护。'
-            : '重新解析原文并建立新索引。失败时保留上一有效索引，具体状态以服务端返回为准。'
+            ? '删除后无法继续查阅，历史回答中的引用也可能失效。已发布退款政策的来源文档无法删除。'
+            : '重新整理已保存的文档，更新可查询的内容。准备失败时仍可查询之前已准备好的内容。'
         "
       /><el-checkbox v-model="actionAcknowledged" class="action-checkbox"
         >我已核对文档，确认{{
-          pendingAction.kind === "delete" ? "删除" : "重新索引"
+          pendingAction.kind === "delete" ? "删除" : "更新搜索内容"
         }}</el-checkbox
       ><el-alert
         v-if="actionError"
@@ -658,11 +681,15 @@ onBeforeUnmount(stopReads);
         :disabled="!actionAcknowledged"
         @click="performAction"
         >确认{{
-          pendingAction?.kind === "delete" ? "删除文档" : "重新索引"
+          pendingAction?.kind === "delete" ? "删除文档" : "更新搜索内容"
         }}</el-button
       ></template
     >
   </el-dialog>
+  <DocumentPreview
+    :document="previewDocument"
+    @close="previewDocument = null"
+  />
 </template>
 
 <style scoped>
@@ -693,6 +720,9 @@ onBeforeUnmount(stopReads);
   margin-top: 12px;
 }
 .document-title {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
   font-weight: 600;
   line-height: 1.7;
 }
@@ -716,7 +746,7 @@ onBeforeUnmount(stopReads);
   margin: 16px 0 20px;
 }
 .search-toolbar .el-select {
-  width: 190px;
+  width: 205px;
 }
 .search-toolbar .el-select + .el-select {
   width: 160px;
@@ -728,6 +758,11 @@ onBeforeUnmount(stopReads);
   margin-top: 14px;
   font-size: 12px;
   color: var(--color-muted, #758076);
+}
+.search-description {
+  margin: -6px 0 20px;
+  font-size: 12px;
+  line-height: 1.7;
 }
 .search-empty {
   text-align: center;

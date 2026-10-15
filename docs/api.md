@@ -1,6 +1,6 @@
 # API 契约
 
-**当前版本 0.9.0 / Phase 9。** 健康、认证、订单、退款、知识库、LangGraph 会话/审批与授权运营分析接口供 Vue 和评估器使用。Phase 9 增加容器部署与 CI，不增加业务 HTTP 路由或通用评估执行/日志下载入口。MCP 保留独立 stdio 三个只读工具，OpenAPI 仅覆盖 HTTP。当前契约以实际代码和 OpenAPI 为准，部署验证见[Phase 9](phase-9.md)，评估与历史烟测保持原始边界。
+**当前版本 0.9.0 / Phase 9。** 健康、认证、订单、退款、知识库、LangGraph 会话/审批与授权运营分析接口供 Vue 和评估器使用。Phase 9 增加容器部署与 CI；后续交互改进增加认证文档全文预览，不提供通用评估执行/日志下载入口。MCP 保留独立 stdio 三个只读工具，OpenAPI 仅覆盖 HTTP。当前契约以实际代码和 OpenAPI 为准，部署验证见[Phase 9](phase-9.md)，评估与历史烟测保持原始边界。
 
 ## 浏览器集成约定
 
@@ -212,6 +212,7 @@ confirmed 必须是 JSON 布尔值，false 也记录拒绝与审计。Agent 确�
 | GET | `/api/v1/knowledge/documents` | 200 | 可见文档分页列表 |
 | POST | `/api/v1/knowledge/documents` | 201 | admin 上传并尝试索引 |
 | GET | `/api/v1/knowledge/documents/{document_id}` | 200 | 当前文档登记及索引状态 |
+| GET | `/api/v1/knowledge/documents/{document_id}/content` | 200 | 认证后的完整文本预览；不要求索引就绪，支持 PDF / DOCX / TXT / Markdown |
 | GET | `/api/v1/knowledge/documents/{document_id}/download` | 200 | 受授权原件下载，attachment / nosniff |
 | POST | `/api/v1/knowledge/documents/{document_id}/reindex` | 200 | admin 重新索引，同步等待 |
 | DELETE | `/api/v1/knowledge/documents/{document_id}` | 204 | admin 软删除，退出检索 |
@@ -375,3 +376,7 @@ order_no 必须为 JSON 字符串，包含 5–30 位 ASCII 数字；数字类�
 客户端应先检查 isError，再读 data；JSON-RPC 协议错误与读取超时可能由 SDK 抛 McpError，不是成功业务结果。业务 handler 不回显原始参数、Pydantic 输入、SQL/DSN 异常或未知工具名。默认服务端每次认证和查询共 15 秒，客户端示例总预算 60 秒。MCP 不创建退款、工单或审批；敏感写入继续使用已有人工确认接口。
 
 可运行 Client 示例与环境设置见[部署](deployment.md)，实际协议、权限、真实子进程退出验证见[Phase 5](phase-5.md)。
+
+文档全文预览返回 `document_id`、`title`、`file_type`、`version` 和 `content`。`content` 是经过原件完整性检查后解析的完整文本，不拼接重叠检索片段，不提供文件系统路径。客户只可读取公开文档，内部、已删除或不可访问的文档返回 404；未登录为 401。格式损坏、来源变化和文本无法解析会明确失败，不伪造预览；扫描 PDF 仍需先提供可提取文本。前端点击标题打开弹窗，保留原件下载与独立引用核验，关闭窗口或切换账号会中止读取并清空内容。
+
+页面检索名称使用“按意思查找”“关键词与意思匹配”“智能查找（推荐）”，依次映射原有 `vector`、`hybrid`、`hybrid_rerank` 参数；仅调整界面表达，不改变检索算法或承诺检索质量提升。

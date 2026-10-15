@@ -7,7 +7,7 @@ for directory in secrets postgres redis chroma app test-output; do
     mkdir -p "var/compose/$directory"
 done
 for secret in postgres-superuser-password postgres-app-password postgres-test-password \
-    postgres-analytics-password postgres-test-analytics-password jwt-secret demo-password; do
+    postgres-analytics-password postgres-test-analytics-password jwt-secret; do
     path="var/compose/secrets/$secret"
     if [ ! -f "$path" ]; then
         openssl rand -hex 32 > "$path"
@@ -18,6 +18,14 @@ for secret in postgres-superuser-password postgres-app-password postgres-test-pa
     fi
     chmod 0644 "$path"
 done
+if [ ! -f var/compose/secrets/demo-password ]; then
+    printf '%s' 'DemoOnly!2026' > var/compose/secrets/demo-password
+fi
+if [ ! -s var/compose/secrets/demo-password ]; then
+    echo 'The local demo login password is empty.' >&2
+    exit 1
+fi
+chmod 0644 var/compose/secrets/demo-password
 if [ ! -f var/compose/secrets/deepseek-api-key ]; then
     : > var/compose/secrets/deepseek-api-key
 fi

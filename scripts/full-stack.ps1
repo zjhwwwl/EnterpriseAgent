@@ -18,7 +18,7 @@ function Initialize-StackFiles {
         [IO.File]::WriteAllText($publicConfigPath, "EA_FULL_LLM_ENABLED=false`nEA_FULL_DOCS_ENABLED=false`n", [Text.UTF8Encoding]::new($false))
     }
     foreach ($name in @('postgres-superuser-password', 'postgres-app-password', 'postgres-test-password',
-                       'postgres-analytics-password', 'postgres-test-analytics-password', 'jwt-secret', 'demo-password')) {
+                       'postgres-analytics-password', 'postgres-test-analytics-password', 'jwt-secret')) {
         $file = Join-Path $secretPath $name
         if (-not (Test-Path -LiteralPath $file)) {
             $bytes = New-Object byte[] 32
@@ -30,6 +30,15 @@ function Initialize-StackFiles {
         if ([IO.File]::ReadAllText($file).Trim() -notmatch '^[0-9a-f]{64}$') {
             throw 'An existing generated stack credential is invalid; no credential was replaced.'
         }
+    }
+    # Match the visible demonstration login; infrastructure secrets stay random.
+    $demoPasswordPath = Join-Path $secretPath 'demo-password'
+    if (-not (Test-Path -LiteralPath $demoPasswordPath)) {
+        [IO.File]::WriteAllText($demoPasswordPath, 'DemoOnly!2026', [Text.UTF8Encoding]::new($false))
+    }
+    $demoPassword = [IO.File]::ReadAllText($demoPasswordPath).Trim()
+    if ($demoPassword.Length -lt 8 -or $demoPassword.Length -gt 256 -or $demoPassword -match '[\s\x00-\x1f\x7f]') {
+        throw 'The existing demo login password is invalid; no credential was replaced.'
     }
     $modelKey = Join-Path $secretPath 'deepseek-api-key'
     if (-not (Test-Path -LiteralPath $modelKey)) {

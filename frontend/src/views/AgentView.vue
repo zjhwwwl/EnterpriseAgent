@@ -395,7 +395,7 @@ onMounted(() => {
           <div class="welcome-mark">EA</div>
           <h2>让每一步都有依据</h2>
           <p class="muted">
-            查询订单、检索政策、创建待审核申请。<br />选中已有会话，或新建对话开始。
+            查询订单、查阅政策、创建待审核申请。<br />选中已有会话，或新建对话开始。
           </p>
           <div class="suggestion-list">
             <button

@@ -132,6 +132,14 @@ export interface KnowledgeDocument {
   created_at: string;
 }
 
+export interface KnowledgeDocumentContent {
+  document_id: string;
+  title: string;
+  file_type: string;
+  version: number;
+  content: string;
+}
+
 export type SearchMode = "vector" | "hybrid" | "hybrid_rerank";
 export type { Citation } from "./agent-types";
 

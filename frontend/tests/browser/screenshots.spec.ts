@@ -320,11 +320,11 @@ test.describe("read-only real local page screenshots", () => {
       );
       await capture("agent", { displayed_task_id: historicalKnowledge.id });
       await knowledgeTask
-        .getByRole("button", { name: "核验来源", exact: true })
+        .getByRole("button", { name: "核对引用", exact: true })
         .first()
         .click();
       const citationDialog = page.getByRole("dialog", {
-        name: "核验知识来源",
+        name: "核对引用来源",
         exact: true,
       });
       await expect(citationDialog.locator(".source-id")).toBeVisible();

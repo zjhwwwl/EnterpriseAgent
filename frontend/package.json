@@ -13,7 +13,8 @@
     "preview": "vite preview --host 127.0.0.1 --port 5173 --strictPort",
     "test": "vitest run",
     "format:check": "prettier --check src tests *.json *.ts *.html",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:knowledge-browser": "playwright test --config=playwright.knowledge.config.ts"
   },
   "dependencies": {
     "dompurify": "3.4.17",

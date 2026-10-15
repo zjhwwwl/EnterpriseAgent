@@ -31,6 +31,14 @@ class DocumentPage(BaseModel):
     limit: int
 
 
+class DocumentContent(BaseModel):
+    document_id: UUID
+    title: str
+    file_type: str
+    version: int
+    content: str
+
+
 class SearchInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     query: str = Field(min_length=2, max_length=500)

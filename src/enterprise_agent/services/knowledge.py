@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import logging
 import math
+import re
 from datetime import UTC, datetime, timedelta
 from functools import partial
 from pathlib import Path
@@ -28,6 +29,7 @@ from enterprise_agent.repositories.knowledge import KnowledgeRepository
 from enterprise_agent.request_context import get_request_id
 from enterprise_agent.schemas.knowledge import (
     Citation,
+    DocumentContent,
     DocumentPage,
     DocumentResponse,
     SearchInput,
@@ -106,6 +108,28 @@ class KnowledgeService:
         relative = Path(document.file_path)
         if relative.is_absolute() or ".." in relative.parts:
             raise BusinessError("document_source_unavailable", "文档原件路径无效", 409)
+        if (
+            len(relative.parts) == 3
+            and relative.parts[:2] == ("data", "knowledge")
+            and relative.suffix == ".md"
+            and document.file_type == "markdown"
+        ):
+            # A checked, immutable copy preserves a published seed version when
+            # a later checkout contains a different revision of the same file.
+            if not isinstance(document.checksum, str) or not re.fullmatch(
+                r"[0-9a-f]{64}", document.checksum
+            ):
+                raise BusinessError("document_source_unavailable", "文档原件校验信息无效", 409)
+            archive_root = self.settings.data_dir / "knowledge-source-archive"
+            archive = archive_root / (document.checksum + ".blob")
+            resolved_root = archive_root.resolve()
+            if not resolved_root.is_relative_to(self.settings.data_dir.resolve()):
+                raise BusinessError("document_source_unavailable", "文档原件不可访问", 409)
+            if archive.exists() or archive.is_symlink():
+                archived_path = archive.resolve()
+                if not archived_path.is_relative_to(resolved_root):
+                    raise BusinessError("document_source_unavailable", "文档原件不可访问", 409)
+                return archived_path
         base = (
             PROJECT_ROOT if relative.parts[:2] == ("data", "knowledge") else self.settings.data_dir
         )
@@ -134,6 +158,30 @@ class KnowledgeService:
             content = await asyncio.to_thread(self._read_source, document)
             extension = ".md" if document.file_type == "markdown" else "." + document.file_type
             return content, str(document.id) + extension, document.file_type
+
+    def _preview_source(self, document):
+        # Parse the immutable original, not overlapping retrieval chunks. This
+        # remains available when local models or the document index are absent.
+        sections = parse_document(self._read_source(document), document.file_type)
+        return "\n\n".join(section.text for section in sections)
+
+    async def document_content(self, actor, document_id):
+        async with self.sessions() as session:
+            document = await self._document(KnowledgeRepository(session), actor, document_id)
+            try:
+                async with asyncio.timeout(self.settings.rag_timeout_seconds):
+                    content = await asyncio.to_thread(self._preview_source, document)
+            except TimeoutError:
+                raise BusinessError(
+                    "document_preview_timeout", "文档内容读取超时，请稍后重试", 504
+                ) from None
+            return DocumentContent(
+                document_id=document.id,
+                title=document.title,
+                file_type=document.file_type,
+                version=document.version,
+                content=content,
+            )
 
     async def upload(self, actor, *, filename: str, content: bytes, title: str, visibility: str):
         require_admin(actor)

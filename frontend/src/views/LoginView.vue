@@ -83,7 +83,7 @@ async function submit() {
           连接知识、订单与运营数据。<br />在一个工作空间，完成查询、分析和业务协作。
         </p>
         <div class="story-capabilities">
-          <span><BookOpen :size="18" />知识检索</span
+          <span><BookOpen :size="18" />知识查询</span
           ><span><Package :size="18" />订单售后</span
           ><span><ChartColumn :size="18" />运营分析</span>
         </div>
@@ -157,9 +157,10 @@ async function submit() {
         <div class="demo-hint">
           <ShieldCheck :size="17" />
           <p>
-            这里是本地模拟演示环境。<br />公开演示密码：<code
+            默认演示密码已填好，可直接登录。<br />演示密码：<code
               >DemoOnly!2026</code
             >
+            <br />如已自定义密码，请使用本机设置的密码。
           </p>
         </div>
         <p class="login-session-note">

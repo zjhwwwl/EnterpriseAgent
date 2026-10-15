@@ -2,6 +2,8 @@
 
 基于 LangGraph、Agentic RAG 与 MCP 的企业级电商智能业务助手。项目使用虚构电商数据，以业务规则、权限、事务、可追溯检索和真实验证为重点，分阶段交付。
 
+最近交互改进：演示密码与登录页预填值一致，知识库标题可点击弹窗查看全文，查找选项使用直白中文。实现与专项验证见[知识库交互说明](docs/knowledge-usability.md)。
+
 **当前版本 0.9.0 / Phase 9 已完成：全栈 Docker Compose、Linux 依赖与 CI 工作流。** 新增独立本机全栈部署、API / Vue 镜像和自动化检查工作流，实际验证范围见[阶段记录](docs/phase-9.md)。已有[Phase 8 评估](evals/results/phase8/report.md)保留 **5 pass / 3 fail / 9 manual_review / 1 unobserved、39440 Token** 的原始结果；[Phase 7 浏览器证据](evals/results/phase7/report.md)及更早记录也不改写为容器部署或新模型成绩。
 
 本机 Linux 全栈已实际构建并启动，六项依赖就绪、**13 / 13 HTTP 检查**通过，API 重建后模拟业务数据保持一致，Nginx 在 API 地址变化后恢复代理。Linux 两套依赖锁实际哈希安装通过，完整后端 **1097 / 1097**、前端 **43 / 43**，受控故障 **16 / 16**、固定 SQL **24 / 24**。新 v2 语料通过独立 CLI 执行 RAG 对照，**60 / 60 记录完成**，两种模式文档级指标相同；完成数量不表示回答语义全对。完整结果及证据边界见[验收报告](evals/results/phase9/report.md)。本阶段未发送聊天模型请求，GitHub 平台工作流尚未运行。
@@ -13,7 +15,7 @@
 | FastAPI 工程 | 配置、JSON 日志、请求 ID、CORS、统一错误与健康检查 |
 | 数据库与认证 | PostgreSQL 17、SQLAlchemy 2.x、Alembic、15 张业务表、Argon2、JWT、实时角色校验 |
 | 订单与售后 | 查询、资格、用户确认、幂等、待审核退款、客服审核、模拟完成与审计 |
-| 知识库 | PDF / DOCX / UTF-8 TXT / Markdown 上传、列表、详情、原件下载、删除、重新索引 |
+| 知识库 | PDF / DOCX / UTF-8 TXT / Markdown 上传、列表、点击标题弹窗查看完整文本、原件下载、删除、重新索引 |
 | 检索 | 512 维中文 BGE、Chroma 1.5.9 HTTP、中文字符/二元组 BM25、RRF、量化 BGE Reranker |
 | 来源与权限 | 页码/段落/行号/字符位置、文档与索引版本、公开/内部可见性、失效引用拒绝 |
 | Agent | LangGraph 1.2.14、HTTPX DeepSeek 兼容接口、Pydantic 工具参数、有限执行、原文抽取回答 |
@@ -154,7 +156,7 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 .\scripts\full-stack.ps1 -Mode Check
 ```
 
-访问 [容器后台](http://127.0.0.1:15173) 或 [容器 API 健康](http://127.0.0.1:18000/health/ready)。全栈项目 `enterpriseagent-full` 使用独立 `var/compose` 数据和随机密码，不覆盖已有开发库。账号名与下表相同，登录密码取本机 `var/compose/secrets/demo-password`，与 Windows 开发公开密码不同。默认关闭 DeepSeek、Swagger 和云端追踪；需要模型时显式配置 secret 文件与 `EA_FULL_LLM_ENABLED`，详见[部署](docs/deployment.md)。
+访问 [容器后台](http://127.0.0.1:15173) 或 [容器 API 健康](http://127.0.0.1:18000/health/ready)。全栈项目 `enterpriseagent-full` 使用独立 `var/compose` 数据，不覆盖已有开发库。账号名与下表相同，默认演示登录密码为 `DemoOnly!2026`，与登录页预填值一致；本机 `var/compose/secrets/demo-password` 保存实际使用的密码，自定义密码时以该文件为准。数据库和 JWT 秘密仍独立随机生成。默认关闭 DeepSeek、Swagger 和云端追踪；需要模型时显式配置 secret 文件与 `EA_FULL_LLM_ENABLED`，详见[部署](docs/deployment.md)。
 
 Linux 容器回归使用 `full-stack.ps1 -Mode Test`，只重置独立测试库；`-Mode Stop` 核对项目归属并停服务，保留数据。实际验收数量、镜像/权限检查与未验证范围见[Phase 9](docs/phase-9.md)，不因容器启动成功声称模型质量或 GitHub CI 已通过。
 

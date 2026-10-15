@@ -769,7 +769,7 @@ test.describe("real local EnterpriseAgent browser workflow", () => {
       await knowledgePanel
         .locator(".citation-topline")
         .first()
-        .getByRole("button", { name: "核验来源", exact: true })
+        .getByRole("button", { name: "核对引用", exact: true })
         .click();
       const currentCitationResponse = await citationResponse;
       expect(currentCitationResponse.status()).toBe(200);
@@ -778,7 +778,7 @@ test.describe("real local EnterpriseAgent browser workflow", () => {
       expect(currentCitation.document_id).toBe(historicalCitation.document_id);
       expect(currentCitation.text).toBe(historicalCitation.text);
       const citationDialog = page.getByRole("dialog", {
-        name: "核验知识来源",
+        name: "核对引用来源",
         exact: true,
       });
       await expect(citationDialog.locator(".source-id")).toHaveText(
@@ -914,14 +914,12 @@ test.describe("real local EnterpriseAgent browser workflow", () => {
       await uiLogin(page, "demo_admin");
       await navigate(page, "knowledge");
       await page
-        .getByRole("textbox", { name: "知识检索问题", exact: true })
+        .getByRole("textbox", { name: "知识查询问题", exact: true })
         .fill("平台优惠券可以叠加使用吗？");
       const searchResponse = page.waitForResponse((value) =>
         endpoint(value, "/api/v1/knowledge/search", "POST"),
       );
-      await page
-        .getByRole("button", { name: "检索知识库", exact: true })
-        .click();
+      await page.getByRole("button", { name: "查找知识", exact: true }).click();
       const search = await searchResponse;
       expect(search.status()).toBe(200);
       expect(await search.json()).toMatchObject({
@@ -951,7 +949,7 @@ test.describe("real local EnterpriseAgent browser workflow", () => {
         { timeout: 120_000 },
       );
       await uploadDialog
-        .getByRole("button", { name: "确认上传并索引", exact: true })
+        .getByRole("button", { name: "确认上传", exact: true })
         .click();
       const uploadedResponse = await uploadResponse;
       expect(uploadedResponse.status()).toBe(201);
@@ -963,18 +961,18 @@ test.describe("real local EnterpriseAgent browser workflow", () => {
         page
           .locator(".el-table__body tr")
           .filter({ has: page.getByText(uniqueTitle, { exact: true }) });
-      await expect(documentRow()).toContainText("已索引");
+      await expect(documentRow()).toContainText("可查询");
       await capture("knowledge");
       await documentRow()
-        .getByRole("button", { name: "重新索引", exact: true })
+        .getByRole("button", { name: "更新搜索内容", exact: true })
         .click();
       const reindexDialog = page.getByRole("dialog", {
-        name: "确认重新索引",
+        name: "确认更新搜索内容",
         exact: true,
       });
       await expect(
         reindexDialog.getByRole("button", {
-          name: "确认重新索引",
+          name: "确认更新搜索内容",
           exact: true,
         }),
       ).toBeDisabled();
@@ -989,7 +987,7 @@ test.describe("real local EnterpriseAgent browser workflow", () => {
         { timeout: 120_000 },
       );
       await reindexDialog
-        .getByRole("button", { name: "确认重新索引", exact: true })
+        .getByRole("button", { name: "确认更新搜索内容", exact: true })
         .click();
       const reindexedResponse = await reindexResponse;
       expect(reindexedResponse.status()).toBe(200);

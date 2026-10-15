@@ -1,7 +1,8 @@
-import { flushPromises, mount } from "@vue/test-utils";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CitationList from "../../src/components/CitationList.vue";
 import type { Citation } from "../../src/api/agent-types";
+import { auth, clearAuth } from "../../src/stores/auth";
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 vi.mock("../../src/api/client", () => ({
@@ -25,8 +26,9 @@ const citation: Citation = {
   rerank_score: 0.8,
 };
 
+const mounted: VueWrapper[] = [];
 function view(citations = [citation]) {
-  return mount(CitationList, {
+  const wrapper = mount(CitationList, {
     props: { citations },
     global: {
       directives: { loading: () => undefined },
@@ -44,11 +46,19 @@ function view(citations = [citation]) {
       },
     },
   });
+  mounted.push(wrapper);
+  return wrapper;
 }
 
 describe("authenticated citation display", () => {
   beforeEach(() => {
     request.mockReset();
+    auth.user = { id: 1, username: "citation-unit", role: "customer" };
+    auth.token = "citation-unit-session";
+  });
+  afterEach(() => {
+    mounted.splice(0).forEach((wrapper) => wrapper.unmount());
+    clearAuth();
   });
 
   it("shows a task-authorized historical citation as escaped text, without following its URL", () => {
@@ -64,7 +74,7 @@ describe("authenticated citation display", () => {
   it("fetches the current source through a trusted citation route only after a click", async () => {
     request.mockResolvedValue({ ...citation, text: "当前认证返回的单测来源" });
     const wrapper = view();
-    await wrapper.get("button").trigger("click");
+    await wrapper.get(".citation-verify").trigger("click");
     await flushPromises();
 
     expect(request).toHaveBeenCalledOnce();
@@ -79,10 +89,32 @@ describe("authenticated citation display", () => {
     );
   });
 
+  it("opens the full document from its title without treating a historical excerpt as the full text", async () => {
+    request.mockResolvedValue({
+      document_id: citation.document_id,
+      title: citation.document_title,
+      file_type: "txt",
+      version: 2,
+      content: "当前授权文档的全文，包含历史摘录之外的后续说明。",
+    });
+    const wrapper = view();
+    await wrapper.get(".citation-title").trigger("click");
+    await flushPromises();
+    expect(request).toHaveBeenCalledWith(
+      `/api/v1/knowledge/documents/${citation.document_id}/content`,
+      { signal: expect.any(AbortSignal) },
+    );
+    expect(wrapper.get(".preview-content").text()).toBe(
+      "当前授权文档的全文，包含历史摘录之外的后续说明。",
+    );
+    expect(wrapper.find("img").exists()).toBe(false);
+    expect(wrapper.find("script").exists()).toBe(false);
+  });
+
   it("keeps permission errors visible without presenting a fetched source", async () => {
     request.mockRejectedValue(new Error("当前账号无权访问单测来源"));
     const wrapper = view();
-    await wrapper.get("button").trigger("click");
+    await wrapper.get(".citation-verify").trigger("click");
     await flushPromises();
 
     const dialog = wrapper.get('[data-testid="citation-dialog"]');
@@ -109,7 +141,7 @@ describe("authenticated citation display", () => {
     };
     request.mockResolvedValueOnce(newer);
     const wrapper = view([citation, newer]);
-    const buttons = wrapper.findAll(".citation-topline button");
+    const buttons = wrapper.findAll(".citation-verify");
     await buttons[0]!.trigger("click");
     await buttons[1]!.trigger("click");
     await flushPromises();

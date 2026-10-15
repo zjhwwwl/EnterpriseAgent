@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { api, errorMessage } from "../api/client";
 import type { Citation } from "../api/agent-types";
+import DocumentPreview from "./DocumentPreview.vue";
 
 const props = defineProps<{ citations: Citation[] }>();
 const uniqueCitations = computed(() => [
@@ -14,6 +15,7 @@ const verified = ref<Citation | null>(null);
 const busy = ref(false);
 const error = ref("");
 const showDialog = ref(false);
+const previewDocument = ref<{ id: string; title: string } | null>(null);
 let requestGeneration = 0;
 
 function locationText(location: Record<string, unknown>): string {
@@ -77,7 +79,7 @@ const changed = computed(
   >
     <h4>
       知识来源
-      <span class="muted">{{ uniqueCitations.length }} 条可追溯片段</span>
+      <span class="muted">{{ uniqueCitations.length }} 条文档出处</span>
     </h4>
     <article
       v-for="citation in uniqueCitations"
@@ -85,26 +87,41 @@ const changed = computed(
       class="citation-card"
     >
       <div class="citation-topline">
-        <strong>{{ citation.document_title }}</strong>
-        <el-button text type="primary" size="small" @click="verify(citation)"
-          >核验来源</el-button
+        <el-button
+          link
+          type="primary"
+          class="citation-title"
+          @click="
+            previewDocument = {
+              id: citation.document_id,
+              title: citation.document_title,
+            }
+          "
+          >{{ citation.document_title }}</el-button
+        >
+        <el-button
+          text
+          type="primary"
+          size="small"
+          class="citation-verify"
+          @click="verify(citation)"
+          >核对引用</el-button
         >
       </div>
       <div class="muted citation-meta">
-        文档 v{{ citation.document_version }} · 索引
-        {{ citation.index_generation }} · Chunk {{ citation.chunk_index }} ·
+        文档第 {{ citation.document_version }} 版 · 第
+        {{ citation.chunk_index + 1 }} 个知识片段 ·
         {{ locationText(citation.source_location) }}
       </div>
       <details>
         <summary>查看引用原文</summary>
         <p class="source-text">{{ citation.text }}</p>
-        <code class="source-id">{{ citation.chunk_id }}</code>
       </details>
     </article>
   </section>
   <el-dialog
     v-model="showDialog"
-    title="核验知识来源"
+    title="核对引用来源"
     width="min(680px, 92vw)"
     :close-on-click-modal="false"
   >
@@ -129,18 +146,20 @@ const changed = computed(
       <template v-if="verified">
         <h3>{{ verified.document_title }}</h3>
         <p class="muted">
-          文档 v{{ verified.document_version }} · 索引
-          {{ verified.index_generation }} ·
+          文档第 {{ verified.document_version }} 版 ·
           {{ locationText(verified.source_location) }}
         </p>
         <p class="source-text">{{ verified.text }}</p>
-        <code class="source-id">{{ verified.chunk_id }}</code>
       </template>
     </div>
     <template #footer
       ><el-button @click="showDialog = false">关闭</el-button></template
     >
   </el-dialog>
+  <DocumentPreview
+    :document="previewDocument"
+    @close="previewDocument = null"
+  />
 </template>
 
 <style scoped>
@@ -169,7 +188,11 @@ const changed = computed(
   justify-content: space-between;
   gap: 8px;
 }
-.citation-topline strong {
+.citation-title {
+  max-width: 75%;
+  white-space: normal;
+  text-align: left;
+  font-weight: 600;
   font-size: 13px;
 }
 .citation-meta {
@@ -188,12 +211,6 @@ summary {
   overflow-wrap: anywhere;
   font-size: 13px;
   line-height: 1.85;
-}
-.source-id {
-  display: block;
-  color: var(--color-muted, #758076);
-  overflow-wrap: anywhere;
-  font-size: 11px;
 }
 .citation-dialog-body {
   min-height: 90px;

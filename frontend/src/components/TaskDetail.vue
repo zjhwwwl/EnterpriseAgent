@@ -74,8 +74,8 @@ function elapsed(value: unknown): string {
 
 const nodeLabels: Record<string, string> = {
   intent_router: "识别任务意图",
-  knowledge_retrieval: "检索知识库",
-  query_rewrite: "改写检索问题",
+  knowledge_retrieval: "查找业务知识",
+  query_rewrite: "理解查询问题",
   tool_planner: "选择业务工具",
   tool_execution: "执行业务工具",
   business_tool: "业务工具",

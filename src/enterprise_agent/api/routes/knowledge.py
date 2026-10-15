@@ -9,6 +9,7 @@ from enterprise_agent.api.dependencies import CurrentUser, get_database
 from enterprise_agent.domain_errors import BusinessError
 from enterprise_agent.schemas.knowledge import (
     Citation,
+    DocumentContent,
     DocumentPage,
     DocumentResponse,
     SearchInput,
@@ -77,6 +78,11 @@ async def download_document(document_id: UUID, request: Request, actor: CurrentU
             "X-Content-Type-Options": "nosniff",
         },
     )
+
+
+@router.get("/documents/{document_id}/content", response_model=DocumentContent)
+async def document_content(document_id: UUID, request: Request, actor: CurrentUser):
+    return await service(request).document_content(actor, document_id)
 
 
 @router.post("/documents/{document_id}/reindex", response_model=DocumentResponse)
