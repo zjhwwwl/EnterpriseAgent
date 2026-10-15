@@ -3,10 +3,10 @@
 set -eu
 
 psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --set ON_ERROR_STOP=1 <<'SQL'
-SELECT trim(pg_read_file('/run/secrets/postgres_app_password')) AS app_password \gset
-SELECT trim(pg_read_file('/run/secrets/postgres_test_password')) AS test_password \gset
-SELECT trim(pg_read_file('/run/secrets/postgres_analytics_password')) AS analytics_password \gset
-SELECT trim(pg_read_file('/run/secrets/postgres_test_analytics_password')) AS test_analytics_password \gset
+SELECT btrim(pg_read_file('/run/secrets/postgres_app_password'), E' \t\r\n') AS app_password \gset
+SELECT btrim(pg_read_file('/run/secrets/postgres_test_password'), E' \t\r\n') AS test_password \gset
+SELECT btrim(pg_read_file('/run/secrets/postgres_analytics_password'), E' \t\r\n') AS analytics_password \gset
+SELECT btrim(pg_read_file('/run/secrets/postgres_test_analytics_password'), E' \t\r\n') AS test_analytics_password \gset
 CREATE ROLE ea_app LOGIN PASSWORD :'app_password' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 CREATE ROLE ea_test_app LOGIN PASSWORD :'test_password' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 CREATE ROLE ea_analytics_reader LOGIN PASSWORD :'analytics_password' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;

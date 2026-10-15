@@ -10,7 +10,7 @@ for secret in postgres-superuser-password postgres-app-password postgres-test-pa
     postgres-analytics-password postgres-test-analytics-password jwt-secret; do
     path="var/compose/secrets/$secret"
     if [ ! -f "$path" ]; then
-        openssl rand -hex 32 > "$path"
+        openssl rand -hex 32 | tr -d '\r\n' > "$path"
     fi
     if [ ! -s "$path" ]; then
         echo 'A required local Compose credential is empty.' >&2

@@ -395,6 +395,8 @@ stop 保留数据。不自动使用 down -v、drop database、prune 或删除其
 
 包装脚本显式指定 `--project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml`，公共开关单独保存在 compose.env，不读取根 `.env`、已有开发 DSN 或继承其他 Compose 项目名。公共文件没有密码；所有 secret 文件只在本机生成，`.dockerignore` 也排除 `.env`、var、模型、构建缓存和本地日志。
 
+CI 生成随机凭据时去掉末尾换行；PostgreSQL 初始化读取角色密码时也统一去除边界空格、制表符和 CR/LF，与应用读取规则保持一致。此规则覆盖 Unix 工具生成的换行结尾文件，避免初始化账号可连接而普通业务账号认证失败。初始化脚本只在新集群执行，已有集群沿用原凭据。
+
 账号名称与 README 相同，默认演示登录密码为 `DemoOnly!2026`，与登录页预填值一致。setup 从 `var/compose/secrets/demo-password` 读取密码；数据库和 JWT 秘密继续独立随机生成。已有自定义密码文件会被保留，重复 `Prepare` 不会旋转密码或重置 seed，也不会更新现有账号的密码散列。修改已有演示账号时须同步数据库散列、递增 token_version 撤销旧凭证并记录审计；不能只改密码文件。自定义凭据不提交 Git。
 
 | 服务 | 运行职责 / 秘密 |
