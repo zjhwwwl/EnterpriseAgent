@@ -77,6 +77,9 @@ jobs:
           python3 scripts/ci/check_stack.py --output var/test-results/stack-smoke.json
       - name: Run required PostgreSQL, Redis, Chroma, RAG tests and offline evaluations
         run: docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml --profile test run --rm tests
+      - name: Report fixed startup status fields on failure
+        if: failure()
+        run: python3 scripts/ci/read_setup_status.py
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:

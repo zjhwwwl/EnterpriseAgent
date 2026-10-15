@@ -193,6 +193,34 @@ def load_settings(
     return DeploymentSettings(_env_file=None, **values)
 
 
+SETUP_STAGES = frozenset(
+    {"resources", "migrations", "seed", "dependencies", "cpu_inference", "knowledge", "complete"}
+)
+
+
+def safe_setup_status(status: Mapping) -> dict:
+    """Allow only fixed stage names and readiness booleans in public diagnostics."""
+    stage = status.get("stage")
+    return {
+        "status": "passed" if status.get("status") == "passed" else "failed",
+        "stage": stage if isinstance(stage, str) and stage in SETUP_STAGES else "unknown",
+        **{
+            name: status.get(name) if type(status.get(name)) is bool else None
+            for name in ("database_ready", "rag_ready")
+        },
+    }
+
+
+def write_setup_status(directory: Path, status: Mapping) -> bool:
+    try:
+        temporary = directory / "setup-status.json.tmp"
+        temporary.write_text(json.dumps(safe_setup_status(status)), encoding="utf-8")
+        temporary.replace(directory / "setup-status.json")
+    except OSError:
+        return False
+    return True
+
+
 async def setup(settings: DeploymentSettings, *, as_of: date) -> dict:
     """Migrate, append fictional records and index through the ordinary Service."""
     if settings.migration_database_url is None or settings.llm_enabled:
@@ -204,6 +232,7 @@ async def setup(settings: DeploymentSettings, *, as_of: date) -> dict:
     )
     database = Database(settings.database_url.get_secret_value())
     runtime = RagRuntime(settings)
+    status = {"status": "failed", "stage": "resources"}
     try:
         configuration = Config(str(PROJECT_ROOT / "alembic.ini"))
 
@@ -211,11 +240,13 @@ async def setup(settings: DeploymentSettings, *, as_of: date) -> dict:
             configuration.attributes["connection"] = connection
             command.upgrade(configuration, "head")
 
+        status["stage"] = "migrations"
         async with owner.begin() as connection:
             await connection.run_sync(migrate)
         # The shared seed guard requires an explicit non-production environment.
         os.environ["EA_APP_ENV"] = "development"
         get_settings.cache_clear()
+        status["stage"] = "seed"
         counts = await seed_demo(
             async_sessionmaker(owner, expire_on_commit=False),
             as_of=datetime.combine(as_of, time.min, tzinfo=UTC),
@@ -223,9 +254,13 @@ async def setup(settings: DeploymentSettings, *, as_of: date) -> dict:
             orders_count=500,
             demo_password=settings.demo_password.get_secret_value(),
         )
-        if not await database.is_ready() or not await runtime.ready():
+        status["stage"] = "dependencies"
+        status["database_ready"] = await database.is_ready()
+        status["rag_ready"] = await runtime.ready()
+        if not status["database_ready"] or not status["rag_ready"]:
             raise ValueError("Migrated ordinary database, pinned models and Chroma must be ready")
         # This is real CPU execution, not only a manifest/health check.
+        status["stage"] = "cpu_inference"
         vectors = await runtime.call(runtime.models.embed_documents, ["平台退款政策"])
         scores = await runtime.call(runtime.models.rerank, "退款规则", ["退款申请需要审核"])
         if len(vectors) != 1 or len(vectors[0]) != 512 or len(scores) != 1:
@@ -248,6 +283,7 @@ async def setup(settings: DeploymentSettings, *, as_of: date) -> dict:
                     .order_by(KnowledgeDocument.id)
                 )
             )
+        status["stage"] = "knowledge"
         service = KnowledgeService(database.session_factory, settings, runtime)
         indexed = []
         for document in documents:
@@ -281,8 +317,10 @@ async def setup(settings: DeploymentSettings, *, as_of: date) -> dict:
         temporary = settings.data_dir / "setup-report.json.tmp"
         temporary.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         temporary.replace(settings.data_dir / "setup-report.json")
+        status.update(status="passed", stage="complete")
         return report
     finally:
+        write_setup_status(settings.data_dir, status)
         await runtime.close()
         await database.close()
         await owner.dispose()

@@ -33,7 +33,7 @@ def check_startup(secret_dir=Path("/run/secrets")):
     report["configuration_valid"] = True
     report["pinned_models_verified"] = verify_model_assets(settings.rag_model_dir)
     try:
-        with tempfile.TemporaryFile(dir=settings.data_dir):
+        with tempfile.NamedTemporaryFile(dir=settings.data_dir, prefix=".startup-access-"):
             pass
         report["runtime_directory_writable"] = True
     except Exception:

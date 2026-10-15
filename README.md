@@ -8,7 +8,7 @@
 
 **当前版本 0.9.0 / Phase 9 已完成：全栈 Docker Compose、Linux 依赖与 CI 工作流。** 新增独立本机全栈部署、API / Vue 镜像和自动化检查工作流，实际验证范围见[阶段记录](docs/phase-9.md)。已有[Phase 8 评估](evals/results/phase8/report.md)保留 **5 pass / 3 fail / 9 manual_review / 1 unobserved、39440 Token** 的原始结果；[Phase 7 浏览器证据](evals/results/phase7/report.md)及更早记录也不改写为容器部署或新模型成绩。
 
-本机 Linux 全栈已实际构建并启动，六项依赖就绪、**13 / 13 HTTP 检查**通过，API 重建后模拟业务数据保持一致，Nginx 在 API 地址变化后恢复代理。Linux 两套依赖锁实际哈希安装通过，完整后端 **1097 / 1097**、前端 **43 / 43**，受控故障 **16 / 16**、固定 SQL **24 / 24**。新 v2 语料通过独立 CLI 执行 RAG 对照，**60 / 60 记录完成**，两种模式文档级指标相同；完成数量不表示回答语义全对。完整结果及证据边界见[验收报告](evals/results/phase9/report.md)。本阶段未发送聊天模型请求，GitHub 平台工作流尚未运行。
+本机 Linux 全栈已实际构建并启动，六项依赖就绪、**13 / 13 HTTP 检查**通过，API 重建后模拟业务数据保持一致，Nginx 在 API 地址变化后恢复代理。Linux 两套依赖锁实际哈希安装通过，完整后端 **1097 / 1097**、前端 **43 / 43**，受控故障 **16 / 16**、固定 SQL **24 / 24**。新 v2 语料通过独立 CLI 执行 RAG 对照，**60 / 60 记录完成**，两种模式文档级指标相同；完成数量不表示回答语义全对。完整结果及证据边界见[验收报告](evals/results/phase9/report.md)。这些是 Phase 9 初验记录，当时未发送聊天模型请求或运行 GitHub 平台工作流；当前平台检查结果见顶部 CI 链接。
 
 ## 功能与技术栈
 
@@ -324,7 +324,7 @@ Phase 3 完整检查 **309 项通过、0 失败/错误/跳过**，Ruff lint/格�
 
 | 阶段 | 内容 |
 | --- | --- |
-| Phase 9（已完成） | 应用/前端镜像、全栈 Compose、GitHub Actions 工作流、本机 Linux 验证；平台 CI 尚未运行，实际边界见阶段记录 |
+| Phase 9（已完成） | 应用/前端镜像、全栈 Compose、GitHub Actions 工作流、本机 Linux 验证；平台 CI 已接通，当前结果见顶部 CI 链接，初验边界见阶段记录 |
 
 原九阶段开发计划已完成。后续维护优先在 GitHub 实际运行 CI，并用独立问题和人工语义标签复核保留的模型失败与待复核案例。公网部署与付费资源需另行确认。设计依据见 [工作流](docs/agent-workflow.md) 和 [技术决策](docs/technical-decisions.md)。
 

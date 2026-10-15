@@ -62,7 +62,7 @@ def test_unwritable_runtime_directory_fails_without_exposing_path(startup, monke
     def refused(*args, **kwargs):
         raise PermissionError("private-runtime-path")
 
-    monkeypatch.setattr(startup.tempfile, "TemporaryFile", refused)
+    monkeypatch.setattr(startup.tempfile, "NamedTemporaryFile", refused)
     result = startup.check_startup()
     assert result["status"] == "failed"
     assert result["runtime_directory_writable"] is False
