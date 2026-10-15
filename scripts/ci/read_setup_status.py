@@ -12,6 +12,15 @@ STAGES = {
     "knowledge",
     "complete",
 }
+DATABASE_CHECKS = (
+    "connection_opened",
+    "query_completed",
+    "role_safe",
+    "schema_current",
+    "privileges_bounded",
+    "required_grants",
+    "timed_out",
+)
 
 
 def read_setup_status(path: Path) -> dict:
@@ -24,7 +33,7 @@ def read_setup_status(path: Path) -> dict:
         if not isinstance(value, dict):
             raise ValueError
         stage = value.get("stage")
-        return {
+        result = {
             "status": "passed" if value.get("status") == "passed" else "failed",
             "stage": stage if isinstance(stage, str) and stage in STAGES else "unknown",
             **{
@@ -32,6 +41,16 @@ def read_setup_status(path: Path) -> dict:
                 for name in ("database_ready", "rag_ready")
             },
         }
+        checks = value.get("database_checks")
+        if isinstance(checks, dict):
+            result["database_checks"] = {
+                name: checks.get(name) if type(checks.get(name)) is bool else None
+                for name in DATABASE_CHECKS
+            }
+        for name in ("database_initial_timeout", "database_retried"):
+            if type(value.get(name)) is bool:
+                result[name] = value[name]
+        return result
     except (OSError, ValueError, TypeError):
         return {"status": "unavailable"}
 

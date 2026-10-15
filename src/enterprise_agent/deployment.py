@@ -196,12 +196,21 @@ def load_settings(
 SETUP_STAGES = frozenset(
     {"resources", "migrations", "seed", "dependencies", "cpu_inference", "knowledge", "complete"}
 )
+DATABASE_CHECKS = (
+    "connection_opened",
+    "query_completed",
+    "role_safe",
+    "schema_current",
+    "privileges_bounded",
+    "required_grants",
+    "timed_out",
+)
 
 
 def safe_setup_status(status: Mapping) -> dict:
     """Allow only fixed stage names and readiness booleans in public diagnostics."""
     stage = status.get("stage")
-    return {
+    result = {
         "status": "passed" if status.get("status") == "passed" else "failed",
         "stage": stage if isinstance(stage, str) and stage in SETUP_STAGES else "unknown",
         **{
@@ -209,6 +218,16 @@ def safe_setup_status(status: Mapping) -> dict:
             for name in ("database_ready", "rag_ready")
         },
     }
+    checks = status.get("database_checks")
+    if isinstance(checks, dict):
+        result["database_checks"] = {
+            name: checks.get(name) if type(checks.get(name)) is bool else None
+            for name in DATABASE_CHECKS
+        }
+    for name in ("database_initial_timeout", "database_retried"):
+        if type(status.get(name)) is bool:
+            result[name] = status[name]
+    return result
 
 
 def write_setup_status(directory: Path, status: Mapping) -> bool:
@@ -256,6 +275,15 @@ async def setup(settings: DeploymentSettings, *, as_of: date) -> dict:
         )
         status["stage"] = "dependencies"
         status["database_ready"] = await database.is_ready()
+        status["database_initial_timeout"] = database.readiness_checks["timed_out"]
+        status["database_retried"] = False
+        if not status["database_ready"] and (
+            database.readiness_checks["timed_out"]
+            or not database.readiness_checks["connection_opened"]
+        ):
+            status["database_retried"] = True
+            status["database_ready"] = await database.is_ready(timeout_seconds=10)
+        status["database_checks"] = database.readiness_checks
         status["rag_ready"] = await runtime.ready()
         if not status["database_ready"] or not status["rag_ready"]:
             raise ValueError("Migrated ordinary database, pinned models and Chroma must be ready")

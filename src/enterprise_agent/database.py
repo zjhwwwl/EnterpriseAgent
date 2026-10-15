@@ -26,17 +26,30 @@ class Database:
             expire_on_commit=False,
         )
         self.verified = False
+        self.readiness_checks = {}
 
-    async def is_ready(self) -> bool:
+    async def is_ready(self, *, timeout_seconds: float = 3) -> bool:
+        self.readiness_checks = {
+            "connection_opened": False,
+            "query_completed": False,
+            "role_safe": None,
+            "schema_current": None,
+            "privileges_bounded": None,
+            "required_grants": None,
+            "timed_out": False,
+        }
         try:
-            async with asyncio.timeout(3), self.engine.connect() as connection:
+            async with asyncio.timeout(timeout_seconds), self.engine.connect() as connection:
+                self.readiness_checks["connection_opened"] = True
                 unsafe_role = await connection.scalar(
                     text(
                         "SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls "
                         "FROM pg_roles WHERE rolname = current_user"
                     )
                 )
+                self.readiness_checks["role_safe"] = unsafe_role is False
                 revision = await connection.scalar(text("SELECT version_num FROM alembic_version"))
+                self.readiness_checks["schema_current"] = revision == EXPECTED_SCHEMA_REVISION
                 excessive_grants = await connection.scalar(
                     text(
                         "SELECT has_schema_privilege(current_user, 'public', 'CREATE') "
@@ -50,6 +63,7 @@ class Database:
                         "AND pg_get_userbyid(c.relowner) = current_user)"
                     )
                 )
+                self.readiness_checks["privileges_bounded"] = excessive_grants is False
                 required_grants = await connection.scalar(
                     text("""
                     SELECT
@@ -76,6 +90,8 @@ class Database:
                         pg_get_serial_sequence('audit_logs', 'id'), 'USAGE')
                 """)
                 )
+                self.readiness_checks["required_grants"] = required_grants is True
+                self.readiness_checks["query_completed"] = True
                 self.verified = (
                     unsafe_role is False
                     and excessive_grants is False
@@ -84,6 +100,7 @@ class Database:
                 )
         except Exception as exc:
             self.verified = False
+            self.readiness_checks["timed_out"] = isinstance(exc, TimeoutError)
             logger.warning(
                 "Database readiness check failed",
                 extra={"event": "database_not_ready", "exception_type": type(exc).__name__},

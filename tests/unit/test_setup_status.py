@@ -11,6 +11,15 @@ from enterprise_agent.deployment import SETUP_STAGES, safe_setup_status, write_s
 
 PRIVATE_DSN = "postgresql+psycopg://private-user:private-password@private-host/private-db"
 PUBLIC_FIELDS = {"status", "stage", "database_ready", "rag_ready"}
+DATABASE_CHECK_FIELDS = (
+    "connection_opened",
+    "query_completed",
+    "role_safe",
+    "schema_current",
+    "privileges_bounded",
+    "required_grants",
+    "timed_out",
+)
 
 
 @pytest.fixture
@@ -189,3 +198,93 @@ def test_reader_hides_private_read_permission_error(status_reader, tmp_path, mon
 
     monkeypatch.setattr(Path, "open", refused)
     assert status_reader.read_setup_status(tmp_path / "status.json") == {"status": "unavailable"}
+
+
+@pytest.fixture(params=["helper", "reader"])
+def sanitize_report(request, status_reader, tmp_path):
+    if request.param == "helper":
+        return safe_setup_status
+
+    def read_report(value):
+        path = tmp_path / "status.json"
+        path.write_text(json.dumps(value), encoding="utf-8")
+        return status_reader.read_setup_status(path)
+
+    return read_report
+
+
+def test_nested_database_checks_keep_only_fixed_boolean_fields(sanitize_report):
+    checks = {name: index % 2 == 0 for index, name in enumerate(DATABASE_CHECK_FIELDS)}
+    result = sanitize_report(
+        {
+            "status": "failed",
+            "stage": "dependencies",
+            "database_checks": {
+                **checks,
+                "error": PRIVATE_DSN,
+                "database_url": PRIVATE_DSN,
+                PRIVATE_DSN: True,
+            },
+            "database_initial_timeout": True,
+            "database_retried": False,
+        }
+    )
+    assert result["database_checks"] == checks
+    assert result["database_initial_timeout"] is True
+    assert result["database_retried"] is False
+    assert PRIVATE_DSN not in json.dumps(result)
+
+
+@pytest.mark.parametrize("value", [None, 0, 1, "true", "false", [], {}])
+def test_nested_database_checks_reject_nonboolean_values(sanitize_report, value):
+    result = sanitize_report({"database_checks": dict.fromkeys(DATABASE_CHECK_FIELDS, value)})
+    assert result["database_checks"] == dict.fromkeys(DATABASE_CHECK_FIELDS)
+
+
+def test_nested_database_checks_preserve_only_missing_fields_as_none(sanitize_report):
+    result = sanitize_report({"database_checks": {"connection_opened": False}})
+    assert result["database_checks"] == {
+        **dict.fromkeys(DATABASE_CHECK_FIELDS),
+        "connection_opened": False,
+    }
+
+
+@pytest.mark.parametrize("value", [None, [], PRIVATE_DSN, True])
+def test_nonmapping_database_checks_are_omitted(sanitize_report, value):
+    result = sanitize_report({"database_checks": value})
+    assert "database_checks" not in result
+    assert PRIVATE_DSN not in json.dumps(result)
+
+
+@pytest.mark.parametrize("value", [False, True])
+def test_retry_flags_preserve_boolean_values(sanitize_report, value):
+    result = sanitize_report({"database_initial_timeout": value, "database_retried": value})
+    assert result["database_initial_timeout"] is value
+    assert result["database_retried"] is value
+
+
+@pytest.mark.parametrize("value", [None, 0, 1, "true", PRIVATE_DSN, [], {}])
+def test_retry_flags_do_not_serialize_nonboolean_values(sanitize_report, value):
+    result = sanitize_report({"database_initial_timeout": value, "database_retried": value})
+    assert "database_initial_timeout" not in result
+    assert "database_retried" not in result
+    assert PRIVATE_DSN not in json.dumps(result)
+
+
+def test_writer_sanitizes_private_nested_error_before_reader_sees_it(status_reader, tmp_path):
+    assert write_setup_status(
+        tmp_path,
+        {
+            "status": "failed",
+            "stage": "dependencies",
+            "database_checks": {"timed_out": True, "error": ValueError(PRIVATE_DSN)},
+            "database_initial_timeout": True,
+            "database_retried": True,
+        },
+    )
+    path = tmp_path / "setup-status.json"
+    assert PRIVATE_DSN not in path.read_text(encoding="utf-8")
+    result = status_reader.read_setup_status(path)
+    assert result["database_checks"]["timed_out"] is True
+    assert "error" not in result["database_checks"]
+    assert result["database_retried"] is True

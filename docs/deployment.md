@@ -412,6 +412,8 @@ stop 保留数据。不自动使用 down -v、drop database、prune 或删除其
 
 完整部署默认 `EA_FULL_LLM_ENABLED=false`、`EA_FULL_DOCS_ENABLED=false`，所以业务查询、直接 RAG / SQL 和持久任务历史可运行，Agent 消息明确返回模型未配置。DeepSeek 不从现有 `.env` 自动复制：需要时由用户将自己的 Key 写入被忽略的 `var/compose/secrets/deepseek-api-key`，在公共 `var/compose/compose.env` 显式启用 `EA_FULL_LLM_ENABLED=true` 后重新运行 Up 更新 API。不要把 Key 放进命令、Compose environment、前端或 Git。远端 LangSmith 在此部署 profile 中关闭。
 
+初始化阶段先按通常的 3 秒期限检查业务数据库；若检查超时或连接尚未建立，最多再检查一次，第二次期限为 10 秒。角色安全属性、权限范围、必需授权和迁移版本仍须全部通过。运行中 API 的健康检查保留 3 秒期限。初始化状态只记录固定阶段和就绪布尔值到本机 `setup-status.json`，CI 通过白名单读取这些字段，不公开数据库连接、用户名、SQL 或异常正文。
+
 Phase 9 修订了售后 Markdown 前言，`rag.json` v2 记录新 checksum。首次 full setup 使用新语料；已存在的旧开发库仍保护发布时来源，seed / 重索引不会替换该原件。旧库不应强改 checksum 以通过评估，v2 对照需使用对应新语料初始化的独立数据库。Phase 3 / Phase 8 旧 JSON / CSV / 报告保持原语料与指标，不能直接作为 v2 成绩。
 
 在已经初始化且知识索引就绪的 full 项目重新执行对照：
