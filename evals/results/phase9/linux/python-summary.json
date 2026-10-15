@@ -1,0 +1,38 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "complete_linux_backend_suite",
+    "source":  "var/compose/test-output/test-results/phase9-linux.xml",
+    "source_sha256":  "24db639bd13b92b92473f8a8a82fded918759c865a0edeb7df9944fd273149fa",
+    "console_source":  "var/test-results/phase9/linux-tests.stdout.log",
+    "console_source_sha256":  "3b3a446c41e3d95c0dba72ab159ee9f4220b6a780a5425dcd519b439f207c5b9",
+    "tests":  1097,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "junit_elapsed_seconds":  621.404,
+    "pytest_elapsed_seconds":  624.08,
+    "test_timestamp":  "2026-10-14T20:51:05.638838+00:00",
+    "warnings":  {
+                     "category":  "DeprecationWarning",
+                     "source":  "chromadb legacy embedding function config",
+                     "count":  87
+                 },
+    "platform":  "linux/amd64",
+    "python":  "3.13.15",
+    "pytest":  "9.1.1",
+    "component_counts":  {
+                             "e2e":  4,
+                             "integration":  241,
+                             "unit":  852
+                         },
+    "ruff_check":  "passed",
+    "ruff_format_files":  150,
+    "pip_check":  "passed",
+    "model_manifest_verification":  "passed",
+    "required_postgres_tests":  true,
+    "required_rag_tests":  true,
+    "complete_chain_exit_code":  0,
+    "counting_semantics":  "Complete suite only; focused repeated subsets and separate evaluation cases are not added.",
+    "scope":  "Real local PostgreSQL, Redis, Chroma, CPU embedding/reranking, process integration and controlled model fixtures; no claim of online DeepSeek quality or GitHub-hosted execution."
+}

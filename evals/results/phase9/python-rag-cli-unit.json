@@ -1,0 +1,14 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "guarded_rag_deployment_cli_unit",
+    "platform":  "Windows",
+    "source":  "var/test-results/phase9-rag-cli-unit.xml",
+    "source_sha256":  "e4f7beffbb44c6c8f35e6979c5bed4ab992b3ec574e11d65d0aad1c398c0ee50",
+    "tests":  6,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "junit_elapsed_seconds":  0.239,
+    "counting_semantics":  "Focused CLI guard regression; not added to complete-suite counts."
+}

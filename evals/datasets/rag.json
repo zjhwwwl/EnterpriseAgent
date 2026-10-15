@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "dataset_id": "enterprise-agent-rag-policies-v1",
+  "dataset_id": "enterprise-agent-rag-policies-v2",
   "description": "人工依据固定五篇模拟政策标注文档级相关性；dev用于调参，test为保留集。知识检索评估，不代表生成答案质量或真实企业政策。",
   "seed_as_of_utc": "2026-10-12T00:00:00+00:00",
   "corpus": [
     {
       "file": "after-sales.md",
       "title": "商品售后政策",
-      "sha256": "1cfb43442e98542a1bda1460eeed8d3c1c857d92eb369405db65c02b2724708c"
+      "sha256": "d7b0a00c8a81007826a3158c1e856dfc1b168ef97449881f69e481779b680f9e"
     },
     {
       "file": "refund-and-return.md",

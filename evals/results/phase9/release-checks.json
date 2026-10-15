@@ -1,0 +1,25 @@
+{
+    "checked_at_utc":  "2026-10-15T08:52:31.7186450Z",
+    "secret_scan":  {
+                        "scanned_file_count":  6681,
+                        "status":  "passed",
+                        "hits":  0,
+                        "configured_secret_count":  16,
+                        "scope":  "Git-visible files, production frontend assets, new full-stack evaluation and test JUnit, Linux dependency/frontend proof, Phase 9 build/test and runtime logs; exact currently available credentials only; private credential files excluded from scanned/public artifacts; no universal detection claim"
+                    },
+    "markdown_positioning_scan":  {
+                                      "scanned_file_count":  45,
+                                      "status":  "passed",
+                                      "hits":  0,
+                                      "scope":  "Git-visible Markdown only; third-party packages and private runtime storage excluded"
+                                  },
+    "markdown_local_links":  {
+                                 "scope":  "Local file existence; anchors and remote URLs not checked",
+                                 "status":  "passed",
+                                 "missing":  0,
+                                 "checked_links":  386
+                             },
+    "git_diff_check":  {
+                           "status":  "passed"
+                       }
+}

@@ -1,0 +1,18 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "pytest_api_and_deployment_initial",
+    "source":  "var/test-results/phase9-initial.xml",
+    "source_sha256":  "4f514b3e7c0d8d63e4cb3b49d6867c667bfa21dfc1daf190881988ec226bc30c",
+    "tests":  57,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "elapsed_seconds":  0.963,
+    "test_timestamp":  "2026-10-15T03:54:03.846744+08:00",
+    "component_counts":  {
+                             "api":  21,
+                             "deployment":  36
+                         },
+    "counts_are_not_added_to_repeated_subsets":  true
+}

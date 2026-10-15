@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 import httpx
 import pytest
 import pytest_asyncio
+from database_scope import container_scope_environment, require_test_database
 from pydantic import SecretStr
 from sqlalchemy import func, select
 from sqlalchemy.engine import make_url
@@ -32,8 +33,7 @@ _PROVIDER_PREFIXES = ("EA_", "LANGSMITH", "LANGCHAIN", "OPENAI", "DEEPSEEK")
 @pytest.fixture
 def wire_settings(rag_settings, pg_urls):
     database = make_url(pg_urls[0])
-    assert database.database == "enterprise_agent_test" and database.username == "ea_test_app"
-    assert database.host in {"127.0.0.1", "localhost"}, "This process test only uses local services"
+    require_test_database(database)
     return rag_settings.model_copy(
         update={
             "agent_enabled": True,
@@ -91,6 +91,7 @@ def child_environment(settings, port):
             "EA_LOG_LEVEL": "INFO",
         }
     )
+    environment.update(container_scope_environment())
     return environment
 
 

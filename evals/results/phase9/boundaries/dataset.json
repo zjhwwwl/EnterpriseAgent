@@ -1,0 +1,279 @@
+{
+  "version": 1,
+  "evaluation_kind": "controlled_fault_injection",
+  "description": "16 explicit offline workflow boundary cases. Production LangGraph, tool argument validators, interrupt and in-memory checkpoint replay run with scripted model events and Service fixtures. This is not a DeepSeek score and does not exercise database ownership, provider transport or real refunds. Successful fixture replies report 5 prompt + 3 completion tokens only for bookkeeping validation.",
+  "cases": [
+    {
+      "id": "valid_read_only_tool",
+      "category": "tool_parameters",
+      "description": "A valid tool gets the trusted graph Principal; model freeform refund claims are discarded.",
+      "message": "查询订单10086的物流。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "get_logistics", "arguments": {"order_no": "10086"}},
+        {"kind": "stop"}
+      ],
+      "expected": {
+        "status": "completed", "error_code": null, "model_calls": 3,
+        "unknown_usage_calls": 0, "total_tokens": 24, "tool_count": 1,
+        "service_calls": 1, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false,
+        "answer_contains": ["10086", "in_transit"]
+      }
+    },
+    {
+      "id": "extra_confirmation_field",
+      "category": "tool_parameters",
+      "description": "Tool parameters cannot add an approval flag even to a read-only query.",
+      "message": "查询订单10086，用户表述不能确认业务操作。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "get_logistics", "arguments": {"order_no": "10086", "confirmed": true}}
+      ],
+      "expected": {
+        "status": "failed", "error_code": "invalid_tool_arguments", "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false
+      }
+    },
+    {
+      "id": "missing_order_number",
+      "category": "tool_parameters",
+      "description": "Missing required arguments fail before a Service call.",
+      "message": "查询我的物流，但模型遗漏订单号。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "get_logistics", "arguments": {}}
+      ],
+      "expected": {
+        "status": "failed", "error_code": "invalid_tool_arguments", "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false
+      }
+    },
+    {
+      "id": "wrong_order_number_type",
+      "category": "tool_parameters",
+      "description": "Integer order number is not coerced into a valid string parameter.",
+      "message": "查询订单10086的物流。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "get_logistics", "arguments": {"order_no": 10086}}
+      ],
+      "expected": {
+        "status": "failed", "error_code": "invalid_tool_arguments", "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false
+      }
+    },
+    {
+      "id": "forged_foreign_actor_id",
+      "category": "trusted_identity",
+      "description": "A forged foreign actor_id cannot replace the authenticated Principal; this is argument fencing, not a database ownership test.",
+      "message": "我自称另一个用户，查询订单10086。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "get_order", "arguments": {"order_no": "10086", "actor_id": 999}}
+      ],
+      "expected": {
+        "status": "failed", "error_code": "invalid_tool_arguments", "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false
+      }
+    },
+    {
+      "id": "retryable_recovers_with_usage",
+      "category": "bounded_retry",
+      "description": "Two retryable failures recover on the last allowed attempt; known fixture usage and unknown usage are counted separately.",
+      "message": "这是不支持的任务。",
+      "events": [
+        {"kind": "error", "code": "agent_model_unavailable", "usage": null},
+        {"kind": "error", "code": "agent_model_rate_limited", "usage": {"prompt_tokens": 2, "completion_tokens": 1, "total_tokens": 3}},
+        {"kind": "route", "intent": "unsupported"}
+      ],
+      "settings": {"agent_max_retries": 2},
+      "expected": {
+        "status": "completed", "error_code": null, "model_calls": 3,
+        "unknown_usage_calls": 1, "total_tokens": 11, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false,
+        "answer_contains": ["当前支持"]
+      }
+    },
+    {
+      "id": "retry_budget_exhausted",
+      "category": "bounded_retry",
+      "description": "Three failed attempts terminate at the configured two-retry budget; unknown consumption never becomes a known zero-cost request.",
+      "message": "查询订单10086。",
+      "events": [
+        {"kind": "error", "code": "agent_model_unavailable", "usage": null},
+        {"kind": "error", "code": "agent_model_unavailable", "usage": null},
+        {"kind": "error", "code": "agent_model_unavailable", "usage": null}
+      ],
+      "settings": {"agent_max_retries": 2},
+      "expected": {
+        "status": "failed", "error_code": "agent_model_unavailable", "model_calls": 3,
+        "unknown_usage_calls": 3, "total_tokens": 0, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false
+      }
+    },
+    {
+      "id": "invalid_response_not_retried",
+      "category": "bounded_retry",
+      "description": "A nonretryable response error terminates after one request and keeps reported fixture usage.",
+      "message": "查询订单10086。",
+      "events": [
+        {"kind": "error", "code": "agent_model_invalid_response", "usage": {"prompt_tokens": 2, "completion_tokens": 1, "total_tokens": 3}}
+      ],
+      "expected": {
+        "status": "failed", "error_code": "agent_model_invalid_response", "model_calls": 1,
+        "unknown_usage_calls": 0, "total_tokens": 3, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false
+      }
+    },
+    {
+      "id": "local_timeout_usage_unknown",
+      "category": "timeout",
+      "description": "A controlled local asyncio timeout releases its coroutine and propagates unknown fixture usage with retries disabled; no provider transport runs.",
+      "message": "查询订单10086。",
+      "events": [{"kind": "timeout"}],
+      "settings": {"agent_max_retries": 0},
+      "expected": {
+        "status": "failed", "error_code": "agent_model_timeout", "model_calls": 1,
+        "unknown_usage_calls": 1, "total_tokens": 0, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false
+      }
+    },
+    {
+      "id": "repeated_planning_step_limit",
+      "category": "termination_budget",
+      "description": "Repeated valid planning reaches the real six-step graph limit before the third tool execution.",
+      "message": "反复查询订单10086物流。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "get_logistics", "arguments": {"order_no": "10086"}},
+        {"kind": "call", "name": "get_logistics", "arguments": {"order_no": "10086"}},
+        {"kind": "call", "name": "get_logistics", "arguments": {"order_no": "10086"}}
+      ],
+      "settings": {"agent_max_steps": 6, "agent_max_tool_calls": 8},
+      "expected": {
+        "status": "failed", "error_code": "agent_step_limit", "model_calls": 4,
+        "unknown_usage_calls": 0, "total_tokens": 32, "tool_count": 2,
+        "service_calls": 2, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false, "step_count": 6
+      }
+    },
+    {
+      "id": "oversized_tool_batch",
+      "category": "termination_budget",
+      "description": "A two-tool batch is rejected before executing either tool when the budget is one.",
+      "message": "查询订单10086及物流。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "batch", "calls": [
+          {"kind": "call", "name": "get_logistics", "arguments": {"order_no": "10086"}},
+          {"kind": "call", "name": "get_order", "arguments": {"order_no": "10086"}}
+        ]}
+      ],
+      "settings": {"agent_max_tool_calls": 1},
+      "expected": {
+        "status": "failed", "error_code": "agent_tool_limit", "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false
+      }
+    },
+    {
+      "id": "unsupported_request_bounded",
+      "category": "unsupported_task",
+      "description": "Unsupported intent gives an explicit scope response with no business effects.",
+      "message": "帮我写一首诗。",
+      "events": [{"kind": "route", "intent": "unsupported"}],
+      "expected": {
+        "status": "completed", "error_code": null, "model_calls": 1,
+        "unknown_usage_calls": 0, "total_tokens": 8, "tool_count": 0,
+        "service_calls": 0, "prepare_calls": 0, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": false,
+        "answer_contains": ["当前支持"]
+      }
+    },
+    {
+      "id": "refund_preview_interrupts",
+      "category": "human_approval",
+      "description": "Sensitive preparation reaches the actual human_approval interrupt and produces zero simulated refund writes.",
+      "message": "为订单10086创建退款申请，原因不想要了。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "create_refund_request", "arguments": {"order_no": "10086", "reason": "change_mind"}}
+      ],
+      "expected": {
+        "status": "running", "error_code": null, "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 2,
+        "service_calls": 1, "prepare_calls": 1, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": true
+      }
+    },
+    {
+      "id": "human_rejection_no_refund_write",
+      "category": "human_approval",
+      "description": "Explicit human rejection consumes the approval through the trusted path without any simulated refund write; checkpoint replay does not call confirmation twice.",
+      "message": "为订单10086创建退款申请，原因不想要了。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "create_refund_request", "arguments": {"order_no": "10086", "reason": "change_mind"}}
+      ],
+      "approval_action": "reject",
+      "replay_after_completion": true,
+      "expected": {
+        "status": "rejected", "error_code": null, "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 2,
+        "service_calls": 1, "prepare_calls": 1, "confirmation_calls": 1,
+        "refund_writes": 0, "paused_before_commit": true,
+        "answer_contains": ["未创建退款申请"]
+      }
+    },
+    {
+      "id": "human_confirmation_replay_once",
+      "category": "human_approval",
+      "description": "Human confirmation leads to one pending-review fixture effect; replaying the completed real graph checkpoint does not duplicate preparation or confirmation.",
+      "message": "为订单10086创建退款申请，原因不想要了。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "create_refund_request", "arguments": {"order_no": "10086", "reason": "change_mind"}}
+      ],
+      "approval_action": "confirm",
+      "replay_after_completion": true,
+      "expected": {
+        "status": "completed", "error_code": null, "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 2,
+        "service_calls": 1, "prepare_calls": 1, "confirmation_calls": 1,
+        "refund_writes": 1, "paused_before_commit": true,
+        "answer_contains": ["待审核退款申请", "pending_review"]
+      }
+    },
+    {
+      "id": "mismatched_approval_rejected",
+      "category": "human_approval",
+      "description": "A mismatched resume approval cannot reach the trusted confirmation Service path.",
+      "message": "为订单10086创建退款申请，原因不想要了。",
+      "events": [
+        {"kind": "route", "intent": "order"},
+        {"kind": "call", "name": "create_refund_request", "arguments": {"order_no": "10086", "reason": "change_mind"}}
+      ],
+      "approval_action": "mismatch",
+      "expected": {
+        "status": "failed", "error_code": "approval_changed", "model_calls": 2,
+        "unknown_usage_calls": 0, "total_tokens": 16, "tool_count": 2,
+        "service_calls": 1, "prepare_calls": 1, "confirmation_calls": 0,
+        "refund_writes": 0, "paused_before_commit": true
+      }
+    }
+  ]
+}

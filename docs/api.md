@@ -1,6 +1,6 @@
 # API 契约
 
-**当前版本 0.8.0 / Phase 8。** 现有健康、认证、订单、退款、知识库、LangGraph 会话/审批与授权运营分析接口供 Vue 和评估器使用；新增评估合同与执行后元数据追踪，不增加通用评估执行/日志下载 HTTP 路由。MCP 保留独立 stdio 三个只读工具，OpenAPI 仅覆盖 HTTP。当前契约以实际代码和 OpenAPI 为准，验证见[Phase 8](phase-8.md)，历史测试与烟测保持原始边界。
+**当前版本 0.9.0 / Phase 9。** 健康、认证、订单、退款、知识库、LangGraph 会话/审批与授权运营分析接口供 Vue 和评估器使用。Phase 9 增加容器部署与 CI，不增加业务 HTTP 路由或通用评估执行/日志下载入口。MCP 保留独立 stdio 三个只读工具，OpenAPI 仅覆盖 HTTP。当前契约以实际代码和 OpenAPI 为准，部署验证见[Phase 9](phase-9.md)，评估与历史烟测保持原始边界。
 
 ## 浏览器集成约定
 
@@ -12,11 +12,11 @@ Agent 深链接支持 `/agent?session=<UUID>`；`message` 只预填最多 2000 �
 
 ## 基础接口与认证
 
-默认地址 `http://127.0.0.1:8000`，`EA_DOCS_ENABLED=true` 时提供 `/docs` 和 `/openapi.json`。所有响应携带 `X-Request-ID`，外部输入的请求 ID 会校验。
+Windows 开发 API 地址为 `http://127.0.0.1:8000`，全栈容器 API 为 `http://127.0.0.1:18000`，web 在 `http://127.0.0.1:15173` 同源代理 `/api/` 与 `/health/`。`EA_DOCS_ENABLED=true` 时提供 `/docs` 和 `/openapi.json`；全栈模板默认关闭，可显式设置 `EA_FULL_DOCS_ENABLED=true`。所有响应携带 `X-Request-ID`，外部输入的请求 ID 会校验。
 
 | 方法 | 路径 | 成功码 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/` | 200 | 名称、版本、phase=8、文档及健康入口 |
+| GET | `/` | 200 | 名称、版本、`phase=9`、文档及健康入口 |
 | GET | `/health/live` | 200 | HTTP 进程存活 |
 | GET | `/health/ready` | 200 / 503 | 实际数据库与已配置 Redis 的就绪检查 |
 | POST | `/api/v1/auth/login` | 200 | JSON 账号密码，返回 JWT |
@@ -150,7 +150,7 @@ $result | Select-Object status, replayed, refund
 
 Phase 8 的本地 Task 追踪为单独 JSONL 白名单元数据：任务关联、状态、节点/工具名、安全错误、耗时和累计 usage。不会增加公开日志读取 API，也不把问题、答案、工具参数、SQL 或个人字段导出到 LangSmith。任务原有 `steps`、`result` 和 `token_usage` 仍由各角色自己的任务接口读取；累计 DTO 或 trace 快照不可跨 resume/recover 相加。`manual_review` 是评估产物状态，不是新增 `Task.status`，详见[评估](evaluation.md)和[部署配置](deployment.md)。
 
-本阶段在线结果观察 17 个 Task 与 17 条白名单 trace 快照相符，但冻结 18 场景仍有真实失败和未复核项；HTTP 200 或 Task completed 不代表其问题合同通过。最新准确计数与原因见[Phase 8](phase-8.md)，不能以追踪账本一致推导线上模型语义正确。
+Phase 8 在线结果观察 17 个 Task 与 17 条白名单 trace 快照相符，但冻结 18 场景仍有真实失败和未复核项；HTTP 200 或 Task completed 不代表其问题合同通过。准确计数与原因见[Phase 8](phase-8.md)，不能以追踪账本一致推导线上模型语义正确。
 
 ## Agent 会话与任务
 

@@ -1,0 +1,186 @@
+{
+    "checked_at_utc":  "2026-10-14T20:12:35.3727759Z",
+    "status":  "passed",
+    "project":  "enterpriseagent-full",
+    "services":  [
+                     {
+                         "service":  "api",
+                         "image_id":  "sha256:2a6143019f4e25ed20e22ab4722695ff2de355122725950fee319cf7785b9c24",
+                         "user":  "10001:10001",
+                         "state":  "running",
+                         "exit_code":  0,
+                         "health":  "healthy",
+                         "read_only_rootfs":  true,
+                         "cap_drop":  [
+                                          "ALL"
+                                      ],
+                         "security_opt":  [
+                                              "no-new-privileges:true"
+                                          ],
+                         "published_ports":  {
+                                                 "8000/tcp":  [
+                                                                  {
+                                                                      "HostIp":  "127.0.0.1",
+                                                                      "HostPort":  "18000"
+                                                                  }
+                                                              ]
+                                             },
+                         "secret_targets":  [
+                                                "/run/secrets/deepseek-api-key",
+                                                "/run/secrets/jwt-secret",
+                                                "/run/secrets/postgres-analytics-password",
+                                                "/run/secrets/postgres-app-password"
+                                            ],
+                         "model_mounts":  [
+                                              {
+                                                  "destination":  "/app/var/models/embedding",
+                                                  "writable":  false
+                                              },
+                                              {
+                                                  "destination":  "/app/var/models/manifest.json",
+                                                  "writable":  false
+                                              },
+                                              {
+                                                  "destination":  "/app/var/models/reranker",
+                                                  "writable":  false
+                                              }
+                                          ]
+                     },
+                     {
+                         "service":  "chroma",
+                         "image_id":  "sha256:1e0b73a187a28757c572acba508c46f48c9e8b0acaf5c20e6d95cdedce1acdf6",
+                         "user":  "",
+                         "state":  "running",
+                         "exit_code":  0,
+                         "health":  "healthy",
+                         "read_only_rootfs":  false,
+                         "cap_drop":  null,
+                         "security_opt":  null,
+                         "published_ports":  {
+
+                                             },
+                         "secret_targets":  [
+
+                                            ],
+                         "model_mounts":  [
+
+                                          ]
+                     },
+                     {
+                         "service":  "postgres",
+                         "image_id":  "sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826",
+                         "user":  "",
+                         "state":  "running",
+                         "exit_code":  0,
+                         "health":  "healthy",
+                         "read_only_rootfs":  false,
+                         "cap_drop":  null,
+                         "security_opt":  null,
+                         "published_ports":  {
+
+                                             },
+                         "secret_targets":  [
+                                                "/run/secrets/postgres_analytics_password",
+                                                "/run/secrets/postgres_app_password",
+                                                "/run/secrets/postgres_superuser_password",
+                                                "/run/secrets/postgres_test_analytics_password",
+                                                "/run/secrets/postgres_test_password"
+                                            ],
+                         "model_mounts":  [
+
+                                          ]
+                     },
+                     {
+                         "service":  "redis",
+                         "image_id":  "sha256:0514fa59e3d84e2f3be66731c5401fc2a85b8ea71b49c0116c850f6a558076f4",
+                         "user":  "",
+                         "state":  "running",
+                         "exit_code":  0,
+                         "health":  "healthy",
+                         "read_only_rootfs":  false,
+                         "cap_drop":  null,
+                         "security_opt":  null,
+                         "published_ports":  {
+
+                                             },
+                         "secret_targets":  [
+
+                                            ],
+                         "model_mounts":  [
+
+                                          ]
+                     },
+                     {
+                         "service":  "setup",
+                         "image_id":  "sha256:2a6143019f4e25ed20e22ab4722695ff2de355122725950fee319cf7785b9c24",
+                         "user":  "10001:10001",
+                         "state":  "exited",
+                         "exit_code":  0,
+                         "health":  null,
+                         "read_only_rootfs":  true,
+                         "cap_drop":  [
+                                          "ALL"
+                                      ],
+                         "security_opt":  [
+                                              "no-new-privileges:true"
+                                          ],
+                         "published_ports":  {
+
+                                             },
+                         "secret_targets":  [
+                                                "/run/secrets/demo-password",
+                                                "/run/secrets/jwt-secret",
+                                                "/run/secrets/postgres-analytics-password",
+                                                "/run/secrets/postgres-app-password",
+                                                "/run/secrets/postgres-superuser-password"
+                                            ],
+                         "model_mounts":  [
+                                              {
+                                                  "destination":  "/app/var/models/embedding",
+                                                  "writable":  false
+                                              },
+                                              {
+                                                  "destination":  "/app/var/models/manifest.json",
+                                                  "writable":  false
+                                              },
+                                              {
+                                                  "destination":  "/app/var/models/reranker",
+                                                  "writable":  false
+                                              }
+                                          ]
+                     },
+                     {
+                         "service":  "web",
+                         "image_id":  "sha256:74cd6a2cd16b11af3ab1e10efc05c95bbc60ac439e3d902fd61759ad6e6abfe1",
+                         "user":  "nginx",
+                         "state":  "running",
+                         "exit_code":  0,
+                         "health":  "healthy",
+                         "read_only_rootfs":  true,
+                         "cap_drop":  [
+                                          "ALL"
+                                      ],
+                         "security_opt":  [
+                                              "no-new-privileges:true"
+                                          ],
+                         "published_ports":  {
+                                                 "8080/tcp":  [
+                                                                  {
+                                                                      "HostIp":  "127.0.0.1",
+                                                                      "HostPort":  "15173"
+                                                                  }
+                                                              ]
+                                             },
+                         "secret_targets":  [
+
+                                            ],
+                         "model_mounts":  [
+
+                                          ]
+                     }
+                 ],
+    "api_owner_and_test_secret_mounts_absent":  true,
+    "api_inline_credentials_absent":  true,
+    "model_assets_readonly":  true,
+    "scope":  "Docker inspect configuration for this isolated local stack; not a penetration test or production security certification"
+}

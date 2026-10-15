@@ -2,13 +2,13 @@
 
 ## 当前实现
 
-Phase 8 / 0.8.0 在现有模块化单体、Vue 五页、单张 LangGraph 图、独立分析 reader 与只读 MCP 外新增评估合同和元数据追踪。评估器采集真实任务/授权业务参考，再执行显式证据检查；受控故障注入单独标记。追踪默认写本地白名单 JSONL，可选 LangSmith 摘要导出默认关闭。当前验证见[Phase 8](phase-8.md)，[Phase 7](phase-7.md)及更早证据保留历史边界；没有独立 Worker。
+Phase 9 / 0.9.0 在模块化单体、Vue 五页、单张 LangGraph 图、独立分析 reader、只读 MCP、评估合同和元数据追踪之外增加 Linux 应用镜像与独立全栈部署。评估器采集真实任务/授权业务参考，再执行显式证据检查；受控故障注入单独标记。追踪默认写本地白名单 JSONL，可选 LangSmith 摘要导出默认关闭。部署验证见[Phase 9](phase-9.md)，[Phase 8](phase-8.md)及更早证据保留历史边界；没有独立 Worker。
 
 采用模块化单体：API、Service、Repository、Schemas、Agents、Tools 分工明确，模型和前端不能自行修改订单状态或替换当前用户身份。图随请求执行，人工等待写入 Checkpoint；没有任务队列 Worker。
 
 ```mermaid
 flowchart TD
-    WEB["Vue 3：五个业务页面"] --> PROXY["Vite loopback 代理"]
+    WEB["Vue 3：五个业务页面"] --> PROXY["开发 Vite / 容器同源代理"]
     PROXY --> HTTP
     HTTP["认证 HTTP 请求"] --> API["FastAPI Routes / Pydantic"]
     API --> AUTH["数据库当前用户与角色"]
@@ -184,7 +184,7 @@ Chroma 使用官方 1.5.9 SDK，针对其 HTTP session 的窄兼容桥在首次�
 
 ## 健康与部署
 
-当前运行分布为 Windows Python API/ONNX，Linux PostgreSQL、Redis 和 Chroma 容器，数据与模型优先 D 盘。健康区分进程存活与依赖就绪：数据库检查迁移/权限，Redis 配置后 PING，RAG 启用后校验模型文件与 Chroma 心跳，建立 Agent Checkpoint 后检查其版本和受限权限，启用分析时检查专用 reader、视图和权限。健康不发送模型请求，也不能证明在线模型可用、所有文档已索引或所有查询正确。
+开发方式使用 Windows Python API/ONNX 与 Linux PostgreSQL、Redis、Chroma 容器；独立全栈方式将 API/ONNX 和静态前端也放入 Linux 容器，数据与模型仍优先 D 盘。健康区分进程存活与依赖就绪：数据库检查迁移/权限，Redis 配置后 PING，RAG 启用后校验模型文件与 Chroma 心跳，建立 Agent Checkpoint 后检查其版本和受限权限，启用分析时检查专用 reader、视图和权限。健康不发送模型请求，也不能证明在线模型可用、所有文档已索引或所有查询正确。
 
 ## Agent 一致性与恢复
 
@@ -204,9 +204,13 @@ Client/Server 均不读取 `.env`，示例白名单仅向子进程传递必要�
 
 每次认证及业务执行默认总预算 15 秒，客户端示例默认总预算 60 秒。官方异步上下文负责关闭 Session、stdin 与实际子进程；Windows Client 使用 Proactor，数据库 Server 使用 Selector。没有 MCP HTTP/OAuth、Token 自动续期、写入工具或 Agent 图内 MCP 分支。完整协议与运行命令见[API](api.md)、[部署](deployment.md)和[Phase 5](phase-5.md)。
 
-## 后续架构
+## 全栈部署结构
 
-Phase 9 交付应用镜像、CI 和干净环境启动。当前五页 Vue 后台的真实浏览器与构建证据见 Phase 7；本阶段评估与元数据追踪边界见 Phase 8。任务调度和应用镜像尚未交付。
+全栈 Compose 使用独立 `enterpriseagent-full` 项目，保留原有开发基础设施和 Windows 运行方式。PostgreSQL、Redis、Chroma、一次性 setup、API 与 web 为同一个模块化系统的部署组件，不额外拆分业务微服务。setup 执行迁移、模拟 seed 和知识索引；API 只读取受限业务和分析凭据，模型文件只读挂载，Vue 静态站点通过同源代理访问 API。具体脚本、健康条件和实际验收边界见[部署](deployment.md)与[Phase 9](phase-9.md)。
+
+图仍由请求驱动执行，人工等待保存 Checkpoint，不提供独立任务调度 Worker。已有五页真实浏览器与模型流程证据分别保留在 Phase 7 / Phase 8，容器启动不能替代新的模型质量评估。
+
+本次实际六项 readiness 与 13 项 HTTP 检查通过，重建本项目 API 后业务数量、订单状态和文档快照保持一致；另行改变 API 自有地址时，Nginx 保持运行并重新解析代理。容器 inspect 记录 API / web 的运行用户、只读根文件系统、capabilities 和实际挂载，证明配置边界，不泛称整个栈非 root 或生产安全认证。Linux 部署、v2 RAG 与原模型评估分别见[Phase 9](phase-9.md)及[验收报告](../evals/results/phase9/report.md)。
 
 ## 评估与追踪数据流
 
@@ -216,4 +220,4 @@ Phase 9 交付应用镜像、CI 和干净环境启动。当前五页 Vue 后台�
 
 记录器不序列化完整 Task、消息、回复、工具参数、SQL、文档内容、用户/订单字段或密钥，request ID 保存 SHA256。节点/工具/状态/错误均白名单处理，未知值使用固定类别。本地 I/O 和远端摘要失败只记录安全错误，不改变业务结果；队列有上限，关闭不等待清空全队列。进程内锁没有跨进程日志互斥或轮转，因此本地 JSONL 不能称生产日志管道。
 
-本阶段实际在线运行的 17 个 Task 有 17 条本地快照，核对 request hash、状态、安全错误和累计 usage 与 DTO 一致，见[追踪证据](../evals/results/phase8/observability/verification.json)。该账本与在线 39440 Token 相同，不重复汇总；LangSmith 远端未连接验收，步骤快照也不当作实时分布式时序。
+Phase 8 实际在线运行的 17 个 Task 有 17 条本地快照，核对 request hash、状态、安全错误和累计 usage 与 DTO 一致，见[追踪证据](../evals/results/phase8/observability/verification.json)。该账本与在线 39440 Token 相同，不重复汇总；LangSmith 远端未连接验收，步骤快照也不当作实时分布式时序。

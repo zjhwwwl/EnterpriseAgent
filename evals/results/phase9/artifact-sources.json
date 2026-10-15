@@ -1,0 +1,618 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "generated_at_utc":  "2026-10-15T08:54:26.6182833Z",
+    "status":  "passed",
+    "artifacts":  [
+                      {
+                          "source":  "var/test-results/phase9-initial.xml",
+                          "public_artifact":  "python-initial.json",
+                          "source_sha256":  "4f514b3e7c0d8d63e4cb3b49d6867c667bfa21dfc1daf190881988ec226bc30c",
+                          "public_sha256":  "b0fa1c2d42d6b97a2384176fdfa42f399e91fdaf0e407161bc9c237b4246e42f",
+                          "transformation":  "junit_summary",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/linux-frontend-check/verification.json",
+                          "public_artifact":  "frontend/verification.json",
+                          "source_sha256":  "7dd949e8e7831181c466bbd8eaa58327d98cf2b554574ac3a4f59cc939efcd43",
+                          "public_sha256":  "7dd949e8e7831181c466bbd8eaa58327d98cf2b554574ac3a4f59cc939efcd43",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/linux-frontend-check/audit.json",
+                          "public_artifact":  "frontend/audit.json",
+                          "source_sha256":  "c752a3edf4bbd450cf1be0d491af66ba1011afd109b6c44a8351e3ba0003eb92",
+                          "public_sha256":  "c752a3edf4bbd450cf1be0d491af66ba1011afd109b6c44a8351e3ba0003eb92",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/linux-frontend-check/phase9-frontend.xml",
+                          "public_artifact":  "frontend/unit.json",
+                          "source_sha256":  "c8dff6c3c94306370ed889e18b85b85d8ecb0c5e59706fde6a818a8c7cc02873",
+                          "public_sha256":  "7e4755d5a07e3b5f521f59903eec331fbdb8aface99a405edddfc55be9217532",
+                          "transformation":  "junit_summary",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/linux-locks/provenance.json",
+                          "public_artifact":  "linux-locks/provenance.json",
+                          "source_sha256":  "b34e6c97a614ee4279b408dbd41aa00fc710d284c021bd2f374f7a59e0be3f89",
+                          "public_sha256":  "b34e6c97a614ee4279b408dbd41aa00fc710d284c021bd2f374f7a59e0be3f89",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/linux-locks/verification-base.json",
+                          "public_artifact":  "linux-locks/verification-base.json",
+                          "source_sha256":  "75707df4bc179ef6cef6347809edfc19542af6d358ccdff9d215f82db492782e",
+                          "public_sha256":  "75707df4bc179ef6cef6347809edfc19542af6d358ccdff9d215f82db492782e",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/linux-locks/verification-dev.json",
+                          "public_artifact":  "linux-locks/verification-dev.json",
+                          "source_sha256":  "bd51aa71cfa83c64efd68e55454cba6d013d7d78a668e5a064e1dbd94eb7491b",
+                          "public_sha256":  "bd51aa71cfa83c64efd68e55454cba6d013d7d78a668e5a064e1dbd94eb7491b",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/linux-locks/initial-attempt.json",
+                          "public_artifact":  "linux-locks/initial-attempt.json",
+                          "source_sha256":  "1660b23c73704b0769113cf01317b2d8e0e08ebe00107cd753e64dfc863ac0ef",
+                          "public_sha256":  "1660b23c73704b0769113cf01317b2d8e0e08ebe00107cd753e64dfc863ac0ef",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9-process-scope-unit.xml",
+                          "public_artifact":  "python-process-scope-unit.json",
+                          "source_sha256":  "a8ff8f24154fa5c6fbd599cfdc7a90e385129f62f8f1eedf8f5be2e35114f8e6",
+                          "public_sha256":  "5e88318b0babe32a91606842c42763ba9efb72d2a8dd44816e9265c2a3fe8aac",
+                          "transformation":  "junit_summary",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/test-results/phase9-process-scope-windows-e2e.xml",
+                          "public_artifact":  "python-process-scope-windows-e2e.json",
+                          "source_sha256":  "27f6db44c42a525bdd913481c13e2c241256856d08db6ba8a33bd89e0fb15335",
+                          "public_sha256":  "b82209905978991d5737560304da5a8ce11edc6be73f83bd19208434c4907a0d",
+                          "transformation":  "junit_summary",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/readiness.json",
+                          "public_artifact":  "runtime/readiness.json",
+                          "source_sha256":  "3a7b3ac33d453d895469704fda644c60b41d3dcea43945c4edc9446bdb41090d",
+                          "public_sha256":  "3a7b3ac33d453d895469704fda644c60b41d3dcea43945c4edc9446bdb41090d",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/container-security.json",
+                          "public_artifact":  "runtime/container-security.json",
+                          "source_sha256":  "ec533a7d08a3cf48f1d30c6a7e8927f413db8f61ac6d1463a54271d99401bba7",
+                          "public_sha256":  "ec533a7d08a3cf48f1d30c6a7e8927f413db8f61ac6d1463a54271d99401bba7",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/persistence.json",
+                          "public_artifact":  "runtime/persistence.json",
+                          "source_sha256":  "2579cc0695dda7ae8706d82d6d3f3f7af4ae6cca76655f0d635bf7b3f5c6f715",
+                          "public_sha256":  "2579cc0695dda7ae8706d82d6d3f3f7af4ae6cca76655f0d635bf7b3f5c6f715",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/dns-recovery.json",
+                          "public_artifact":  "runtime/dns-recovery.json",
+                          "source_sha256":  "8297d9ea01966de86c115d48cc89a504bb740e7d641b97fb1bf97089344550bc",
+                          "public_sha256":  "8297d9ea01966de86c115d48cc89a504bb740e7d641b97fb1bf97089344550bc",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/app/setup-report.json",
+                          "public_artifact":  "runtime/setup-report.json",
+                          "source_sha256":  "8c3bd62bdf5ceff62363686e1cc2704d3310373a85a996f52d59924c79b0e9e6",
+                          "public_sha256":  "8c3bd62bdf5ceff62363686e1cc2704d3310373a85a996f52d59924c79b0e9e6",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/test-output/stack-smoke.json",
+                          "public_artifact":  "runtime/stack-smoke.json",
+                          "source_sha256":  "4370671c476517ab5aebfb83514e0b07bb0db4f02eb55612f664656bdc50f682",
+                          "public_sha256":  "4370671c476517ab5aebfb83514e0b07bb0db4f02eb55612f664656bdc50f682",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "sources":  [
+                                          {
+                                              "source":  "var/test-results/phase9/linux-attempt1-exit.json",
+                                              "source_sha256":  "3a37786f279b7465564c5f7fd5871deaf6394dae343355e9e312881012be03f0"
+                                          },
+                                          {
+                                              "source":  "var/test-results/phase9/linux-attempt2-exit.json",
+                                              "source_sha256":  "8c117da7b4fdc38cbba62ee3f99287265e3a3a7ffabb596bfba941724b348c08"
+                                          },
+                                          {
+                                              "source":  "var/test-results/phase9/linux-attempt3-exit.json",
+                                              "source_sha256":  "447660e266179c0cb94675be84b345830b9b9523eada3774b785346c41d215f6"
+                                          },
+                                          {
+                                              "source":  "var/test-results/phase9/linux-attempt3.xml",
+                                              "source_sha256":  "d465fc7ccc1387b27702853b764197d79fcce1d3b72b3315f87bf66f5f945223"
+                                          }
+                                      ],
+                          "public_artifact":  "linux-failed-attempts.json",
+                          "public_sha256":  "0bdcade7d2b82aa9dda287b89c07b8fb83bfe4dcc1de0e9ea9f7ada05e6d91b5",
+                          "transformation":  "derived_exit_summary_with_executed_failure_context",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/rag/results.json",
+                          "public_artifact":  "rag/results.json",
+                          "source_sha256":  "aeb0c097bfb3a2799ed7249ced6b888dbe492bd947ea3bedcf0d02f0ea1162be",
+                          "public_sha256":  "aeb0c097bfb3a2799ed7249ced6b888dbe492bd947ea3bedcf0d02f0ea1162be",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/rag/metrics.csv",
+                          "public_artifact":  "rag/metrics.csv",
+                          "source_sha256":  "9498f0823080c22bb576910cc85ec9f267362099cd7b5f74f54c51a38009e635",
+                          "public_sha256":  "9498f0823080c22bb576910cc85ec9f267362099cd7b5f74f54c51a38009e635",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/rag/queries.csv",
+                          "public_artifact":  "rag/queries.csv",
+                          "source_sha256":  "4a9c81f3adff81d41481b113a7c83026e7194a56e6109093706509682110db7a",
+                          "public_sha256":  "4a9c81f3adff81d41481b113a7c83026e7194a56e6109093706509682110db7a",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/rag/report.md",
+                          "public_artifact":  "rag/report.md",
+                          "source_sha256":  "ef8b95c567a9f66bfe043c8b6623243b64e7fe02c498d4f93b7087a02b621198",
+                          "public_sha256":  "ef8b95c567a9f66bfe043c8b6623243b64e7fe02c498d4f93b7087a02b621198",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/corpus-v2.json",
+                          "public_artifact":  "rag/dataset.json",
+                          "source_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+                          "public_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "sources":  [
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag/results.json",
+                                              "source_sha256":  "aeb0c097bfb3a2799ed7249ced6b888dbe492bd947ea3bedcf0d02f0ea1162be"
+                                          },
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/corpus-v2.json",
+                                              "source_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52"
+                                          },
+                                          {
+                                              "source":  "evals/datasets/rag.json",
+                                              "source_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52"
+                                          }
+                                      ],
+                          "public_artifact":  "rag/provenance.json",
+                          "public_sha256":  "0fffdc264c0ec764d954d1c9bd0f1df3f3285834b52de28d1e76239614de9e6f",
+                          "transformation":  "input_and_relevant_source_hash_comparison",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/native-readiness.json",
+                          "public_artifact":  "runtime/native-readiness.json",
+                          "source_sha256":  "78b4b06acd999e858d4267e46ffae565562869be24b9eb2d878bb2c5d2339ab0",
+                          "public_sha256":  "78b4b06acd999e858d4267e46ffae565562869be24b9eb2d878bb2c5d2339ab0",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/disk-resource-verification.json",
+                          "public_artifact":  "resources/disk-resource-verification.json",
+                          "source_sha256":  "4c1705cb36af541e1edba9046824cfd20f80e8e36f88c4b3aa0c011c8d28fa34",
+                          "public_sha256":  "4c1705cb36af541e1edba9046824cfd20f80e8e36f88c4b3aa0c011c8d28fa34",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/disk-resource-attempt1.json",
+                          "public_artifact":  "resources/disk-resource-attempt1.json",
+                          "source_sha256":  "369396b36f28a7dd8f45533e7a594200d74f96a40703daf531e7cd92b3b696ba",
+                          "public_sha256":  "369396b36f28a7dd8f45533e7a594200d74f96a40703daf531e7cd92b3b696ba",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/test-output/test-results/phase9-disk-resource.xml",
+                          "public_artifact":  "resources/model-integrity-unit.json",
+                          "source_sha256":  "c40e56a5d664a5354a9f1bda92def6d78d93d298ba2a1360137b8d12493e1120",
+                          "public_sha256":  "a5fcc95f253955be5975e99e288e8635de89f8758e7c348bab4d970a4e1ac596",
+                          "transformation":  "junit_summary",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/test-results/phase9-rag-cli-unit.xml",
+                          "public_artifact":  "python-rag-cli-unit.json",
+                          "source_sha256":  "e4f7beffbb44c6c8f35e6979c5bed4ab992b3ec574e11d65d0aad1c398c0ee50",
+                          "public_sha256":  "ed21618ea8232adc6570d59e471a362bf5a6c0513831ac5a8ac59fa95e8410a9",
+                          "transformation":  "junit_summary",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/results.json",
+                          "public_artifact":  "rag-cli/results.json",
+                          "source_sha256":  "ba567b20384d69f75af0b95bc3887bd1189a18ed00e79cda300c40cfb9b7f890",
+                          "public_sha256":  "ba567b20384d69f75af0b95bc3887bd1189a18ed00e79cda300c40cfb9b7f890",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/metrics.csv",
+                          "public_artifact":  "rag-cli/metrics.csv",
+                          "source_sha256":  "e881ba64e1608d41175ac291c67e9b67ef09dc4f08c3a0709fb8d2c2004c1c8b",
+                          "public_sha256":  "e881ba64e1608d41175ac291c67e9b67ef09dc4f08c3a0709fb8d2c2004c1c8b",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/queries.csv",
+                          "public_artifact":  "rag-cli/queries.csv",
+                          "source_sha256":  "c9d0cdbc379aa930265385f2da05bda31d1b1d06c97851a64fbd6e63e12da0f8",
+                          "public_sha256":  "c9d0cdbc379aa930265385f2da05bda31d1b1d06c97851a64fbd6e63e12da0f8",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/report.md",
+                          "public_artifact":  "rag-cli/report.md",
+                          "source_sha256":  "580461c5f31e605c4608723f708eb00cfe44f1084c16db04cd70b889ca3d3468",
+                          "public_sha256":  "580461c5f31e605c4608723f708eb00cfe44f1084c16db04cd70b889ca3d3468",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/rag-cli-exit.json",
+                          "public_artifact":  "rag-cli/exit.json",
+                          "source_sha256":  "95164f14e625b53a4cda720a5bfbf3076cedc726acce47f05ae9c1aa5fcc3473",
+                          "public_sha256":  "95164f14e625b53a4cda720a5bfbf3076cedc726acce47f05ae9c1aa5fcc3473",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "evals/datasets/rag.json",
+                          "public_artifact":  "rag-cli/dataset.json",
+                          "source_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+                          "public_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "sources":  [
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/results.json",
+                                              "source_sha256":  "ba567b20384d69f75af0b95bc3887bd1189a18ed00e79cda300c40cfb9b7f890"
+                                          },
+                                          {
+                                              "source":  "evals/datasets/rag.json",
+                                              "source_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52"
+                                          }
+                                      ],
+                          "public_artifact":  "rag-cli/provenance.json",
+                          "public_sha256":  "0aaf645fa03af040b7f0dfab93fe8fc70c572d2e3e8af5a43abee0cedca2515b",
+                          "transformation":  "canonical_input_and_relevant_source_hash_comparison",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/final-readiness.json",
+                          "public_artifact":  "runtime/final-readiness.json",
+                          "source_sha256":  "05e255ae4ebf74c8f9cc923597bd0b2c640be08c4bab072bc5166ce9bd6c0780",
+                          "public_sha256":  "05e255ae4ebf74c8f9cc923597bd0b2c640be08c4bab072bc5166ce9bd6c0780",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/linux-check-exit.json",
+                          "public_artifact":  "linux/exit.json",
+                          "source_sha256":  "fa527376736babd73d72ed4bdde3f82e81d4d47b294d6d0a9b6455dfd17830b0",
+                          "public_sha256":  "fa527376736babd73d72ed4bdde3f82e81d4d47b294d6d0a9b6455dfd17830b0",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/test-output/evaluation/phase9/boundaries/results.json",
+                          "public_artifact":  "boundaries/results.json",
+                          "source_sha256":  "7ec268b7e23fe39f6cb2ae26c630c476d705777c7ed297dbb075df104b6b273d",
+                          "public_sha256":  "7ec268b7e23fe39f6cb2ae26c630c476d705777c7ed297dbb075df104b6b273d",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/test-output/evaluation/phase9/boundaries/results.csv",
+                          "public_artifact":  "boundaries/results.csv",
+                          "source_sha256":  "dcf35a090533a0c0c217398101e6181706af7bfec046e6b90a5405138866a3b1",
+                          "public_sha256":  "dcf35a090533a0c0c217398101e6181706af7bfec046e6b90a5405138866a3b1",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/test-output/evaluation/phase9/boundaries/report.md",
+                          "public_artifact":  "boundaries/report.md",
+                          "source_sha256":  "c58ddc04da82efd45c5b3aab2a72fbc0323017af4c72bbc54d86d3c647842132",
+                          "public_sha256":  "c58ddc04da82efd45c5b3aab2a72fbc0323017af4c72bbc54d86d3c647842132",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/test-output/evaluation/phase9/sql/results.json",
+                          "public_artifact":  "sql/results.json",
+                          "source_sha256":  "7d77374c8d19c3f2c823dbbe92df1aceb7232fe9d62ae88e0477e1e7eecd9ded",
+                          "public_sha256":  "7d77374c8d19c3f2c823dbbe92df1aceb7232fe9d62ae88e0477e1e7eecd9ded",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/compose/test-output/evaluation/phase9/sql/report.md",
+                          "public_artifact":  "sql/report.md",
+                          "source_sha256":  "53f86483ec161b60c524ede92522c7285405ae52a67340fd886cce3425f715da",
+                          "public_sha256":  "53f86483ec161b60c524ede92522c7285405ae52a67340fd886cce3425f715da",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "sources":  [
+                                          {
+                                              "source_sha256":  "24db639bd13b92b92473f8a8a82fded918759c865a0edeb7df9944fd273149fa",
+                                              "source":  "var/compose/test-output/test-results/phase9-linux.xml"
+                                          },
+                                          {
+                                              "source_sha256":  "3b3a446c41e3d95c0dba72ab159ee9f4220b6a780a5425dcd519b439f207c5b9",
+                                              "source":  "var/test-results/phase9/linux-tests.stdout.log"
+                                          }
+                                      ],
+                          "public_artifact":  "linux/python-summary.json",
+                          "public_sha256":  "b823fa93afe8c2a24890792cee5e5b99fcce46db88e09672fc6b3cc96af97f87",
+                          "transformation":  "junit_summary_with_separate_console_and_chain_results",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "evals/datasets/agent-boundaries.json",
+                          "public_artifact":  "boundaries/dataset.json",
+                          "source_sha256":  "fcb7c790c4217818c5f19296ca4ee68a87fe02391783dd986d0ecc28e06936fc",
+                          "public_sha256":  "fcb7c790c4217818c5f19296ca4ee68a87fe02391783dd986d0ecc28e06936fc",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "evals/datasets/analytics-sql.json",
+                          "public_artifact":  "sql/dataset.json",
+                          "source_sha256":  "6b1fbe0d6d5266c2bd364c1b9bba50b7d1ad9ea856448ae58b78b8104372867a",
+                          "public_sha256":  "6b1fbe0d6d5266c2bd364c1b9bba50b7d1ad9ea856448ae58b78b8104372867a",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "evals/results/phase8/artifact-sources.json",
+                          "source_sha256":  "b797d8a2467dfbcebed457e4c783f64ae4c6128780ce31479440226eab4d9bd2",
+                          "public_artifact":  "historical-preservation.json",
+                          "public_sha256":  "d8b2ab42e9a7e6485a14d9905b07fa8fcca44ef0e6d93efa1058ed3277c505de",
+                          "transformation":  "historical_manifest_to_current_raw_file_hash_comparison",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/test-image-source-check.json",
+                          "public_artifact":  "linux/test-image-source-check.json",
+                          "source_sha256":  "46948b61e86ed27eb4aebf8841eb1b2b839d4f298d92252152ac458fec4a7747",
+                          "public_sha256":  "46948b61e86ed27eb4aebf8841eb1b2b839d4f298d92252152ac458fec4a7747",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/native-source-checks.json",
+                          "public_artifact":  "native-source-checks.json",
+                          "source_sha256":  "14956ed815213e76f1a5882ece14d1fcd9ed46f20b491750b08651f19c108785",
+                          "public_sha256":  "14956ed815213e76f1a5882ece14d1fcd9ed46f20b491750b08651f19c108785",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9/final-local-readiness.json",
+                          "public_artifact":  "runtime/final-local-readiness.json",
+                          "source_sha256":  "1103a1f624e6f0863b336b7549826e48598a0b046821c760d7850424be6719a8",
+                          "public_sha256":  "1103a1f624e6f0863b336b7549826e48598a0b046821c760d7850424be6719a8",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "source":  "var/test-results/phase9-release-checks.json",
+                          "public_artifact":  "release-checks.json",
+                          "source_sha256":  "116823d7a06307307285f8d55f5b669eac0f33b7226c5ad76fd7bcf82d57a907",
+                          "public_sha256":  "116823d7a06307307285f8d55f5b669eac0f33b7226c5ad76fd7bcf82d57a907",
+                          "transformation":  "byte_copy",
+                          "copied_without_content_change":  true,
+                          "byte_identical":  true,
+                          "encoding_normalization":  "none"
+                      },
+                      {
+                          "sources":  [
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag/results.json",
+                                              "source_sha256":  "aeb0c097bfb3a2799ed7249ced6b888dbe492bd947ea3bedcf0d02f0ea1162be"
+                                          },
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag/metrics.csv",
+                                              "source_sha256":  "9498f0823080c22bb576910cc85ec9f267362099cd7b5f74f54c51a38009e635"
+                                          },
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag/queries.csv",
+                                              "source_sha256":  "4a9c81f3adff81d41481b113a7c83026e7194a56e6109093706509682110db7a"
+                                          },
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag/report.md",
+                                              "source_sha256":  "ef8b95c567a9f66bfe043c8b6623243b64e7fe02c498d4f93b7087a02b621198"
+                                          },
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/results.json",
+                                              "source_sha256":  "ba567b20384d69f75af0b95bc3887bd1189a18ed00e79cda300c40cfb9b7f890"
+                                          },
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/metrics.csv",
+                                              "source_sha256":  "e881ba64e1608d41175ac291c67e9b67ef09dc4f08c3a0709fb8d2c2004c1c8b"
+                                          },
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/queries.csv",
+                                              "source_sha256":  "c9d0cdbc379aa930265385f2da05bda31d1b1d06c97851a64fbd6e63e12da0f8"
+                                          },
+                                          {
+                                              "source":  "var/compose/app/evaluation/phase9/rag-cli-validation/report.md",
+                                              "source_sha256":  "580461c5f31e605c4608723f708eb00cfe44f1084c16db04cd70b889ca3d3468"
+                                          },
+                                          {
+                                              "source":  "var/test-results/phase9/rag-cli-exit.json",
+                                              "source_sha256":  "95164f14e625b53a4cda720a5bfbf3076cedc726acce47f05ae9c1aa5fcc3473"
+                                          }
+                                      ],
+                          "public_artifact":  "rag-credential-scan.json",
+                          "public_sha256":  "618bb67f3757298e7549f36a79a50adf2df4b6ac757a8c7d6d45fccfcaea3dee",
+                          "transformation":  "prior_exact_known_credential_scan_summary_preserved",
+                          "copied_without_content_change":  false,
+                          "byte_identical":  false,
+                          "encoding_normalization":  "derived_utf8_no_bom"
+                      }
+                  ],
+    "exclusions":  [
+                       "Raw runtime logs",
+                       "Secret files",
+                       "Authentication responses",
+                       "The artifact-sources manifest itself is excluded from its own hash inventory."
+                   ],
+    "derived_artifacts":  [
+                              {
+                                  "public_artifact":  "report.md",
+                                  "public_sha256":  "ad6e4fd5aee36b87191eecce490ac9d9daba9d688fb25a3190a9ba93b013caae",
+                                  "transformation":  "aggregate_narrative_from_manifested_execution_evidence",
+                                  "source_scope":  "Manifested Phase 9 execution evidence; not a raw execution artifact."
+                              },
+                              {
+                                  "public_artifact":  "verification.json",
+                                  "public_sha256":  "c1053304097f3a660d2cfe93f72ebe5819b590020969667ef754d2f43c6ccaa2",
+                                  "transformation":  "aggregate_narrative_from_manifested_execution_evidence",
+                                  "source_scope":  "Manifested Phase 9 execution evidence; not a raw execution artifact."
+                              }
+                          ]
+}

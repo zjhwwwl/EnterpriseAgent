@@ -1,0 +1,13 @@
+{
+    "checked_at_utc":  "2026-10-15T08:48:17.5034678Z",
+    "status":  "passed",
+    "python":  "3.13.15",
+    "platform":  "Windows",
+    "ruff_check":  "passed",
+    "ruff_format_check":  {
+                              "status":  "passed",
+                              "files_already_formatted":  188
+                          },
+    "pip_check":  "passed",
+    "scope":  "Final configured native interpreter lint/format/dependency checks only; not an additional complete Windows pytest run"
+}

@@ -34,6 +34,13 @@ _PG_ENV = {
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+# Preserve explicit test endpoints before the autouse environment isolation.
+# Container tests use the Chroma service name; Windows keeps its loopback port.
+_RAG_ENV = {
+    "chroma_host": os.environ.get("EA_TEST_CHROMA_HOST", "127.0.0.1"),
+    "chroma_port": os.environ.get("EA_TEST_CHROMA_PORT", "58000"),
+}
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -68,6 +75,7 @@ def rag_settings(tmp_path):
         rag_enabled=True,
         rag_model_dir=PROJECT_ROOT / "var" / "models",
         rag_collection_prefix="ea_test_" + uuid4().hex,
+        **_RAG_ENV,
     )
 
 

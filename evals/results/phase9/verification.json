@@ -1,0 +1,412 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "status":  "passed",
+    "deployment":  {
+                       "project":  "enterpriseagent-full",
+                       "api_origin":  "http://127.0.0.1:18000",
+                       "web_origin":  "http://127.0.0.1:15173",
+                       "data_root":  "var/compose",
+                       "model_enabled_default":  false,
+                       "langsmith_enabled_default":  false,
+                       "runtime_verified":  true,
+                       "runtime_verification_status":  "passed",
+                       "evidence":  [
+                                        "runtime/readiness.json",
+                                        "runtime/container-security.json",
+                                        "runtime/setup-report.json",
+                                        "runtime/stack-smoke.json",
+                                        "runtime/persistence.json",
+                                        "runtime/dns-recovery.json",
+                                        "runtime/final-readiness.json",
+                                        "runtime/final-local-readiness.json"
+                                    ]
+                   },
+    "github_actions":  {
+                           "hosted_run_verified":  false,
+                           "local_equivalent_verified":  true,
+                           "status":  "local_equivalent_passed_hosted_run_not_performed"
+                       },
+    "initial_pytest":  {
+                           "tests":  57,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0,
+                           "elapsed_seconds":  0.963,
+                           "counts_are_not_added_to_repeated_subsets":  true,
+                           "artifact":  "python-initial.json"
+                       },
+    "limitations":  [
+                        "GitHub-hosted Actions execution has not been performed.",
+                        "Runtime smoke checks use HTTP; no new browser UI interaction evidence is claimed.",
+                        "DNS recovery and evaluation timing values are local observations, not performance benchmarks.",
+                        "Current RAG modes have equal accuracy on known synthetic labels; no accuracy improvement or blind-evaluation claim.",
+                        "Workflow boundary cases use scripted model and Service fixtures; SQL cases are human-authored and do not measure natural-language-to-SQL quality.",
+                        "87 Chroma deprecation warnings and the frontend bundle-size warning remain."
+                    ],
+    "frontend":  {
+                     "platform":  "linux/amd64",
+                     "node":  "24.19.0",
+                     "tests":  43,
+                     "test_files":  6,
+                     "failures":  0,
+                     "errors":  0,
+                     "skipped":  0,
+                     "format":  "passed",
+                     "typecheck":  "passed",
+                     "build":  "passed",
+                     "build_elapsed_seconds":  9.28,
+                     "vitest_run_elapsed_seconds":  16.38,
+                     "junit_case_elapsed_sum_seconds":  0.432399204,
+                     "production_audit_vulnerabilities":  0,
+                     "status":  "passed",
+                     "artifacts":  [
+                                       "frontend/verification.json",
+                                       "frontend/unit.json",
+                                       "frontend/audit.json"
+                                   ],
+                     "limitation":  "UI chunk remains 984.49 kB, gzip 316.59 kB; production dependency audit is not a complete application security audit."
+                 },
+    "linux_lock_install":  {
+                               "status":  "passed",
+                               "platform":  "linux/amd64",
+                               "python":  "3.13.15",
+                               "pip_tools":  "7.6.2",
+                               "base_package_count":  107,
+                               "dev_package_count":  119,
+                               "windows_only_excluded":  [
+                                                             "colorama",
+                                                             "pyreadline3",
+                                                             "pywin32",
+                                                             "win32-setctime"
+                                                         ],
+                               "common_dependency_version_changes":  0,
+                               "all_locked_versions_match":  true,
+                               "runtime_imports_passed":  true,
+                               "pip_check":  "passed",
+                               "hash_locked_binary_install_completed":  true,
+                               "actual_model_inference_executed":  false,
+                               "artifacts":  [
+                                                 "linux-locks/provenance.json",
+                                                 "linux-locks/verification-base.json",
+                                                 "linux-locks/verification-dev.json",
+                                                 "linux-locks/initial-attempt.json"
+                                             ],
+                               "limitation":  "Dependency installation and imports passed separately from the completed full Linux backend suite; hosted GitHub execution remains unverified."
+                           },
+    "process_scope_focused":  {
+                                  "status":  "passed",
+                                  "unit_tests":  48,
+                                  "unit_junit_elapsed_seconds":  0.481,
+                                  "windows_real_process_e2e_tests":  2,
+                                  "windows_e2e_junit_elapsed_seconds":  30.196,
+                                  "online_deepseek_tested":  false,
+                                  "counting_semantics":  "Focused and platform compatibility evidence; not added to complete-suite counts.",
+                                  "artifacts":  [
+                                                    "python-process-scope-unit.json",
+                                                    "python-process-scope-windows-e2e.json"
+                                                ]
+                              },
+    "runtime":  {
+                    "status":  "passed",
+                    "version":  "0.9.0",
+                    "health_dependency_count":  6,
+                    "http_smoke_checks":  13,
+                    "model_requests":  0,
+                    "refund_mutations_in_http_smoke":  0,
+                    "documents":  5,
+                    "chunks":  44,
+                    "orders":  500,
+                    "order_items":  1016,
+                    "refund_requests":  19,
+                    "support_tickets":  19,
+                    "api_owner_and_test_secret_mounts_absent":  true,
+                    "api_inline_credentials_absent":  true,
+                    "api_web_nonroot_and_readonly":  true,
+                    "model_assets_readonly":  true,
+                    "api_recreated_and_business_snapshot_unchanged":  true,
+                    "recreated_api_ip_changed":  false,
+                    "separate_api_edge_ip_change_verified":  true,
+                    "nginx_restarted_for_edge_ip_change":  false,
+                    "dns_single_observation_poll_elapsed_ms":  3671.902,
+                    "scope":  "HTTP, database, CPU retrieval, scoped container configuration and API recreation; not browser interaction, a security certification, crash consistency or a benchmark.",
+                    "native_development_readiness":  "runtime/native-readiness.json",
+                    "final_readiness_artifact":  "runtime/final-readiness.json",
+                    "final_api_image_id":  "sha256:bcdf6d6c2c14e6cea918b048e920cb6fe72b802216514c480d7ec5eab5a28a45",
+                    "final_deployment_cli_and_dataset_source_match":  true,
+                    "fresh_local_readiness_artifact":  "runtime/final-local-readiness.json",
+                    "fresh_local_origins":  [
+                                                "http://127.0.0.1:18000",
+                                                "http://127.0.0.1:15173",
+                                                "http://127.0.0.1:8000",
+                                                "http://127.0.0.1:5173"
+                                            ]
+                },
+    "rag":  {
+                "status":  "passed",
+                "dataset_id":  "enterprise-agent-rag-policies-v2",
+                "records":  60,
+                "query_count":  30,
+                "modes":  2,
+                "test":  {
+                             "answerable_queries":  17,
+                             "off_topic_queries":  3,
+                             "vector":  {
+                                            "recall_at_1":  0.94117647058823528,
+                                            "recall_at_3":  1,
+                                            "recall_at_5":  1,
+                                            "mrr":  1,
+                                            "ndcg_at_5":  1,
+                                            "mean_latency_ms":  86.384527050358884,
+                                            "p95_latency_ms":  92.746422997151967
+                                        },
+                             "hybrid_rerank":  {
+                                                   "recall_at_1":  0.94117647058823528,
+                                                   "recall_at_3":  1,
+                                                   "recall_at_5":  1,
+                                                   "mrr":  1,
+                                                   "ndcg_at_5":  1,
+                                                   "mean_latency_ms":  680.38325524994434,
+                                                   "p95_latency_ms":  713.19559800031129
+                                               },
+                             "citation_validity_rate":  1,
+                             "off_topic_rejection_rate":  1
+                         },
+                "dev":  {
+                            "answerable_queries":  8,
+                            "off_topic_queries":  2,
+                            "recall_at_1":  0.8125,
+                            "recall_at_3":  1,
+                            "recall_at_5":  1,
+                            "mrr":  0.9375,
+                            "ndcg_at_5":  0.95386621919643222
+                        },
+                "errors":  0,
+                "llm_calls":  0,
+                "llm_input_tokens":  0,
+                "llm_output_tokens":  0,
+                "embedding_provider_token_usage":  null,
+                "reranker_provider_token_usage":  null,
+                "source_hashes_stable":  true,
+                "corpus_unchanged":  true,
+                "relevant_host_source_hashes_match":  true,
+                "accuracy_improvement_observed":  false,
+                "artifacts":  [
+                                  "rag/results.json",
+                                  "rag/metrics.csv",
+                                  "rag/queries.csv",
+                                  "rag/report.md",
+                                  "rag/dataset.json",
+                                  "rag/provenance.json",
+                                  "rag-credential-scan.json"
+                              ],
+                "scope":  "Updated v2 corpus; known synthetic labels; two modes have identical accuracy and hybrid_rerank is slower in this local run. Not blind evaluation or a benchmark."
+            },
+    "disk_resource_focused":  {
+                                  "status":  "passed",
+                                  "tests":  1,
+                                  "failures":  0,
+                                  "errors":  0,
+                                  "skipped":  0,
+                                  "junit_elapsed_seconds":  12.09,
+                                  "pytest_elapsed_seconds":  12.13,
+                                  "private_model_copy_bytes":  396804133,
+                                  "source_model_mounts_readonly":  true,
+                                  "native_tmp_capture_preserved":  true,
+                                  "large_fixtures_on_new_d_backed_namespace":  true,
+                                  "old_directories_deleted":  false,
+                                  "minimum_free_disk_bytes":  2147483648,
+                                  "earlier_collection_probe_counted_as_pass":  false,
+                                  "counting_semantics":  "Focused resource regression; not added to complete-suite counts.",
+                                  "artifacts":  [
+                                                    "resources/disk-resource-verification.json",
+                                                    "resources/disk-resource-attempt1.json",
+                                                    "resources/model-integrity-unit.json"
+                                                ]
+                              },
+    "rag_cli_guard_focused":  {
+                                  "status":  "passed",
+                                  "tests":  6,
+                                  "failures":  0,
+                                  "errors":  0,
+                                  "skipped":  0,
+                                  "junit_elapsed_seconds":  0.239,
+                                  "counting_semantics":  "Focused guard regression; not added to complete-suite counts.",
+                                  "artifact":  "python-rag-cli-unit.json",
+                                  "real_canonical_entry_recheck_status":  "passed"
+                              },
+    "rag_cli":  {
+                    "status":  "passed",
+                    "records":  60,
+                    "dataset_id":  "enterprise-agent-rag-policies-v2",
+                    "dataset_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+                    "source_hashes_stable":  true,
+                    "host_relevant_source_hashes_match":  true,
+                    "corpus_unchanged":  true,
+                    "independent_of_first_rag_run":  true,
+                    "test_vector_mean_latency_ms":  92.829628999788838,
+                    "test_vector_p95_latency_ms":  99.21788999781711,
+                    "test_hybrid_mean_latency_ms":  731.95148995000636,
+                    "test_hybrid_p95_latency_ms":  866.333662001125,
+                    "accuracy_same_as_first_run":  true,
+                    "llm_calls":  0,
+                    "llm_input_tokens":  0,
+                    "llm_output_tokens":  0,
+                    "artifacts":  [
+                                      "rag-cli/results.json",
+                                      "rag-cli/metrics.csv",
+                                      "rag-cli/queries.csv",
+                                      "rag-cli/report.md",
+                                      "rag-cli/dataset.json",
+                                      "rag-cli/provenance.json",
+                                      "rag-cli/exit.json"
+                                  ],
+                    "scope":  "Guarded deployment CLI recheck; separate original timing values are preserved, not merged with the first RAG run."
+                },
+    "linux_backend":  {
+                          "status":  "passed",
+                          "tests":  1097,
+                          "failures":  0,
+                          "errors":  0,
+                          "skipped":  0,
+                          "junit_elapsed_seconds":  621.404,
+                          "pytest_elapsed_seconds":  624.08,
+                          "warnings":  {
+                                           "category":  "DeprecationWarning",
+                                           "source":  "chromadb legacy embedding function config",
+                                           "count":  87
+                                       },
+                          "component_counts":  {
+                                                   "e2e":  4,
+                                                   "integration":  241,
+                                                   "unit":  852
+                                               },
+                          "ruff_check":  "passed",
+                          "ruff_format_files":  150,
+                          "pip_check":  "passed",
+                          "model_manifest_verification":  "passed",
+                          "required_postgres_tests":  true,
+                          "required_rag_tests":  true,
+                          "complete_chain_exit_code":  0,
+                          "artifacts":  [
+                                            "linux/python-summary.json",
+                                            "linux/exit.json"
+                                        ],
+                          "counting_semantics":  "Complete suite only; focused repeated subsets and separate evaluation cases are not added."
+                      },
+    "boundaries":  {
+                       "status":  "passed",
+                       "evaluation_kind":  "controlled_fault_injection",
+                       "cases":  16,
+                       "passed":  16,
+                       "failed":  0,
+                       "elapsed_ms":  813.748,
+                       "fixture_usage":  {
+                                             "model_calls":  34,
+                                             "prompt_tokens":  139,
+                                             "completion_tokens":  83,
+                                             "total_tokens":  222,
+                                             "unknown_usage_calls":  5
+                                         },
+                       "provider_usage":  null,
+                       "provider_usage_status":  "not_applicable_no_provider_requests",
+                       "artifacts":  [
+                                         "boundaries/results.json",
+                                         "boundaries/results.csv",
+                                         "boundaries/report.md",
+                                         "boundaries/dataset.json"
+                                     ],
+                       "scope":  "Controlled expectation checks for production LangGraph with scripted model and Service fixtures; not provider task completion, database business logic or billed token metrics."
+                   },
+    "sql":  {
+                "status":  "passed",
+                "source":  "human_authored_sql_fixtures",
+                "as_of":  "2026-10-12",
+                "executed_at":  "2026-10-14T21:01:34.113241+00:00",
+                "summary":  {
+                                "total":  24,
+                                "passed":  24,
+                                "failed":  0,
+                                "correct_query_total":  16,
+                                "correct_query_passed":  16,
+                                "rejection_total":  8,
+                                "rejection_passed":  8,
+                                "reference_match_rate":  1.0,
+                                "rejection_rate":  1.0
+                            },
+                "data":  {
+                             "database":  "enterprise_agent_test",
+                             "reference_role":  "ea_local_admin",
+                             "table_counts":  {
+                                                  "orders":  500,
+                                                  "order_items":  1016,
+                                                  "refund_requests":  19
+                                              },
+                             "data_fingerprint_sha256":  "7cd995f62e94ad4905f471ceb253356c8261f86e264fa6d02ccbddf0f905a7c1",
+                             "database_version":  "PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+                         },
+                "data_stable":  true,
+                "model_calls":  0,
+                "provider_token_usage":  null,
+                "artifacts":  [
+                                  "sql/results.json",
+                                  "sql/report.md",
+                                  "sql/dataset.json"
+                              ],
+                "scope":  "Sixteen authorized-view queries run by the database reader compared with independent owner references in read-only transactions, plus eight parser rejection cases; not natural-language-to-SQL accuracy or a production security guarantee."
+            },
+    "historical_preservation":  {
+                                    "status":  "passed",
+                                    "artifacts_checked":  19,
+                                    "all_unchanged":  true,
+                                    "artifact":  "historical-preservation.json"
+                                },
+    "release_checks":  {
+                           "status":  "passed",
+                           "checked_at_utc":  "2026-10-15T08:52:31.7186450Z",
+                           "secret_scan":  {
+                                               "scanned_file_count":  6681,
+                                               "status":  "passed",
+                                               "hits":  0,
+                                               "configured_secret_count":  16,
+                                               "scope":  "Git-visible files, production frontend assets, new full-stack evaluation and test JUnit, Linux dependency/frontend proof, Phase 9 build/test and runtime logs; exact currently available credentials only; private credential files excluded from scanned/public artifacts; no universal detection claim"
+                                           },
+                           "markdown_positioning_scan":  {
+                                                             "scanned_file_count":  45,
+                                                             "status":  "passed",
+                                                             "hits":  0,
+                                                             "scope":  "Git-visible Markdown only; third-party packages and private runtime storage excluded"
+                                                         },
+                           "markdown_local_links":  {
+                                                        "scope":  "Local file existence; anchors and remote URLs not checked",
+                                                        "status":  "passed",
+                                                        "missing":  0,
+                                                        "checked_links":  386
+                                                    },
+                           "git_diff_check":  {
+                                                  "status":  "passed"
+                                              },
+                           "artifact":  "release-checks.json",
+                           "scope":  "Frozen release-check snapshot; later Git index byte preservation is verified separately to avoid self-referential hashes."
+                       },
+    "test_image_postrun_source_check":  {
+                                            "status":  "passed",
+                                            "file_count":  155,
+                                            "image_id":  "sha256:be55cd35fb2d565bfee015a64986121f97952aa942edb00c9391528abd624f79",
+                                            "scope":  "Post-run comparison of final test image files with workspace Python source, tests, scripts, Alembic, evaluation datasets and included deployment files. This is not a pre-run snapshot or all-repository freeze; README and secrets intentionally outside scope.",
+                                            "artifact":  "linux/test-image-source-check.json"
+                                        },
+    "native_source_checks":  {
+                                 "status":  "passed",
+                                 "python":  "3.13.15",
+                                 "platform":  "Windows",
+                                 "ruff_check":  "passed",
+                                 "ruff_format_check":  {
+                                                           "status":  "passed",
+                                                           "files_already_formatted":  188
+                                                       },
+                                 "pip_check":  "passed",
+                                 "scope":  "Final configured native interpreter lint/format/dependency checks only; not an additional complete Windows pytest run",
+                                 "artifact":  "native-source-checks.json"
+                             }
+}

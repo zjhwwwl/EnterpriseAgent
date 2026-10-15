@@ -1,0 +1,236 @@
+name: enterpriseagent-full
+
+x-backend-environment: &backend-environment
+  EA_LLM_ENABLED: "false"
+  EA_LANGSMITH_ENABLED: "false"
+  EA_LOG_LEVEL: INFO
+  EA_RAG_MODEL_THREADS: "2"
+  EA_RAG_TIMEOUT_SECONDS: "120"
+
+x-backend-tmpfs: &backend-tmpfs
+  - /tmp:rw,nosuid,noexec,size=128m,mode=1777
+  - /app/var/models/runtime-cache:rw,nosuid,noexec,size=16m,uid=10001,gid=10001
+
+services:
+  postgres:
+    image: postgres:17.11-bookworm@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: ea_local_admin
+      POSTGRES_DB: enterprise_agent
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_superuser_password
+    volumes:
+      - ../var/compose/postgres:/var/lib/postgresql/data
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/10-enterpriseagent.sh:ro
+    secrets:
+      - postgres_superuser_password
+      - postgres_app_password
+      - postgres_test_password
+      - postgres_analytics_password
+      - postgres_test_analytics_password
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U ea_local_admin -d enterprise_agent"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.4-alpine@sha256:0514fa59e3d84e2f3be66731c5401fc2a85b8ea71b49c0116c850f6a558076f4
+    platform: linux/amd64
+    command: [redis-server, --appendonly, "yes"]
+    volumes:
+      - ../var/compose/redis:/data
+    networks: [backend]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  chroma:
+    image: chromadb/chroma:1.5.9@sha256:1e0b73a187a28757c572acba508c46f48c9e8b0acaf5c20e6d95cdedce1acdf6
+    platform: linux/amd64
+    environment:
+      ANONYMIZED_TELEMETRY: "False"
+    volumes:
+      - ../var/compose/chroma:/data
+    networks: [backend]
+    healthcheck:
+      # The pinned image has bash but no curl, wget or Python.
+      test:
+        - CMD
+        - /usr/bin/bash
+        - -ec
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8000;
+          printf 'GET /api/v2/heartbeat HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3;
+          read -r -t 2 status <&3;
+          [[ "$$status" == *' 200 '* ]]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  setup:
+    image: enterpriseagent-full-api:0.9.0
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+      target: runtime
+    command: [setup, --as-of, "2026-10-12"]
+    environment:
+      <<: *backend-environment
+      EA_APP_ENV: development
+    volumes:
+      - ../var/models/embedding:/app/var/models/embedding:ro
+      - ../var/models/reranker:/app/var/models/reranker:ro
+      - ../var/models/manifest.json:/app/var/models/manifest.json:ro
+      - ../var/compose/app:/app/var/data
+    tmpfs: *backend-tmpfs
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    secrets:
+      - source: postgres_superuser_password
+        target: postgres-superuser-password
+      - source: postgres_app_password
+        target: postgres-app-password
+      - source: postgres_analytics_password
+        target: postgres-analytics-password
+      - source: jwt_secret
+        target: jwt-secret
+      - source: demo_password
+        target: demo-password
+    networks: [backend]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      chroma: {condition: service_healthy}
+    healthcheck: {disable: true}
+    restart: "no"
+
+  api:
+    image: enterpriseagent-full-api:0.9.0
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+      target: runtime
+    environment:
+      <<: *backend-environment
+      EA_APP_ENV: production
+      EA_LLM_ENABLED: ${EA_FULL_LLM_ENABLED:-false}
+      EA_DOCS_ENABLED: ${EA_FULL_DOCS_ENABLED:-false}
+    ports:
+      - "127.0.0.1:18000:8000"
+    volumes:
+      - ../var/models/embedding:/app/var/models/embedding:ro
+      - ../var/models/reranker:/app/var/models/reranker:ro
+      - ../var/models/manifest.json:/app/var/models/manifest.json:ro
+      - ../var/compose/app:/app/var/data
+    tmpfs: *backend-tmpfs
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    secrets:
+      - source: postgres_app_password
+        target: postgres-app-password
+      - source: postgres_analytics_password
+        target: postgres-analytics-password
+      - source: jwt_secret
+        target: jwt-secret
+      - source: deepseek_api_key
+        target: deepseek-api-key
+    networks: [backend, edge]
+    depends_on:
+      setup: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, python, -m, enterprise_agent.deployment, health]
+      interval: 15s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    image: enterpriseagent-full-web:0.9.0
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    ports:
+      - "127.0.0.1:15173:8080"
+    tmpfs:
+      - /tmp:rw,nosuid,noexec,size=64m,mode=1777
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [edge]
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+
+  tests:
+    profiles: [test]
+    image: enterpriseagent-full-tests:0.9.0
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+      target: tests
+    command: [tests, --, sh, scripts/ci/check_backend.sh]
+    environment:
+      <<: *backend-environment
+      EA_APP_ENV: test
+      # Anonymous Python/pytest capture files need a native Linux filesystem.
+      # The CI script places large tmp_path fixtures on the separate disk bind mount.
+      TMPDIR: /tmp
+    volumes:
+      - ../var/models/embedding:/app/var/models/embedding:ro
+      - ../var/models/reranker:/app/var/models/reranker:ro
+      - ../var/models/manifest.json:/app/var/models/manifest.json:ro
+      - ../var/compose/test-output:/app/var
+    tmpfs: *backend-tmpfs
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    secrets:
+      - source: postgres_superuser_password
+        target: postgres-superuser-password
+      - source: postgres_test_password
+        target: postgres-test-password
+      - source: postgres_test_analytics_password
+        target: postgres-test-analytics-password
+      - source: jwt_secret
+        target: jwt-secret
+    networks: [backend]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      chroma: {condition: service_healthy}
+    restart: "no"
+
+networks:
+  backend: {internal: true}
+  edge: {}
+
+secrets:
+  postgres_superuser_password:
+    file: ../var/compose/secrets/postgres-superuser-password
+  postgres_app_password:
+    file: ../var/compose/secrets/postgres-app-password
+  postgres_test_password:
+    file: ../var/compose/secrets/postgres-test-password
+  postgres_analytics_password:
+    file: ../var/compose/secrets/postgres-analytics-password
+  postgres_test_analytics_password:
+    file: ../var/compose/secrets/postgres-test-analytics-password
+  jwt_secret:
+    file: ../var/compose/secrets/jwt-secret
+  demo_password:
+    file: ../var/compose/secrets/demo-password
+  deepseek_api_key:
+    file: ../var/compose/secrets/deepseek-api-key

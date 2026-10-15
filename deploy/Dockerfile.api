@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1
+ARG PYTHON_IMAGE=python:3.13.15-slim-bookworm@sha256:2325bb286ec344af3e5898cc224b5844e2707ac6e26b1632516fd3edc84a5e26
+FROM ${PYTHON_IMAGE} AS package
+ENV PIP_NO_CACHE_DIR=1
+WORKDIR /build
+COPY requirements/linux-dev.lock /tmp/requirements.lock
+RUN python -m pip install --require-hashes --only-binary=:all: -r /tmp/requirements.lock
+COPY pyproject.toml README.md LICENSE ./
+COPY src ./src
+RUN python -m pip wheel --no-deps --no-build-isolation --wheel-dir /wheels .
+
+FROM ${PYTHON_IMAGE} AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONUTF8=1 \
+    PIP_NO_CACHE_DIR=1 PYTHONPATH=/app/src HF_HUB_OFFLINE=1 \
+    HF_HUB_DISABLE_TELEMETRY=1 ANONYMIZED_TELEMETRY=False \
+    LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false
+WORKDIR /app
+COPY requirements/linux-base.lock /tmp/requirements.lock
+COPY --from=package /wheels /tmp/wheels
+RUN python -m pip install --require-hashes --only-binary=:all: -r /tmp/requirements.lock \
+    && python -m pip install --no-deps /tmp/wheels/*.whl \
+    && rm /tmp/requirements.lock \
+    && rm -r /tmp/wheels \
+    && groupadd --gid 10001 enterpriseagent \
+    && useradd --uid 10001 --gid 10001 --no-create-home enterpriseagent
+COPY pyproject.toml README.md LICENSE main.py alembic.ini ./
+COPY src ./src
+COPY alembic ./alembic
+COPY data/knowledge ./data/knowledge
+COPY evals/datasets/rag.json ./evals/datasets/rag.json
+COPY scripts/prepare-rag-models.py ./scripts/prepare-rag-models.py
+RUN mkdir -p /app/var/models/embedding /app/var/models/reranker \
+       /app/var/models/runtime-cache /app/var/data /app/var/test-results \
+    && chown -R 10001:10001 /app/var
+USER 10001:10001
+EXPOSE 8000
+HEALTHCHECK --interval=15s --timeout=10s --start-period=60s --retries=5 \
+    CMD ["python", "-m", "enterprise_agent.deployment", "health"]
+ENTRYPOINT ["python", "-m", "enterprise_agent.deployment"]
+CMD ["serve"]
+
+FROM runtime AS tests
+USER root
+COPY requirements/linux-dev.lock /tmp/requirements.lock
+RUN python -m pip install --require-hashes --only-binary=:all: -r /tmp/requirements.lock \
+    && rm /tmp/requirements.lock
+COPY tests ./tests
+COPY evals/datasets ./evals/datasets
+COPY scripts ./scripts
+COPY .dockerignore ./
+COPY deploy/Dockerfile.api deploy/Dockerfile.web deploy/nginx.conf deploy/compose.full.yaml ./deploy/
+USER 10001:10001
+HEALTHCHECK NONE
+CMD ["tests"]

@@ -2,7 +2,7 @@
 
 ## 真实结果的边界
 
-Phase 8 新增严格 Agent 案例合同、真实证据采集与核对、明确受控故障集及元数据追踪。真实 RAG、人工 SQL、线上模型和受控流程结果分开呈现，当前状态见[Phase 8](phase-8.md)。历史[Phase 7](phase-7.md)浏览器/前端、[Phase 6](phase-6.md)SQL/烟测、[Phase 5](phase-5.md)MCP、[Phase 4](phase-4.md)在线修复与[Phase 3](phase-3.md)检索对照保持原始结果，不改写为本阶段成绩。
+Phase 9 / 0.9.0 增加 Linux 部署与 CI 检查，真实执行范围和结果见[Phase 9](phase-9.md)。已有严格 Agent 案例合同、真实证据采集、受控故障集及元数据追踪保持原实现。真实 RAG、人工 SQL、线上模型和受控流程分开呈现；[Phase 8](phase-8.md)评估、[Phase 7](phase-7.md)浏览器/前端及更早结果保留原始证据，不改写为容器交付阶段的新模型成绩。
 
 ```powershell
 .\scripts\check.ps1
@@ -11,7 +11,27 @@ Phase 8 新增严格 Agent 案例合同、真实证据采集与核对、明确�
 .\scripts\frontend.ps1 -Mode Check
 ```
 
-check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，当前保存 `var/test-results/phase8.xml`、`phase8.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。前端 TypeScript、Vite 和 Vitest 检查单独运行；浏览器必须注明连接真实后端还是受控接口，不能互相替代。
+check 执行 Ruff、格式、pytest、pip check，默认强制 `--require-postgres --require-rag`，当前 Windows 产物为 `var/test-results/phase9.xml`、`phase9.json`，前端为 `phase9-frontend-unit.json`。`-SkipPostgres` / `-SkipRag` 明确排除对应环境检查；直接 pytest 未配置依赖可能跳过，不能当作完整验收。Linux 测试容器单独保存 `var/compose/test-output/test-results/phase9-linux.xml`，不覆盖 Windows 或历史成绩。浏览器必须注明连接真实后端还是受控接口，不能互相替代。
+
+## Phase 9 部署与 CI 验证协议
+
+Linux 哈希锁由目标 Python 3.13 重新解析，用共有版本约束保持兼容选择，而不是截取 Windows 锁。依赖安装、pip check、512 维 CPU Embedding、真实 Reranker、数据库迁移/权限、知识索引、六项 readiness 和静态前端代理分别记录。真正的容器构建与启动证明部署行为，不替代模型任务质量；没有发送消息的启动/HTTP 检查供应商请求为零。
+
+```powershell
+.\scripts\full-stack.ps1 -Mode Up
+.\scripts\full-stack.ps1 -Mode Check
+.\scripts\full-stack.ps1 -Mode Test
+```
+
+测试容器只使用 full 项目的 `enterprise_agent_test`、专用业务与 reader，初始化账号仅供测试夹具；不会重置应用库。Linux 后端脚本显式关闭 DeepSeek 和 LangSmith，固定 SQL 的独立基表参考与 16 条受控故障仍按各自协议记录，不冒充新的在线任务完成率。GitHub Actions YAML、本地执行命令和 GitHub 平台 workflow 结果分别核验；没有真实平台运行时不报告 GitHub CI 已通过。
+
+当前 CI chain 包含强制 RAG 的完整 pytest、boundaries 与 SQL；60 条两模式相关性对照属于独立 `rag-evaluate` 命令，不自动加入 CI 或上传。其 `run_status=complete` 是执行完整性，引用来源匹配是结构验证，二者都不能替代知识答案语义充分性的人工判断。
+
+本阶段售后前言文案改变，`evals/datasets/rag.json` v2 保存新 SHA256。检索评估匹配新原件、数据库 checksum 与活动索引；已有受保护政策来源不能通过修改 checksum 强行替换。新 full 库上已实际完成 60 条模式记录，test 两组 Recall@3 / 5、MRR、nDCG@5 均为 1，Recall@1=0.941176；拒答与引用结构有效率均为 100%。Vector / Hybrid + Rerank mean 为 86.385 / 680.383 ms、P95 为 92.746 / 713.196 ms，没有文档级质量增益，较高时延保留。dev 独立统计，单次服务耗时不作为性能基准；无聊天供应商调用，本地模型计费 usage 为 N/A。
+
+最终 Linux 完整后端 **1097 / 1097 通过，0 失败/错误/跳过**，强制真实 PostgreSQL / RAG，JUnit 621.404 秒、控制台 624.08 秒；87 条 Chroma 弃用警告保留。Ruff、150 文件格式、pip check 与固定模型核验通过。后续受控故障 **16 / 16**（34 次 fixture 调用、222 已知 fixture Token、5 次 fixture 未知消费）与人工 SQL **24 / 24**（16 条独立基表参考、8 条拒绝）分别统计，供应商均无请求。SQL 的 500 订单 / 1016 明细 / 19 退款指纹稳定，问题日期仍为 2026-10-12，实际运行 UTC 为 2026-10-14，不据此宣称 NL SQL 正确率。
+
+旧 Phase 3 / Phase 8 JSON / CSV / 报告与原 corpus 保留，历史指标不转移为新语料成绩。本次 HTTP 13 项、六项 readiness、容器权限、重建持久化、DNS 恢复、Linux 依赖与前端检查分别归档，前三轮失败与最终完整运行见[Phase 9](phase-9.md)与[验收报告](../evals/results/phase9/report.md)，不把 Windows 57 / 48 / 2 项重叠专项相加。
 
 ## 测试分层
 
@@ -163,7 +183,7 @@ Phase 4公共证据已归档到evals/results/phase4/：[verification.json](../ev
 
 5个问题手选用于开发修复，所有轮次均非盲评，不能推导统计提升或泛化质量。检查器新增区分检索不足与候选拒答，旧三轮仍有真实失败；RAG阈值未变。实际源引用用HTTP验证，耗时仅本次观察，不是性能基准，Token是供应商实际报告的已知用量。在线运行需脚本显式--allow-live；当前天气问题拒答、七天政策等少样本观察不替代独立领域集。
 
-本阶段新增的 Agent validation 问题在首次在线运行前冻结并与 development、历史 regression 分开。它们由开发助手已知项目代码/语料编写，不能称独立外部标注或盲评。政策冲突识别、开放式语义相关性和泛化效果仍需要新数据与人工复核，不能仅靠 schema 或 substring 匹配证明。
+Phase 8 新增的 Agent validation 问题在首次在线运行前冻结并与 development、历史 regression 分开。它们由开发助手已知项目代码/语料编写，不能称独立外部标注或盲评。政策冲突识别、开放式语义相关性和泛化效果仍需要新数据与人工复核，不能仅靠 schema 或 substring 匹配证明。
 
 线上模型缺 Key 或未经实际调用时明确标记未运行；Token 从实际 API usage 获取。优化没有改善也保留原始结果，不预填分数、伪造压测或部署成绩。
 

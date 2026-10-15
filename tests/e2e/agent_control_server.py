@@ -15,6 +15,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import uvicorn
+from database_scope import require_test_database
 from sqlalchemy.engine import make_url
 
 from enterprise_agent.agents.llm import ChatReply, ModelCallError, ModelToolCall
@@ -76,12 +77,12 @@ def main():
     if settings.database_url is None:
         raise SystemExit("An explicitly configured dedicated test database is required")
     database = make_url(settings.database_url.get_secret_value())
-    if (
-        database.database != "enterprise_agent_test"
-        or database.username != "ea_test_app"
-        or database.host not in {"127.0.0.1", "localhost"}
-    ):
-        raise SystemExit("The controlled server refuses a nonlocal or non-test database")
+    try:
+        require_test_database(database)
+    except ValueError:
+        raise SystemExit(
+            "The controlled server refuses a database outside its test scope"
+        ) from None
     if (
         settings.app_env != "test"
         or str(settings.host) != "127.0.0.1"

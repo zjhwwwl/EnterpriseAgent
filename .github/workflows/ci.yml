@@ -1,0 +1,93 @@
+name: EnterpriseAgent CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: enterpriseagent-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-fund --no-audit
+      - run: npm run format:check
+      - run: npm test -- --reporter=default --reporter=junit --outputFile=../var/test-results/phase9-frontend.xml
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=moderate
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: frontend-test-report
+          path: var/test-results/phase9-frontend.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  linux-stack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      COMPOSE_ENV_FILES: var/compose/compose.env
+      COMPOSE_DISABLE_ENV_FILE: "true"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: var/models
+          key: pinned-rag-models-v1-${{ hashFiles('src/enterprise_agent/rag/backends.py') }}
+      - name: Prepare isolated local credentials
+        run: sh scripts/ci/prepare_stack.sh
+      - name: Validate Compose configuration
+        run: docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml --profile test config --quiet
+      - name: Build hash-locked Linux backend and frontend images
+        run: docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml --profile test build api web tests
+      - name: Explicitly prepare and verify fixed-revision ONNX assets
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" --entrypoint python \
+            --mount "type=bind,source=$PWD/var/models,target=/app/var/models" \
+            enterpriseagent-full-api:0.9.0 scripts/prepare-rag-models.py --destination /app/var/models
+          docker run --rm --user "$(id -u):$(id -g)" --entrypoint python \
+            --mount "type=bind,source=$PWD/var/models,target=/app/var/models,readonly" \
+            enterpriseagent-full-api:0.9.0 scripts/prepare-rag-models.py --verify-only
+      - name: Start and verify full local stack
+        run: |
+          docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml up --detach --wait --wait-timeout 300
+          python3 scripts/ci/check_stack.py
+      - name: Run required PostgreSQL, Redis, Chroma, RAG tests and offline evaluations
+        run: docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml --profile test run --rm tests
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: linux-stack-test-reports
+          path: |
+            var/compose/test-output/stack-smoke.json
+            var/compose/test-output/test-results/phase9-linux.xml
+            var/compose/test-output/evaluation/phase9/boundaries/results.json
+            var/compose/test-output/evaluation/phase9/boundaries/report.md
+            var/compose/test-output/evaluation/phase9/sql/results.json
+            var/compose/test-output/evaluation/phase9/sql/report.md
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Stop this run's Compose services
+        if: always()
+        run: docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml --profile test stop

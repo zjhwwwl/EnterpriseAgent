@@ -1,0 +1,15 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "pytest_windows_real_tcp_restart_and_mcp_stdio_e2e",
+    "platform":  "Windows",
+    "source":  "var/test-results/phase9-process-scope-windows-e2e.xml",
+    "source_sha256":  "27f6db44c42a525bdd913481c13e2c241256856d08db6ba8a33bd89e0fb15335",
+    "tests":  2,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "junit_elapsed_seconds":  30.196,
+    "counting_semantics":  "Focused verification; not added to complete-suite counts.",
+    "online_deepseek_tested":  false
+}

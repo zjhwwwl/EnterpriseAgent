@@ -1,0 +1,65 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "linux_failed_attempts_summary",
+    "attempts":  [
+                     {
+                         "attempt":  1,
+                         "source":  "var/test-results/phase9/linux-attempt1-exit.json",
+                         "source_sha256":  "3a37786f279b7465564c5f7fd5871deaf6394dae343355e9e312881012be03f0",
+                         "exit_code":  2,
+                         "finished_at_utc":  "2026-10-14T20:13:13.4370653Z",
+                         "status":  "failed_before_pytest",
+                         "reason":  "Nonroot Ruff cache path was not writable.",
+                         "complete_pytest_report_available":  false,
+                         "counted_as_success":  false
+                     },
+                     {
+                         "attempt":  2,
+                         "source":  "var/test-results/phase9/linux-attempt2-exit.json",
+                         "source_sha256":  "8c117da7b4fdc38cbba62ee3f99287265e3a3a7ffabb596bfba941724b348c08",
+                         "exit_code":  137,
+                         "finished_at_utc":  "2026-10-14T20:20:54.3639339Z",
+                         "status":  "stopped_incomplete",
+                         "reason":  "Two e2e fixtures rejected the fixed Compose test database hostname; the owned tests container was stopped before complete-suite results.",
+                         "complete_pytest_report_available":  false,
+                         "counted_as_success":  false
+                     },
+                     {
+                         "attempt":  3,
+                         "source":  "var/test-results/phase9/linux-attempt3-exit.json",
+                         "source_sha256":  "447660e266179c0cb94675be84b345830b9b9523eada3774b785346c41d215f6",
+                         "exit_code":  1,
+                         "finished_at_utc":  "2026-10-14T20:39:12.7816500Z",
+                         "status":  "failed_incomplete_internal_error",
+                         "reason":  "The tests container exhausted its 128 MiB /tmp tmpfs during temporary model-file copies; pytest reported INTERNALERROR OSError errno 28.",
+                         "complete_pytest_report_available":  false,
+                         "partial_junit_available":  true,
+                         "partial_junit_source":  "var/test-results/phase9/linux-attempt3.xml",
+                         "partial_junit_source_sha256":  "d465fc7ccc1387b27702853b764197d79fcce1d3b72b3315f87bf66f5f945223",
+                         "partial_junit":  {
+                                               "recorded_tests":  923,
+                                               "passed":  880,
+                                               "failures":  8,
+                                               "errors":  35,
+                                               "skipped":  0,
+                                               "junit_elapsed_seconds":  591.613
+                                           },
+                         "console_process_summary":  {
+                                                         "passed":  880,
+                                                         "failed":  9,
+                                                         "errors":  34,
+                                                         "elapsed_seconds":  591.65,
+                                                         "internal_error":  true,
+                                                         "scope":  "Console classifications differ from partial JUnit classifications; no complete-suite result."
+                                                     },
+                         "counted_as_success":  false
+                     }
+                 ],
+    "final_complete_run":  "passed",
+    "scope":  "Earlier attempts retained transparently; raw logs remain private; partial progress is not a completed suite.",
+    "final_complete_run_artifacts":  [
+                                         "linux/exit.json",
+                                         "linux/python-summary.json"
+                                     ]
+}

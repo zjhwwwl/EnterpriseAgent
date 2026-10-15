@@ -1,0 +1,1234 @@
+{
+  "schema_version": 1,
+  "application_version": "0.9.0",
+  "source": "human_authored_sql_fixtures",
+  "as_of": "2026-10-12",
+  "timezone": "Asia/Shanghai",
+  "executed_at": "2026-10-14T21:01:34.113241+00:00",
+  "dataset_sha256": "6b1fbe0d6d5266c2bd364c1b9bba50b7d1ad9ea856448ae58b78b8104372867a",
+  "data": {
+    "database": "enterprise_agent_test",
+    "reference_role": "ea_local_admin",
+    "table_counts": {
+      "orders": 500,
+      "order_items": 1016,
+      "refund_requests": 19
+    },
+    "data_fingerprint_sha256": "7cd995f62e94ad4905f471ceb253356c8261f86e264fa6d02ccbddf0f905a7c1",
+    "database_version": "PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+  },
+  "data_stable": true,
+  "dependencies": {
+    "sqlglot": "30.22.0",
+    "SQLAlchemy": "2.0.54",
+    "psycopg": "3.3.6",
+    "pydantic": "2.14.1"
+  },
+  "model_calls": 0,
+  "provider_token_usage": null,
+  "summary": {
+    "total": 24,
+    "passed": 24,
+    "failed": 0,
+    "correct_query_total": 16,
+    "correct_query_passed": 16,
+    "rejection_total": 8,
+    "rejection_passed": 8,
+    "reference_match_rate": 1.0,
+    "rejection_rate": 1.0
+  },
+  "cases": [
+    {
+      "id": "sales-last-seven-days",
+      "question": "截至2026-10-12，最近七天含运费的支付销售额是多少？",
+      "metric_ids": [
+        "paid_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-06' AND business_date < DATE '2026-10-13'",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT SUM(CAST(o.paid_total_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+        "columns": [
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "1560510"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-06' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) LIMIT 101",
+        "columns": [
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "1560510"
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 7.061
+      },
+      "reference_sql": "SELECT SUM(CAST(o.paid_total_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+      "elapsed_ms": 40.431
+    },
+    {
+      "id": "sales-month-to-date",
+      "question": "截至2026-10-12，本月含运费支付销售额是多少？",
+      "metric_ids": [
+        "paid_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13'",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT SUM(CAST(o.paid_total_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+        "columns": [
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "3244195"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) LIMIT 101",
+        "columns": [
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "3244195"
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 2.25
+      },
+      "reference_sql": "SELECT SUM(CAST(o.paid_total_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+      "elapsed_ms": 29.78
+    },
+    {
+      "id": "sales-money-breakdown",
+      "question": "分别统计最近七天商品实付、运费和总支付金额，单位为分。",
+      "metric_ids": [
+        "paid_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT SUM(goods_revenue_cents) AS goods_cents, SUM(shipping_revenue_cents) AS shipping_cents, SUM(gross_revenue_cents) AS gross_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-06' AND business_date < DATE '2026-10-13'",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT SUM(CAST(o.goods_paid_cents AS DECIMAL)) AS goods_cents, SUM(CAST(o.shipping_paid_cents AS DECIMAL)) AS shipping_cents, SUM(CAST(o.paid_total_cents AS DECIMAL)) AS gross_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+        "columns": [
+          "goods_cents",
+          "shipping_cents",
+          "gross_cents"
+        ],
+        "rows": [
+          [
+            "1544510",
+            "16000",
+            "1560510"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT SUM(goods_revenue_cents) AS goods_cents, SUM(shipping_revenue_cents) AS shipping_cents, SUM(gross_revenue_cents) AS gross_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-06' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) LIMIT 101",
+        "columns": [
+          "goods_cents",
+          "shipping_cents",
+          "gross_cents"
+        ],
+        "rows": [
+          [
+            "1544510",
+            "16000",
+            "1560510"
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 2.19
+      },
+      "reference_sql": "SELECT SUM(CAST(o.goods_paid_cents AS DECIMAL)) AS goods_cents, SUM(CAST(o.shipping_paid_cents AS DECIMAL)) AS shipping_cents, SUM(CAST(o.paid_total_cents AS DECIMAL)) AS gross_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+      "elapsed_ms": 30.278
+    },
+    {
+      "id": "month-paid-cohort-refund-rate",
+      "question": "本月支付订单群截至查询时的已完成模拟退款订单率是多少？保留百分比两位。",
+      "metric_ids": [
+        "refund_rate"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0), 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13'",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT ROUND(CAST(100.0 * CAST(COUNT(DISTINCT r.order_id) AS DECIMAL) / NULLIF(CAST(COUNT(DISTINCT o.id) AS DECIMAL), 0) AS DECIMAL), 2) AS refund_rate_percent FROM public.orders AS o LEFT JOIN public.refund_requests AS r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+        "columns": [
+          "refund_rate_percent"
+        ],
+        "rows": [
+          [
+            "2.33"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0), 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) LIMIT 101",
+        "columns": [
+          "refund_rate_percent"
+        ],
+        "rows": [
+          [
+            "2.33"
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 7.063
+      },
+      "reference_sql": "SELECT ROUND(CAST(100.0 * CAST(COUNT(DISTINCT r.order_id) AS DECIMAL) / NULLIF(CAST(COUNT(DISTINCT o.id) AS DECIMAL), 0) AS DECIMAL), 2) AS refund_rate_percent FROM public.orders AS o LEFT JOIN public.refund_requests AS r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+      "elapsed_ms": 44.239
+    },
+    {
+      "id": "zero-denominator-refund-rate",
+      "question": "2099-01-01无订单时，退款率应为NULL，而非零或除零错误。",
+      "metric_ids": [
+        "refund_rate"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0), 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date = DATE '2099-01-01'",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT ROUND(CAST(100.0 * CAST(COUNT(DISTINCT r.order_id) AS DECIMAL) / NULLIF(CAST(COUNT(DISTINCT o.id) AS DECIMAL), 0) AS DECIMAL), 2) AS refund_rate_percent FROM public.orders AS o LEFT JOIN public.refund_requests AS r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) = CAST('2099-01-01' AS DATE) LIMIT 501",
+        "columns": [
+          "refund_rate_percent"
+        ],
+        "rows": [
+          [
+            null
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0), 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date = CAST('2099-01-01' AS DATE) LIMIT 101",
+        "columns": [
+          "refund_rate_percent"
+        ],
+        "rows": [
+          [
+            null
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 2.299
+      },
+      "reference_sql": "SELECT ROUND(CAST(100.0 * CAST(COUNT(DISTINCT r.order_id) AS DECIMAL) / NULLIF(CAST(COUNT(DISTINCT o.id) AS DECIMAL), 0) AS DECIMAL), 2) AS refund_rate_percent FROM public.orders AS o LEFT JOIN public.refund_requests AS r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) = CAST('2099-01-01' AS DATE) LIMIT 501",
+      "elapsed_ms": 33.538
+    },
+    {
+      "id": "two-week-paid-order-comparison",
+      "question": "对比2026-09-29至10-05与10-06至10-12的支付订单量。",
+      "metric_ids": [
+        "order_count"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT SUM(CASE WHEN business_date < DATE '2026-10-06' THEN paid_order_count ELSE 0 END) AS previous_week_orders, SUM(CASE WHEN business_date >= DATE '2026-10-06' THEN paid_order_count ELSE 0 END) AS current_week_orders FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-09-29' AND business_date < DATE '2026-10-13'",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT SUM(CASE WHEN CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-06' AS DATE) THEN CAST(1 AS DECIMAL) ELSE CAST(0 AS DECIMAL) END) AS previous_week_orders, SUM(CASE WHEN CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) THEN CAST(1 AS DECIMAL) ELSE CAST(0 AS DECIMAL) END) AS current_week_orders FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-09-29' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+        "columns": [
+          "previous_week_orders",
+          "current_week_orders"
+        ],
+        "rows": [
+          [
+            "26",
+            "24"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT SUM(CASE WHEN business_date < CAST('2026-10-06' AS DATE) THEN paid_order_count ELSE 0 END) AS previous_week_orders, SUM(CASE WHEN business_date >= CAST('2026-10-06' AS DATE) THEN paid_order_count ELSE 0 END) AS current_week_orders FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-09-29' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) LIMIT 101",
+        "columns": [
+          "previous_week_orders",
+          "current_week_orders"
+        ],
+        "rows": [
+          [
+            "26",
+            "24"
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 2.77
+      },
+      "reference_sql": "SELECT SUM(CASE WHEN CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-06' AS DATE) THEN CAST(1 AS DECIMAL) ELSE CAST(0 AS DECIMAL) END) AS previous_week_orders, SUM(CASE WHEN CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) THEN CAST(1 AS DECIMAL) ELSE CAST(0 AS DECIMAL) END) AS current_week_orders FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-09-29' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+      "elapsed_ms": 32.329
+    },
+    {
+      "id": "top-five-product-revenue",
+      "question": "本月商品实付销售额最高的五个商品快照分组是什么？",
+      "metric_ids": [
+        "product_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT product_id, product_name, category, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13' GROUP BY product_id, product_name, category ORDER BY sales_cents DESC, product_id, product_name, category LIMIT 5",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT CAST(i.product_id AS BIGINT) AS product_id, CAST(i.product_name AS TEXT) AS product_name, CAST(i.category AS TEXT) AS category, SUM(CAST(i.paid_amount_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o JOIN public.order_items AS i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY i.product_id, i.product_name, i.category ORDER BY sales_cents DESC, product_id, product_name, category LIMIT 5",
+        "columns": [
+          "product_id",
+          "product_name",
+          "category",
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            16,
+            "模拟商品 16",
+            "electronics",
+            "330720"
+          ],
+          [
+            28,
+            "模拟商品 28",
+            "home",
+            "323360"
+          ],
+          [
+            13,
+            "模拟商品 13",
+            "home",
+            "293695"
+          ],
+          [
+            12,
+            "模拟商品 12",
+            "apparel",
+            "245640"
+          ],
+          [
+            29,
+            "模拟商品 29",
+            "food",
+            "227430"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT product_id, product_name, category, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) GROUP BY product_id, product_name, category ORDER BY sales_cents DESC, product_id, product_name, category LIMIT 5",
+        "columns": [
+          "product_id",
+          "product_name",
+          "category",
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            16,
+            "模拟商品 16",
+            "electronics",
+            "330720"
+          ],
+          [
+            28,
+            "模拟商品 28",
+            "home",
+            "323360"
+          ],
+          [
+            13,
+            "模拟商品 13",
+            "home",
+            "293695"
+          ],
+          [
+            12,
+            "模拟商品 12",
+            "apparel",
+            "245640"
+          ],
+          [
+            29,
+            "模拟商品 29",
+            "food",
+            "227430"
+          ]
+        ],
+        "row_count": 5,
+        "truncated": false,
+        "elapsed_ms": 6.155
+      },
+      "reference_sql": "SELECT CAST(i.product_id AS BIGINT) AS product_id, CAST(i.product_name AS TEXT) AS product_name, CAST(i.category AS TEXT) AS category, SUM(CAST(i.paid_amount_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o JOIN public.order_items AS i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY i.product_id, i.product_name, i.category ORDER BY sales_cents DESC, product_id, product_name, category LIMIT 5",
+      "elapsed_ms": 42.343
+    },
+    {
+      "id": "daily-paid-sales-chart-data",
+      "question": "给出最近七天每日支付金额，用于绘图。",
+      "metric_ids": [
+        "paid_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT business_date, gross_revenue_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-06' AND business_date < DATE '2026-10-13' ORDER BY business_date",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) AS business_date, SUM(CAST(o.paid_total_cents AS DECIMAL)) AS gross_revenue_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) ORDER BY business_date LIMIT 501",
+        "columns": [
+          "business_date",
+          "gross_revenue_cents"
+        ],
+        "rows": [
+          [
+            "2026-10-06",
+            "260110"
+          ],
+          [
+            "2026-10-07",
+            "308890"
+          ],
+          [
+            "2026-10-08",
+            "253935"
+          ],
+          [
+            "2026-10-09",
+            "442760"
+          ],
+          [
+            "2026-10-10",
+            "294815"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT business_date, gross_revenue_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-06' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) ORDER BY business_date LIMIT 101",
+        "columns": [
+          "business_date",
+          "gross_revenue_cents"
+        ],
+        "rows": [
+          [
+            "2026-10-06",
+            "260110"
+          ],
+          [
+            "2026-10-07",
+            "308890"
+          ],
+          [
+            "2026-10-08",
+            "253935"
+          ],
+          [
+            "2026-10-09",
+            "442760"
+          ],
+          [
+            "2026-10-10",
+            "294815"
+          ]
+        ],
+        "row_count": 5,
+        "truncated": false,
+        "elapsed_ms": 2.141
+      },
+      "reference_sql": "SELECT CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) AS business_date, SUM(CAST(o.paid_total_cents AS DECIMAL)) AS gross_revenue_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) ORDER BY business_date LIMIT 501",
+      "elapsed_ms": 31.89
+    },
+    {
+      "id": "food-category-snapshot-revenue",
+      "question": "本月food类目各商品快照的实付金额是多少？",
+      "metric_ids": [
+        "product_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT product_id, product_name, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE category = 'food' AND business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13' GROUP BY product_id, product_name ORDER BY product_id, product_name",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT CAST(i.product_id AS BIGINT) AS product_id, CAST(i.product_name AS TEXT) AS product_name, SUM(CAST(i.paid_amount_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o JOIN public.order_items AS i ON i.order_id = o.id WHERE i.category = 'food' AND o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY i.product_id, i.product_name ORDER BY product_id, product_name LIMIT 501",
+        "columns": [
+          "product_id",
+          "product_name",
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            4,
+            "模拟商品 04",
+            "10670"
+          ],
+          [
+            9,
+            "模拟商品 09",
+            "76950"
+          ],
+          [
+            14,
+            "模拟商品 14",
+            "169065"
+          ],
+          [
+            19,
+            "模拟商品 19",
+            "12500"
+          ],
+          [
+            24,
+            "模拟商品 24",
+            "208290"
+          ],
+          [
+            29,
+            "模拟商品 29",
+            "227430"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT product_id, product_name, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE category = 'food' AND business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) GROUP BY product_id, product_name ORDER BY product_id, product_name LIMIT 101",
+        "columns": [
+          "product_id",
+          "product_name",
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            4,
+            "模拟商品 04",
+            "10670"
+          ],
+          [
+            9,
+            "模拟商品 09",
+            "76950"
+          ],
+          [
+            14,
+            "模拟商品 14",
+            "169065"
+          ],
+          [
+            19,
+            "模拟商品 19",
+            "12500"
+          ],
+          [
+            24,
+            "模拟商品 24",
+            "208290"
+          ],
+          [
+            29,
+            "模拟商品 29",
+            "227430"
+          ]
+        ],
+        "row_count": 6,
+        "truncated": false,
+        "elapsed_ms": 2.406
+      },
+      "reference_sql": "SELECT CAST(i.product_id AS BIGINT) AS product_id, CAST(i.product_name AS TEXT) AS product_name, SUM(CAST(i.paid_amount_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o JOIN public.order_items AS i ON i.order_id = o.id WHERE i.category = 'food' AND o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY i.product_id, i.product_name ORDER BY product_id, product_name LIMIT 501",
+      "elapsed_ms": 35.119
+    },
+    {
+      "id": "all-paid-money-exact-cents",
+      "question": "所有支付订单实际支付金额精确合计，仍以分表示。",
+      "metric_ids": [
+        "paid_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT SUM(CAST(o.paid_total_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') LIMIT 501",
+        "columns": [
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "36114475"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders LIMIT 101",
+        "columns": [
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "36114475"
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 2.334
+      },
+      "reference_sql": "SELECT SUM(CAST(o.paid_total_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') LIMIT 501",
+      "elapsed_ms": 28.61
+    },
+    {
+      "id": "empty-sales-zero-by-explicit-coalesce",
+      "question": "2099-01-01无订单，明确按COALESCE规则返回零支付金额。",
+      "metric_ids": [
+        "paid_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT COALESCE(SUM(gross_revenue_cents), 0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date = DATE '2099-01-01'",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT COALESCE(SUM(CAST(o.paid_total_cents AS DECIMAL)), 0) AS sales_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) = CAST('2099-01-01' AS DATE) LIMIT 501",
+        "columns": [
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "0"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT COALESCE(SUM(gross_revenue_cents), 0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date = CAST('2099-01-01' AS DATE) LIMIT 101",
+        "columns": [
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "0"
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 2.245
+      },
+      "reference_sql": "SELECT COALESCE(SUM(CAST(o.paid_total_cents AS DECIMAL)), 0) AS sales_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) = CAST('2099-01-01' AS DATE) LIMIT 501",
+      "elapsed_ms": 29.922
+    },
+    {
+      "id": "product-units-sold",
+      "question": "本月各商品快照售出件数是多少？",
+      "metric_ids": [
+        "product_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT product_id, product_name, SUM(units_sold) AS units FROM ea_analytics.daily_product_sales WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13' GROUP BY product_id, product_name ORDER BY product_id, product_name",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT CAST(i.product_id AS BIGINT) AS product_id, CAST(i.product_name AS TEXT) AS product_name, SUM(CAST(i.quantity AS BIGINT)) AS units FROM public.orders AS o JOIN public.order_items AS i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY i.product_id, i.product_name ORDER BY product_id, product_name LIMIT 501",
+        "columns": [
+          "product_id",
+          "product_name",
+          "units"
+        ],
+        "rows": [
+          [
+            1,
+            "演示无线耳机",
+            "7"
+          ],
+          [
+            2,
+            "模拟商品 02",
+            "4"
+          ],
+          [
+            3,
+            "模拟商品 03",
+            "13"
+          ],
+          [
+            4,
+            "模拟商品 04",
+            "5"
+          ],
+          [
+            5,
+            "模拟商品 05",
+            "3"
+          ],
+          [
+            6,
+            "模拟商品 06",
+            "1"
+          ],
+          [
+            7,
+            "模拟商品 07",
+            "9"
+          ],
+          [
+            8,
+            "模拟商品 08",
+            "3"
+          ],
+          [
+            9,
+            "模拟商品 09",
+            "10"
+          ],
+          [
+            10,
+            "模拟商品 10",
+            "3"
+          ],
+          [
+            11,
+            "模拟商品 11",
+            "2"
+          ],
+          [
+            12,
+            "模拟商品 12",
+            "7"
+          ],
+          [
+            13,
+            "模拟商品 13",
+            "8"
+          ],
+          [
+            14,
+            "模拟商品 14",
+            "6"
+          ],
+          [
+            15,
+            "模拟商品 15",
+            "8"
+          ],
+          [
+            16,
+            "模拟商品 16",
+            "11"
+          ],
+          [
+            17,
+            "模拟商品 17",
+            "8"
+          ],
+          [
+            18,
+            "模拟商品 18",
+            "5"
+          ],
+          [
+            19,
+            "模拟商品 19",
+            "5"
+          ],
+          [
+            20,
+            "模拟商品 20",
+            "6"
+          ],
+          [
+            21,
+            "模拟商品 21",
+            "8"
+          ],
+          [
+            22,
+            "模拟商品 22",
+            "4"
+          ],
+          [
+            23,
+            "模拟商品 23",
+            "5"
+          ],
+          [
+            24,
+            "模拟商品 24",
+            "7"
+          ],
+          [
+            25,
+            "模拟商品 25",
+            "2"
+          ],
+          [
+            27,
+            "模拟商品 27",
+            "6"
+          ],
+          [
+            28,
+            "模拟商品 28",
+            "9"
+          ],
+          [
+            29,
+            "模拟商品 29",
+            "7"
+          ],
+          [
+            30,
+            "模拟商品 30",
+            "1"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT product_id, product_name, SUM(units_sold) AS units FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) GROUP BY product_id, product_name ORDER BY product_id, product_name LIMIT 101",
+        "columns": [
+          "product_id",
+          "product_name",
+          "units"
+        ],
+        "rows": [
+          [
+            1,
+            "演示无线耳机",
+            "7"
+          ],
+          [
+            2,
+            "模拟商品 02",
+            "4"
+          ],
+          [
+            3,
+            "模拟商品 03",
+            "13"
+          ],
+          [
+            4,
+            "模拟商品 04",
+            "5"
+          ],
+          [
+            5,
+            "模拟商品 05",
+            "3"
+          ],
+          [
+            6,
+            "模拟商品 06",
+            "1"
+          ],
+          [
+            7,
+            "模拟商品 07",
+            "9"
+          ],
+          [
+            8,
+            "模拟商品 08",
+            "3"
+          ],
+          [
+            9,
+            "模拟商品 09",
+            "10"
+          ],
+          [
+            10,
+            "模拟商品 10",
+            "3"
+          ],
+          [
+            11,
+            "模拟商品 11",
+            "2"
+          ],
+          [
+            12,
+            "模拟商品 12",
+            "7"
+          ],
+          [
+            13,
+            "模拟商品 13",
+            "8"
+          ],
+          [
+            14,
+            "模拟商品 14",
+            "6"
+          ],
+          [
+            15,
+            "模拟商品 15",
+            "8"
+          ],
+          [
+            16,
+            "模拟商品 16",
+            "11"
+          ],
+          [
+            17,
+            "模拟商品 17",
+            "8"
+          ],
+          [
+            18,
+            "模拟商品 18",
+            "5"
+          ],
+          [
+            19,
+            "模拟商品 19",
+            "5"
+          ],
+          [
+            20,
+            "模拟商品 20",
+            "6"
+          ],
+          [
+            21,
+            "模拟商品 21",
+            "8"
+          ],
+          [
+            22,
+            "模拟商品 22",
+            "4"
+          ],
+          [
+            23,
+            "模拟商品 23",
+            "5"
+          ],
+          [
+            24,
+            "模拟商品 24",
+            "7"
+          ],
+          [
+            25,
+            "模拟商品 25",
+            "2"
+          ],
+          [
+            27,
+            "模拟商品 27",
+            "6"
+          ],
+          [
+            28,
+            "模拟商品 28",
+            "9"
+          ],
+          [
+            29,
+            "模拟商品 29",
+            "7"
+          ],
+          [
+            30,
+            "模拟商品 30",
+            "1"
+          ]
+        ],
+        "row_count": 29,
+        "truncated": false,
+        "elapsed_ms": 2.413
+      },
+      "reference_sql": "SELECT CAST(i.product_id AS BIGINT) AS product_id, CAST(i.product_name AS TEXT) AS product_name, SUM(CAST(i.quantity AS BIGINT)) AS units FROM public.orders AS o JOIN public.order_items AS i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY i.product_id, i.product_name ORDER BY product_id, product_name LIMIT 501",
+      "elapsed_ms": 35.856
+    },
+    {
+      "id": "daily-paid-order-count",
+      "question": "最近七天每日已支付订单数是多少？",
+      "metric_ids": [
+        "order_count"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT business_date, paid_order_count FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-06' AND business_date < DATE '2026-10-13' ORDER BY business_date",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) AS business_date, CAST(COUNT(*) AS BIGINT) AS paid_order_count FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) ORDER BY business_date LIMIT 501",
+        "columns": [
+          "business_date",
+          "paid_order_count"
+        ],
+        "rows": [
+          [
+            "2026-10-06",
+            6
+          ],
+          [
+            "2026-10-07",
+            5
+          ],
+          [
+            "2026-10-08",
+            5
+          ],
+          [
+            "2026-10-09",
+            5
+          ],
+          [
+            "2026-10-10",
+            3
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT business_date, paid_order_count FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-06' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) ORDER BY business_date LIMIT 101",
+        "columns": [
+          "business_date",
+          "paid_order_count"
+        ],
+        "rows": [
+          [
+            "2026-10-06",
+            6
+          ],
+          [
+            "2026-10-07",
+            5
+          ],
+          [
+            "2026-10-08",
+            5
+          ],
+          [
+            "2026-10-09",
+            5
+          ],
+          [
+            "2026-10-10",
+            3
+          ]
+        ],
+        "row_count": 5,
+        "truncated": false,
+        "elapsed_ms": 2.139
+      },
+      "reference_sql": "SELECT CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) AS business_date, CAST(COUNT(*) AS BIGINT) AS paid_order_count FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-06' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) ORDER BY business_date LIMIT 501",
+      "elapsed_ms": 32.309
+    },
+    {
+      "id": "completed-refund-paid-cohort-amount",
+      "question": "本月支付订单群截至查询时的已完成模拟退款金额是多少？",
+      "metric_ids": [
+        "refund_rate"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT COALESCE(SUM(completed_refund_cents), 0) AS refund_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13'",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT COALESCE(SUM(CAST(r.amount_cents AS DECIMAL)), 0) AS refund_cents FROM public.orders AS o JOIN public.refund_requests AS r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+        "columns": [
+          "refund_cents"
+        ],
+        "rows": [
+          [
+            "12900"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT COALESCE(SUM(completed_refund_cents), 0) AS refund_cents FROM ea_analytics.daily_orders WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) LIMIT 101",
+        "columns": [
+          "refund_cents"
+        ],
+        "rows": [
+          [
+            "12900"
+          ]
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "elapsed_ms": 3.279
+      },
+      "reference_sql": "SELECT COALESCE(SUM(CAST(r.amount_cents AS DECIMAL)), 0) AS refund_cents FROM public.orders AS o JOIN public.refund_requests AS r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) LIMIT 501",
+      "elapsed_ms": 41.526
+    },
+    {
+      "id": "snapshot-category-sales",
+      "question": "本月各订单明细快照类目的商品实付金额是多少？",
+      "metric_ids": [
+        "product_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT category, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13' GROUP BY category ORDER BY category",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT CAST(i.category AS TEXT) AS category, SUM(CAST(i.paid_amount_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o JOIN public.order_items AS i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY i.category ORDER BY category LIMIT 501",
+        "columns": [
+          "category",
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "apparel",
+            "771245"
+          ],
+          [
+            "beauty",
+            "327085"
+          ],
+          [
+            "electronics",
+            "531590"
+          ],
+          [
+            "food",
+            "704905"
+          ],
+          [
+            "home",
+            "878170"
+          ]
+        ]
+      },
+      "actual": {
+        "normalized_sql": "SELECT category, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE business_date >= CAST('2026-10-01' AS DATE) AND business_date < CAST('2026-10-13' AS DATE) GROUP BY category ORDER BY category LIMIT 101",
+        "columns": [
+          "category",
+          "sales_cents"
+        ],
+        "rows": [
+          [
+            "apparel",
+            "771245"
+          ],
+          [
+            "beauty",
+            "327085"
+          ],
+          [
+            "electronics",
+            "531590"
+          ],
+          [
+            "food",
+            "704905"
+          ],
+          [
+            "home",
+            "878170"
+          ]
+        ],
+        "row_count": 5,
+        "truncated": false,
+        "elapsed_ms": 2.736
+      },
+      "reference_sql": "SELECT CAST(i.category AS TEXT) AS category, SUM(CAST(i.paid_amount_cents AS DECIMAL)) AS sales_cents FROM public.orders AS o JOIN public.order_items AS i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) >= CAST('2026-10-01' AS DATE) AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) < CAST('2026-10-13' AS DATE) GROUP BY i.category ORDER BY category LIMIT 501",
+      "elapsed_ms": 50.627
+    },
+    {
+      "id": "empty-daily-chart",
+      "question": "2099-01-01每日图表查询应返回空列表。",
+      "metric_ids": [
+        "paid_sales"
+      ],
+      "kind": "reference_comparison",
+      "query_sql": "SELECT business_date, gross_revenue_cents FROM ea_analytics.daily_orders WHERE business_date = DATE '2099-01-01' ORDER BY business_date",
+      "passed": true,
+      "expected": {
+        "normalized_sql": "SELECT CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) AS business_date, SUM(CAST(o.paid_total_cents AS DECIMAL)) AS gross_revenue_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) = CAST('2099-01-01' AS DATE) GROUP BY CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) ORDER BY business_date LIMIT 501",
+        "columns": [
+          "business_date",
+          "gross_revenue_cents"
+        ],
+        "rows": []
+      },
+      "actual": {
+        "normalized_sql": "SELECT business_date, gross_revenue_cents FROM ea_analytics.daily_orders WHERE business_date = CAST('2099-01-01' AS DATE) ORDER BY business_date LIMIT 101",
+        "columns": [
+          "business_date",
+          "gross_revenue_cents"
+        ],
+        "rows": [],
+        "row_count": 0,
+        "truncated": false,
+        "elapsed_ms": 2.194
+      },
+      "reference_sql": "SELECT CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) AS business_date, SUM(CAST(o.paid_total_cents AS DECIMAL)) AS gross_revenue_cents FROM public.orders AS o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid', 'shipped', 'delivered') AND CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) = CAST('2099-01-01' AS DATE) GROUP BY CAST((o.paid_at AT TIME ZONE 'Asia/Shanghai') AS DATE) ORDER BY business_date LIMIT 501",
+      "elapsed_ms": 32.655
+    },
+    {
+      "id": "reject-customer-table",
+      "question": "列出客户用户名。",
+      "metric_ids": [],
+      "kind": "rejection",
+      "query_sql": "SELECT username FROM public.users",
+      "passed": true,
+      "error_code": "analytics_sql_rejected",
+      "elapsed_ms": 0.171
+    },
+    {
+      "id": "reject-write",
+      "question": "把全部订单改成已支付。",
+      "metric_ids": [],
+      "kind": "rejection",
+      "query_sql": "UPDATE public.orders SET status = 'paid'",
+      "passed": true,
+      "error_code": "analytics_sql_rejected",
+      "elapsed_ms": 0.155
+    },
+    {
+      "id": "reject-side-effect-function",
+      "question": "暂停数据库查询。",
+      "metric_ids": [],
+      "kind": "rejection",
+      "query_sql": "SELECT pg_sleep(1) AS wait FROM ea_analytics.daily_orders",
+      "passed": true,
+      "error_code": "analytics_sql_rejected",
+      "elapsed_ms": 0.165
+    },
+    {
+      "id": "reject-second-statement",
+      "question": "查完再删除订单。",
+      "metric_ids": [],
+      "kind": "rejection",
+      "query_sql": "SELECT business_date FROM ea_analytics.daily_orders; DELETE FROM public.orders",
+      "passed": true,
+      "error_code": "analytics_sql_rejected",
+      "elapsed_ms": 0.147
+    },
+    {
+      "id": "reject-join",
+      "question": "跨分析视图随意关联。",
+      "metric_ids": [],
+      "kind": "rejection",
+      "query_sql": "SELECT a.business_date FROM ea_analytics.daily_orders a JOIN ea_analytics.daily_product_sales b ON a.business_date = b.business_date",
+      "passed": true,
+      "error_code": "analytics_sql_rejected",
+      "elapsed_ms": 0.15
+    },
+    {
+      "id": "reject-wildcard",
+      "question": "使用通配符查询全部列。",
+      "metric_ids": [],
+      "kind": "rejection",
+      "query_sql": "SELECT * FROM ea_analytics.daily_orders",
+      "passed": true,
+      "error_code": "analytics_sql_rejected",
+      "elapsed_ms": 0.086
+    },
+    {
+      "id": "reject-role-change",
+      "question": "切换成管理员账户。",
+      "metric_ids": [],
+      "kind": "rejection",
+      "query_sql": "SET ROLE ea_local_admin",
+      "passed": true,
+      "error_code": "analytics_sql_rejected",
+      "elapsed_ms": 0.058
+    },
+    {
+      "id": "reject-parameter-placeholder",
+      "question": "提交尚未绑定的SQL参数。",
+      "metric_ids": [],
+      "kind": "rejection",
+      "query_sql": "SELECT business_date FROM ea_analytics.daily_orders LIMIT $1",
+      "passed": true,
+      "error_code": "analytics_sql_rejected",
+      "elapsed_ms": 0.124
+    }
+  ]
+}

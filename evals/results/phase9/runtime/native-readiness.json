@@ -1,0 +1,35 @@
+{
+    "checked_at_utc":  "2026-10-14T20:45:20.9126636Z",
+    "status":  "passed",
+    "api_origin":  "http://127.0.0.1:8000",
+    "web_origin":  "http://127.0.0.1:5173",
+    "api":  {
+                "status":  "ok",
+                "service":  "EnterpriseAgent",
+                "version":  "0.9.0",
+                "phase":  9,
+                "checks":  {
+                               "application":  "ok",
+                               "database":  "ok",
+                               "redis":  "ok",
+                               "knowledge":  "ok",
+                               "agent_checkpoint":  "ok",
+                               "analytics":  "ok"
+                           }
+            },
+    "proxy":  {
+                  "status":  "ok",
+                  "service":  "EnterpriseAgent",
+                  "version":  "0.9.0",
+                  "phase":  9,
+                  "checks":  {
+                                 "application":  "ok",
+                                 "database":  "ok",
+                                 "redis":  "ok",
+                                 "knowledge":  "ok",
+                                 "agent_checkpoint":  "ok",
+                                 "analytics":  "ok"
+                             }
+              },
+    "scope":  "Existing native API restarted from verified project launcher; readiness only, no new chat model call"
+}

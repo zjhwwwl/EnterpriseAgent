@@ -1,0 +1,48 @@
+{
+    "checked_at_utc":  "2026-10-14T20:57:11.8261012Z",
+    "status":  "passed",
+    "api_origin":  "http://127.0.0.1:18000",
+    "web_origin":  "http://127.0.0.1:15173",
+    "api":  {
+                "status":  "ok",
+                "service":  "EnterpriseAgent",
+                "version":  "0.9.0",
+                "phase":  9,
+                "checks":  {
+                               "application":  "ok",
+                               "database":  "ok",
+                               "redis":  "ok",
+                               "knowledge":  "ok",
+                               "agent_checkpoint":  "ok",
+                               "analytics":  "ok"
+                           }
+            },
+    "proxy":  {
+                  "status":  "ok",
+                  "service":  "EnterpriseAgent",
+                  "version":  "0.9.0",
+                  "phase":  9,
+                  "checks":  {
+                                 "application":  "ok",
+                                 "database":  "ok",
+                                 "redis":  "ok",
+                                 "knowledge":  "ok",
+                                 "agent_checkpoint":  "ok",
+                                 "analytics":  "ok"
+                             }
+              },
+    "current_image_id":  "sha256:bcdf6d6c2c14e6cea918b048e920cb6fe72b802216514c480d7ec5eab5a28a45",
+    "source_checks":  [
+                          {
+                              "sha256":  "e862c1f4e2bf7e5413f00c965d2119219903a83bf6c27d6c6dc1837bb53e465c",
+                              "relative_file":  "src/enterprise_agent/deployment.py",
+                              "matches_running_container":  true
+                          },
+                          {
+                              "sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+                              "relative_file":  "evals/datasets/rag.json",
+                              "matches_running_container":  true
+                          }
+                      ],
+    "scope":  "Final rebuilt API image readiness and exact deployment CLI/dataset source identity after separate RAG CLI execution; no cloud call or browser interaction"
+}

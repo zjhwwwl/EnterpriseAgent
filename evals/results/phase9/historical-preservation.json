@@ -1,0 +1,127 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "historical_phase8_raw_archive_preservation",
+    "source":  "evals/results/phase8/artifact-sources.json",
+    "source_sha256":  "b797d8a2467dfbcebed457e4c783f64ae4c6128780ce31479440226eab4d9bd2",
+    "checked_at_utc":  "2026-10-15T08:46:57.2054229Z",
+    "artifacts_checked":  19,
+    "all_unchanged":  true,
+    "artifacts":  [
+                      {
+                          "public_artifact":  "evals/results/phase8/boundaries/results.json",
+                          "recorded_sha256":  "fd66c29155cc7cd492a7a99e732e1b0a3b7d50ddec1c37b673c192c4a91fec14",
+                          "actual_sha256":  "fd66c29155cc7cd492a7a99e732e1b0a3b7d50ddec1c37b673c192c4a91fec14",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/boundaries/results.csv",
+                          "recorded_sha256":  "261f750ff4aefffc8cbb502c1a6fb095a24eec997124b923f98849e216eb766a",
+                          "actual_sha256":  "261f750ff4aefffc8cbb502c1a6fb095a24eec997124b923f98849e216eb766a",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/boundaries/report.md",
+                          "recorded_sha256":  "400d099be26e97c6ae2517b1a8057dbab0a13835fe1b335f1cb66ead49be4111",
+                          "actual_sha256":  "400d099be26e97c6ae2517b1a8057dbab0a13835fe1b335f1cb66ead49be4111",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/rag/results.json",
+                          "recorded_sha256":  "86d188e932f50d616ecc784bed0ea458e7de4afcc9ae3a21de3ad5b2f81df622",
+                          "actual_sha256":  "86d188e932f50d616ecc784bed0ea458e7de4afcc9ae3a21de3ad5b2f81df622",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/rag/report.md",
+                          "recorded_sha256":  "bceae016294bf5e1c8c582be2a4e09ecbc88569b9065ddac8edb12d623f96b0b",
+                          "actual_sha256":  "bceae016294bf5e1c8c582be2a4e09ecbc88569b9065ddac8edb12d623f96b0b",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/rag/metrics.csv",
+                          "recorded_sha256":  "3de37f1634db4b3602a8956e40c342de7c0e93087eeec41c28caab8b9dce5bb1",
+                          "actual_sha256":  "3de37f1634db4b3602a8956e40c342de7c0e93087eeec41c28caab8b9dce5bb1",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/rag/queries.csv",
+                          "recorded_sha256":  "38fc8c40f857af480dbd3a2009972f17b22fec41ec7db35f972e958fa03f6af3",
+                          "actual_sha256":  "38fc8c40f857af480dbd3a2009972f17b22fec41ec7db35f972e958fa03f6af3",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/sql/results.json",
+                          "recorded_sha256":  "a1122223486573c7c87c7ae8f9bf971325dc76f42caf01813ce3aed5623227f4",
+                          "actual_sha256":  "a1122223486573c7c87c7ae8f9bf971325dc76f42caf01813ce3aed5623227f4",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/sql/report.md",
+                          "recorded_sha256":  "47498ba444c542291fd24efde745e1227098a0085ef0b97a13a04b57550aa8dc",
+                          "actual_sha256":  "47498ba444c542291fd24efde745e1227098a0085ef0b97a13a04b57550aa8dc",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/live/results.json",
+                          "recorded_sha256":  "f7d2c3ffa4f04f758f902b621ca5d7059c065aea84e4c6986c3f2a0a3dff053b",
+                          "actual_sha256":  "f7d2c3ffa4f04f758f902b621ca5d7059c065aea84e4c6986c3f2a0a3dff053b",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/live/report.md",
+                          "recorded_sha256":  "95e4c4ffdb6607ff493b90ff2e15410c4229c9522a298c89806957030a1eeca3",
+                          "actual_sha256":  "95e4c4ffdb6607ff493b90ff2e15410c4229c9522a298c89806957030a1eeca3",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/live/cases.csv",
+                          "recorded_sha256":  "b57eeaf9ada5449f92760911649a78534886acc6d50719cb96b9068bc33c0d5f",
+                          "actual_sha256":  "b57eeaf9ada5449f92760911649a78534886acc6d50719cb96b9068bc33c0d5f",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/observability/verification.json",
+                          "recorded_sha256":  "02556bd2c30ef9bee55fe2f015306e85fc0766f222495d5f57795febb09ccf0d",
+                          "actual_sha256":  "02556bd2c30ef9bee55fe2f015306e85fc0766f222495d5f57795febb09ccf0d",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/observability/snapshots.jsonl",
+                          "recorded_sha256":  "4c13a601dec388bdff5303674588b4f4cb579b44c79ae9438fb874780bae596b",
+                          "actual_sha256":  "4c13a601dec388bdff5303674588b4f4cb579b44c79ae9438fb874780bae596b",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/preparation.json",
+                          "recorded_sha256":  "a5de19fe6ad411f723438297f71057a999cc3909804fa3f996e895b99e9084fb",
+                          "actual_sha256":  "a5de19fe6ad411f723438297f71057a999cc3909804fa3f996e895b99e9084fb",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/frontend-unit.json",
+                          "recorded_sha256":  "1b20d01c7cc1423fbc9cc82a68d52e11f18de462f9d7609769dca3524a0f37b2",
+                          "actual_sha256":  "1b20d01c7cc1423fbc9cc82a68d52e11f18de462f9d7609769dca3524a0f37b2",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/python-summary.json",
+                          "recorded_sha256":  "463928f746dc2437f2491481770692b7663e59374ec19d01f9c688901ac0dccf",
+                          "actual_sha256":  "463928f746dc2437f2491481770692b7663e59374ec19d01f9c688901ac0dccf",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/source-before.json",
+                          "recorded_sha256":  "94fcd8ba0bd13ea211424e0902c348d32cc22ee199ba6f0a623fea8956afbd9a",
+                          "actual_sha256":  "94fcd8ba0bd13ea211424e0902c348d32cc22ee199ba6f0a623fea8956afbd9a",
+                          "unchanged":  true
+                      },
+                      {
+                          "public_artifact":  "evals/results/phase8/demo-ready.json",
+                          "recorded_sha256":  "2a893e639dfbf2417d4004e3af46ba26fbbafd3e587dbfbb1a43cbc9dea40690",
+                          "actual_sha256":  "2a893e639dfbf2417d4004e3af46ba26fbbafd3e587dbfbb1a43cbc9dea40690",
+                          "unchanged":  true
+                      }
+                  ],
+    "scope":  "Checks the raw artifacts listed by the historical manifest; does not recompute or replace historical evaluation metrics."
+}

@@ -1,0 +1,37 @@
+{
+    "checked_at_utc":  "2026-10-14T20:24:08.2628649Z",
+    "status":  "passed",
+    "before_container_id":  "749de5870e78e4f103b5e26911f6c29da2272a28066cee5fbc1185ed08763091",
+    "after_container_id":  "814a98accbb3a9acf6d410e75fbb28fcf4e59f7a9522f870b439ad0620aba872",
+    "before_edge_ip":  "172.20.0.2",
+    "after_edge_ip":  "172.20.0.2",
+    "container_changed":  true,
+    "proxy_recovered":  true,
+    "readiness":  {
+                      "status":  "ok",
+                      "service":  "EnterpriseAgent",
+                      "version":  "0.9.0",
+                      "phase":  9,
+                      "checks":  {
+                                     "application":  "ok",
+                                     "database":  "ok",
+                                     "redis":  "ok",
+                                     "knowledge":  "ok",
+                                     "agent_checkpoint":  "ok",
+                                     "analytics":  "ok"
+                                 }
+                  },
+    "business_snapshot":  {
+                              "orders":  500,
+                              "order_items":  1016,
+                              "refund_requests":  19,
+                              "support_tickets":  19,
+                              "documents":  5,
+                              "chunks":  44,
+                              "order_status_md5":  "93a5f94bcf4dddcdad141ce138d217ac",
+                              "document_version_md5":  "83a8a0dd6339ac4340b1020fc34e5a45"
+                          },
+    "business_snapshot_unchanged":  true,
+    "model_requests":  0,
+    "scope":  "Only the verified API container was replaced; existing Nginx was kept. Readonly main-database counts, order statuses and document versions matched; not a crash-consistency or generalized recovery proof"
+}

@@ -117,7 +117,7 @@ function logout() {
         <span class="tiny-dot" />模拟业务 · 本地演示
         <p>每个答案有来源<br />每次执行可追溯</p>
         <span class="version-label"
-          >EnterpriseAgent {{ version || "0.8.0" }}</span
+          >EnterpriseAgent {{ version || "0.9.0" }}</span
         >
       </div>
     </aside>

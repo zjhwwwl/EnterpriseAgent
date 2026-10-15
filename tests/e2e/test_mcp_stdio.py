@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 
 import pytest
 import pytest_asyncio
+from database_scope import require_test_database
 from mcp import ClientSession, StdioServerParameters
 from mcp.client import stdio as sdk_stdio
 from pydantic import SecretStr
@@ -33,8 +34,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.postgres, pytest.mark.rag]
 @pytest.fixture
 def mcp_wire_settings(rag_settings, pg_urls):
     database = make_url(pg_urls[0])
-    assert database.database == "enterprise_agent_test" and database.username == "ea_test_app"
-    assert database.host in {"127.0.0.1", "localhost"}
+    require_test_database(database)
     return rag_settings.model_copy(
         update={
             "database_url": SecretStr(pg_urls[0]),

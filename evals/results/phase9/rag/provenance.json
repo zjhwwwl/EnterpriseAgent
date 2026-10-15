@@ -1,0 +1,98 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "fresh_v2_rag_input_and_source_provenance",
+    "dataset_id":  "enterprise-agent-rag-policies-v2",
+    "canonical_dataset_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+    "canonical_dataset_sha256_after":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+    "canonical_dataset_unchanged":  true,
+    "input_dataset_source":  "var/compose/app/evaluation/phase9/corpus-v2.json",
+    "repository_dataset":  "evals/datasets/rag.json",
+    "raw_input_file_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+    "repository_dataset_raw_sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+    "repository_dataset_byte_match":  true,
+    "source_hashes_stable":  true,
+    "host_relevant_source_hashes_match":  true,
+    "relevant_source_file_count":  10,
+    "source_comparisons":  [
+                               {
+                                   "file":  "src/enterprise_agent/evaluation.py",
+                                   "run_sha256":  "51ea6286f086fcb0487dae28783d05d800a678fe6643d729b0aa69ab16f97c0e",
+                                   "run_after_sha256":  "51ea6286f086fcb0487dae28783d05d800a678fe6643d729b0aa69ab16f97c0e",
+                                   "host_sha256":  "51ea6286f086fcb0487dae28783d05d800a678fe6643d729b0aa69ab16f97c0e",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/services/knowledge.py",
+                                   "run_sha256":  "470b7cfdd5d4324a2a580adde20afa26c07253ae9ba429392396d99ccfa747f5",
+                                   "run_after_sha256":  "470b7cfdd5d4324a2a580adde20afa26c07253ae9ba429392396d99ccfa747f5",
+                                   "host_sha256":  "470b7cfdd5d4324a2a580adde20afa26c07253ae9ba429392396d99ccfa747f5",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/rag/backends.py",
+                                   "run_sha256":  "7c6f9d6faa81312edba0a8320a280f475f49bb6aa67019bb031e73cc7c99620d",
+                                   "run_after_sha256":  "7c6f9d6faa81312edba0a8320a280f475f49bb6aa67019bb031e73cc7c99620d",
+                                   "host_sha256":  "7c6f9d6faa81312edba0a8320a280f475f49bb6aa67019bb031e73cc7c99620d",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/rag/ranking.py",
+                                   "run_sha256":  "5b13b3b2275943f3460cd28694338345af9e3e211b53485ede86422f45e8568c",
+                                   "run_after_sha256":  "5b13b3b2275943f3460cd28694338345af9e3e211b53485ede86422f45e8568c",
+                                   "host_sha256":  "5b13b3b2275943f3460cd28694338345af9e3e211b53485ede86422f45e8568c",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/rag/runtime.py",
+                                   "run_sha256":  "630fe2314cb9a9a3bf27221910ad313d760d672bd59a935ad0b3f109895c399a",
+                                   "run_after_sha256":  "630fe2314cb9a9a3bf27221910ad313d760d672bd59a935ad0b3f109895c399a",
+                                   "host_sha256":  "630fe2314cb9a9a3bf27221910ad313d760d672bd59a935ad0b3f109895c399a",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/rag/store.py",
+                                   "run_sha256":  "028d07eac7f14907d7b1bd033d6df4b30aea95ed896b5d37e9624914c0845d4a",
+                                   "run_after_sha256":  "028d07eac7f14907d7b1bd033d6df4b30aea95ed896b5d37e9624914c0845d4a",
+                                   "host_sha256":  "028d07eac7f14907d7b1bd033d6df4b30aea95ed896b5d37e9624914c0845d4a",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/repositories/knowledge.py",
+                                   "run_sha256":  "dce831d2dc39f79ff4b26b9f59e12c917169709bb0d4065df1b6e800002d948a",
+                                   "run_after_sha256":  "dce831d2dc39f79ff4b26b9f59e12c917169709bb0d4065df1b6e800002d948a",
+                                   "host_sha256":  "dce831d2dc39f79ff4b26b9f59e12c917169709bb0d4065df1b6e800002d948a",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/config.py",
+                                   "run_sha256":  "96bfc18aa8111fa5e577253501e8940039ed32855784066394b235b4c1308627",
+                                   "run_after_sha256":  "96bfc18aa8111fa5e577253501e8940039ed32855784066394b235b4c1308627",
+                                   "host_sha256":  "96bfc18aa8111fa5e577253501e8940039ed32855784066394b235b4c1308627",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/rag/parsing.py",
+                                   "run_sha256":  "b71bd2c1ad6f724d0865071e73013e0e15a9c247a9182631b396a1e98a612837",
+                                   "run_after_sha256":  "b71bd2c1ad6f724d0865071e73013e0e15a9c247a9182631b396a1e98a612837",
+                                   "host_sha256":  "b71bd2c1ad6f724d0865071e73013e0e15a9c247a9182631b396a1e98a612837",
+                                   "matches":  true
+                               },
+                               {
+                                   "file":  "src/enterprise_agent/rag/chunking.py",
+                                   "run_sha256":  "6859deb941258809710dafc8de5af0614840c97c2898400ee4bf8f1e1d9175eb",
+                                   "run_after_sha256":  "6859deb941258809710dafc8de5af0614840c97c2898400ee4bf8f1e1d9175eb",
+                                   "host_sha256":  "6859deb941258809710dafc8de5af0614840c97c2898400ee4bf8f1e1d9175eb",
+                                   "matches":  true
+                               }
+                           ],
+    "model_manifest_unchanged":  true,
+    "corpus_changed_during_run":  false,
+    "container_git_metadata":  {
+                                   "commit":  null,
+                                   "dirty":  null
+                               },
+    "git_metadata_note":  "The image did not provide Git metadata; reported null values are preserved rather than backfilled as a run commit.",
+    "metric_scope":  "document relevance after deduplicating top_k returned chunks",
+    "scope":  "Fresh Linux read-only retrieval run on the updated v2 corpus; known synthetic labels, not blind evaluation or a performance benchmark."
+}

@@ -2,7 +2,7 @@
 
 ## 实际支持范围
 
-Phase 8 / 0.8.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio / 只读运营分析 / Vue 管理后台 / 评估与元数据追踪 + Linux PostgreSQL / Redis / Chroma 容器**。本阶段证据见[Phase 8](phase-8.md)，前端浏览器及历史 MCP、SQL 和在线 Agent 结果保留。当前 Compose 为基础设施，没有应用 Dockerfile、全栈前端镜像、GitHub Actions 执行、公网发布或生产部署证明。
+Phase 9 / 0.9.0 保留 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 MCP stdio / 只读运营分析 / Vue 管理后台 / 评估与元数据追踪 + Linux 基础设施容器**，新增独立 Linux 全栈 Compose、API / web Dockerfile、Linux 哈希锁与 GitHub Actions 工作流。实际容器与测试验收按[Phase 9](phase-9.md)记录；历史浏览器、MCP、SQL 和在线 Agent 结果保留。交付 workflow 文件不代表已在 GitHub 平台执行，也没有公网发布或生产部署证明。
 
 默认仅绑定 loopback，使用虚构数据与公开演示账号。没有真实支付、退款或付费云资源。
 
@@ -20,15 +20,17 @@ Phase 8 / 0.8.0 支持 **Windows 本机 FastAPI / LangGraph / CPU ONNX / 独立 
 | 前端依赖/构建 | 项目 frontend/node_modules、frontend/dist，Git 忽略 |
 | npm / 浏览器测试缓存 | 项目 var/cache 下；具体安装与检查以脚本为准 |
 
-Docker 程序与实际数据盘分别配置，少量 Windows 用户配置仍可能在 C 盘；本项目不另装 Ubuntu。基础设施镜像为 PostgreSQL 17.11-bookworm、Redis 8.4-alpine、Chroma 1.5.9，API 和本地模型运行在 Windows，不把容器运行当作 Linux 应用安装证明。
+Docker 程序与实际数据盘分别配置，少量 Windows 用户配置仍可能在 C 盘；本项目不另装 Ubuntu。基础设施镜像为 PostgreSQL 17.11-bookworm、Redis 8.4-alpine、Chroma 1.5.9。原开发方式在 Windows 运行 API 和本地推理；全栈方式使用 Linux Python 3.13.15-slim-bookworm、Node 24.19.0 构建与 Nginx 静态站点。基础设施心跳、应用依赖安装和真实推理分别验证，不相互替代。
 
-Python 3.13 项目虚拟环境须先可用。bootstrap 按 requirements/dev.lock 的哈希安装依赖，再以 --no-deps --no-build-isolation 可编辑安装并运行 pip check，不安装 Python 或 Docker、不覆盖已有 .env。当前锁文件已在 Windows 验证，Linux 应用依赖尚待交付阶段验证。
+Windows Python 3.13 项目虚拟环境须先可用。bootstrap 按 requirements/dev.lock 的哈希安装依赖，再以 --no-deps --no-build-isolation 可编辑安装并运行 pip check，不安装 Python 或 Docker、不覆盖已有 .env。Linux 镜像使用 requirements/linux-base.lock 与 linux-dev.lock，通过 --require-hashes --only-binary=:all: 安装，版本与实际安装证据见本阶段记录。
 
-Phase 5 固定官方 mcp 1.30.0，并安装 Windows stdio 子进程所需 pywin32。两份 lock 是本机 Windows 解析结果，其中 pywin32 没有平台 marker；不能直接拿该 lock 安装 Linux 应用镜像，Phase 9 需重新解析并验证目标平台依赖。
+Phase 5 固定官方 mcp 1.30.0，Windows stdio 子进程所需 pywin32 保留在 Windows 锁。Linux 锁在真实目标平台重新解析，同一 MCP SDK 按平台条件选择依赖，不把 Windows lock 直接用于 Linux 镜像。
 
 Phase 6 固定 SQLGlot 30.22.0，使用 PostgreSQL AST 白名单；显式依赖 tzdata 以支持 Windows 的 ZoneInfo / Asia/Shanghai。依赖锁保持已固定版本，新增依赖仍通过哈希校验；不能仅据锁文件声称完成 Linux 应用安装。
 
 ## 首次启动
+
+以下命令保留 Windows 开发方式；独立全栈容器方式见后面的“Linux 全栈 Compose”说明，两套项目的秘密、端口和数据分别管理。
 
 ```powershell
 Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
@@ -72,7 +74,7 @@ Set-Location 'D:\Python\PycharmProjects\EnterpriseAgent'
 .\scripts\frontend.ps1 -Mode Run
 ```
 
-访问 `http://127.0.0.1:5173`，使用 README 中的公开模拟账号。`Install` 根据锁文件安装依赖；`Run` 启动 Vite；`Check` 执行格式检查、Vitest、TypeScript/Vite 构建和生产依赖 audit，测试 JSON 写入 `var/test-results/phase8-frontend-unit.json`：
+访问 `http://127.0.0.1:5173`，使用 README 中的公开模拟账号。`Install` 根据锁文件安装依赖；`Run` 启动 Vite；`Check` 执行格式检查、Vitest、TypeScript/Vite 构建和生产依赖 audit，测试 JSON 写入 `var/test-results/phase9-frontend-unit.json`：
 
 ```powershell
 .\scripts\frontend.ps1 -Mode Check
@@ -353,7 +355,7 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/ready'
 
 ready 要求 application、database、已配置 Redis、已启用 knowledge、已建立 agent_checkpoint 以及启用时的 analytics 通过。业务库验证当前迁移 head，分析库验证固定 schema marker、两个视图、专用角色和授权边界；knowledge 校验本地模型与 Chroma 心跳，checkpoint 检查官方 SDK 版本和运行账号权限。健康不验证每个语料活动索引、模型配置、DeepSeek 在线状态或模型 SQL 语义。
 
-本阶段[重启后的 HTTP 证据](../evals/results/phase8/demo-ready.json)记录后端 0.8.0/phase=8、六项 ready 检查通过、Vite 5173 返回 200 且健康代理一致。该检查新增模型请求 0，只证明对应本机启动状态，没有执行新一轮浏览器业务流程、Linux 应用镜像或公网部署。
+Phase 8 [重启后的 HTTP 证据](../evals/results/phase8/demo-ready.json)记录后端 0.8.0/phase=8、六项 ready 检查通过、Vite 5173 返回 200 且健康代理一致。该检查新增模型请求 0，只证明对应本机启动状态，当时没有执行新一轮浏览器业务流程、Linux 应用镜像或公网部署。
 
 完整检查结果保存本阶段var/test-results JSON/JUnit；Phase 4初验511项通过，零失败/错误/跳过，Ruff与pip check通过，公共证据见[验收记录](phase-4.md)及[验证摘要](../evals/results/phase4/verification.json)。检索评估输出路径仍由evaluate-rag配置，历史Phase 3原始JSON/CSV/报告保留，不作为Phase 4 Agent效果分数。依赖缺失的跳过不属于通过，SkipPostgres/SkipRag只用于局部开发。
 
@@ -373,4 +375,67 @@ docker compose --env-file var/infra-secrets.env -f deploy/compose.yaml stop
 
 stop 保留数据。不自动使用 down -v、drop database、prune 或删除其他项目文件。
 
-API/前端应用镜像、Linux应用依赖、全栈 Compose、CI及公网部署属于后续阶段。Vue 的构建与实际本地浏览器记录单独见 Phase 7，不当作 Linux 应用或公网部署验证。当前没有独立 Worker、自动维护清理工具或部署到公网的记录。
+## Linux 全栈 Compose
+
+全栈文件为 [deploy/compose.full.yaml](../deploy/compose.full.yaml)，项目名 `enterpriseagent-full`，与原 `enterpriseagent` 基础设施分开。只暴露 `127.0.0.1:18000` 的 API 与 `127.0.0.1:15173` 的 web；PostgreSQL、Redis、Chroma 不映射宿主端口，使用内部网络。静态 Vue 站点由 Nginx 代理同源 `/api/` 与 `/health/`，直接刷新前端路由由 SPA fallback 处理。
+
+确认固定模型已经位于 `var/models` 后，Windows PowerShell 执行：
+
+```powershell
+.\scripts\full-stack.ps1 -Mode Prepare
+.\scripts\full-stack.ps1 -Mode Up
+.\scripts\full-stack.ps1 -Mode Check
+# 运行单独测试容器；它只重置 enterprise_agent_test 中的虚构测试记录
+.\scripts\full-stack.ps1 -Mode Test
+# 停止属于 enterpriseagent-full 的服务，保留所有持久数据
+.\scripts\full-stack.ps1 -Mode Stop
+```
+
+`Prepare` 仅补齐本项目目录、未存在的随机 secret 文件和空模型 Key，检查模型资产目录存在并校验 Compose；不覆盖已有秘密或数据库。`Up` 构建 API / web 并等待依赖健康与 setup 成功，随后执行 loopback 检查；`Check` 保存 `var/test-results/phase9/readiness.json`，不发送聊天请求。`Test` 构建并运行 test profile 镜像，JUnit / 固定 SQL / 故障结果留在 `var/compose/test-output`。失败退出时保留原数据和日志，不自动删卷或重试付费模型。
+
+包装脚本显式指定 `--project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml`，公共开关单独保存在 compose.env，不读取根 `.env`、已有开发 DSN 或继承其他 Compose 项目名。公共文件没有密码；所有 secret 文件只在本机生成，`.dockerignore` 也排除 `.env`、var、模型、构建缓存和本地日志。
+
+账号名称与 README 相同，setup 使用 `var/compose/secrets/demo-password` 的随机密码；README 的 `DemoOnly!2026` 只适用于原 Windows 开发库。不要把该密码写进文档、截图、Git 或前端编译配置。初始密码文件生成后被保留，重复 `Prepare` 不会旋转密码或重置 seed。
+
+| 服务 | 运行职责 / 秘密 |
+| --- | --- |
+| postgres | 独立本地库与测试库、既有初始化 ACL；密码文件不进入镜像 |
+| redis / chroma | 独立持久目录与内部网络，不监听公网 |
+| setup | 一次性迁移、seed42 / 500 模拟订单 / 2026-10-12、真实 CPU 推理和知识索引；短期使用初始化账号 |
+| api | `ea_app` 与 `ea_analytics_reader`、JWT、可选模型 Key；不挂载 owner / 测试 / demo 密码 |
+| web | Nginx 静态站点及同源 API 代理，不持有后端秘密 |
+| tests（test profile） | 独立测试业务 / reader / 初始化账号，只访问本项目测试库，运行强制 PostgreSQL / RAG 检查 |
+
+新增数据和秘密位于项目 D 盘 `var/compose/{postgres,redis,chroma,app,test-output,secrets}`；Docker 镜像缓存仍使用已配置的 `D:\DockerData`。Compose 使用宿主 `var/models/embedding`、`reranker`、`manifest.json` 三个只读挂载，推理缓存独立放在可写 tmpfs。setup / API 使用非 root 用户、只读根文件系统与有限临时目录；检查数据挂载是否可写属于启动验证，不通过删除旧数据解决权限问题。
+
+容器入口 `python -m enterprise_agent.deployment` 支持 `serve`、`setup`、`health`、`tests` 与 `rag-evaluate`。它从固定 `/run/secrets` 文件读取必要配置，不加载宿主 `.env` 或继承内联 DSN；收到内联数据库/密钥环境字段、setup/tests 开启聊天模型或远端 LangSmith 时拒绝运行。API 绑定容器 `0.0.0.0:8000` 是 Docker 内部监听，宿主映射仍为 loopback。
+
+完整部署默认 `EA_FULL_LLM_ENABLED=false`、`EA_FULL_DOCS_ENABLED=false`，所以业务查询、直接 RAG / SQL 和持久任务历史可运行，Agent 消息明确返回模型未配置。DeepSeek 不从现有 `.env` 自动复制：需要时由用户将自己的 Key 写入被忽略的 `var/compose/secrets/deepseek-api-key`，在公共 `var/compose/compose.env` 显式启用 `EA_FULL_LLM_ENABLED=true` 后重新运行 Up 更新 API。不要把 Key 放进命令、Compose environment、前端或 Git。远端 LangSmith 在此部署 profile 中关闭。
+
+Phase 9 修订了售后 Markdown 前言，`rag.json` v2 记录新 checksum。首次 full setup 使用新语料；已存在的旧开发库仍保护发布时来源，seed / 重索引不会替换该原件。旧库不应强改 checksum 以通过评估，v2 对照需使用对应新语料初始化的独立数据库。Phase 3 / Phase 8 旧 JSON / CSV / 报告保持原语料与指标，不能直接作为 v2 成绩。
+
+在已经初始化且知识索引就绪的 full 项目重新执行对照：
+
+```powershell
+docker compose --project-name enterpriseagent-full --env-file var/compose/compose.env -f deploy/compose.full.yaml exec -T api python -m enterprise_agent.deployment rag-evaluate
+```
+
+该入口复用原检索 evaluator，加载 API 当前挂载的普通应用凭据和 v2 数据集，局部显式关闭聊天模型，不使用 owner 或宿主 `.env`。默认新产物写入宿主 `var/compose/app/evaluation/phase9/rag-<UTC>`；可显式追加 `--output /app/var/data/evaluation/phase9/my-run`，请自行选择尚未使用的目录保留历史。自定义输出不提供既有目录防覆盖校验。稳定 CLI 已实际复验 60 条记录，结果与初轮分别保存；真实执行和代码范围见[本阶段记录](phase-9.md)。
+
+## GitHub Actions 与本地验证
+
+[.github/workflows/ci.yml](../.github/workflows/ci.yml) 支持 push、pull_request 和手动触发，权限为 contents:read，Action 使用提交 SHA 固定。两个 job 都在 Ubuntu 24.04：frontend 使用固定 Node 24.19.0 跑 npm ci、格式、Vitest、TypeScript / Vite 与生产 audit；linux-stack 构建 full API / web / tests、显式准备和校验固定 ONNX 文件、启动 setup / readiness / 代理检查，再运行后端测试与离线评估。backend job 不注入真实 Key，模型缓存只包含公开资产。
+
+上传产物是选定前端 JUnit、Linux JUnit、脱敏 stack-smoke JSON、固定 SQL 和故障 JSON / 报告，保留 7 天；不上传 var/compose/secrets、完整运行目录或容器环境。失败和取消时停止本次项目服务，保留数据及已生成证据。工作流没有发布镜像、推送站点、远端迁移或云部署步骤。
+
+Linux 后端检查使用 `scripts/ci/check_backend.sh`：Ruff / 格式 / pip check、模型资产核验、强制真实 PostgreSQL / RAG 的 pytest，以及明确故障注入与固定 SQL 评估。模型 fixture 和真实供应商消费仍分开；CI 显式关闭聊天模型及云端追踪，不需要 DeepSeek Key。最终本机完整检查链退出 0：pytest **1097 / 1097**、受控故障 **16 / 16**、人工 SQL **24 / 24**；JUnit 621.404 秒、0 失败/错误/跳过，87 条 Chroma 弃用警告保留。
+
+测试脚本每轮在 D 盘的专用测试输出挂载创建独立具名临时目录，用于约 397 MB 模型副本与 Ruff 缓存，执行前要求至少 2 GiB 可用空间。匿名输出捕获仍使用 Linux `/tmp`，避免 Docker Desktop 的 NTFS 绑定挂载对此类文件的兼容问题。旧轮次失败记录保留，不通过扩展宿主 C 盘缓存、取消真实模型校验或改用应用库来规避测试。
+
+60 条两模式 RAG 对照由独立 `rag-evaluate` 入口手动执行，不在当前 CI chain 中自动运行或上传。CI 的强制 RAG 集成测试、smoke 单次检索与整套相关性对照是不同范围；`run_status=complete` 仅表示执行记录完成，引用校验通过也不能证明语义充分或政策冲突识别。
+
+本次实际 Linux 依赖解析和哈希安装、API / web 镜像构建、setup / 索引、六项 readiness、13 项 HTTP smoke、API 重建持久化与 Nginx DNS 恢复均已保存[公开证据](../evals/results/phase9/report.md)。HTTP smoke 检查真实订单、混合重排/当前来源和分析视图，不包含新的浏览器交互。新的 v2 RAG 单独完成 60 条模式记录，质量与延迟分别呈现，不继承旧语料成绩。
+
+工作流交付、实际本机容器运行和 GitHub 平台执行是分别核验的范围。没有执行平台上的 workflow 时只报告文件和本地检查，不填写绿色 CI 或公网部署成绩。最终命令、证据路径及数量以[Phase 9](phase-9.md)为准。
+
+API / web 镜像、Linux 依赖与独立全栈 Compose 的当前交付和实际验证见[Phase 9](phase-9.md)。Vue 的历史浏览器记录单独见 Phase 7，不当作本阶段的新浏览器或模型验证。当前没有独立 Worker、自动维护清理工具、GitHub 平台执行成绩或公网部署记录。

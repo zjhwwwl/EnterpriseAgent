@@ -1,6 +1,6 @@
 # LangGraph 工作流
 
-当前 Phase 8 / 0.8.0 使用一张 LangGraph 图，复用 OrderService、RefundService、KnowledgeService 和 AnalyticsService。模型负责路由、工具规划、有限检索改写、引用原文选择与受限 SQL 规划；后端决定权限、业务规则、确认和实际执行。Vue 和评估器消费持久任务契约，新增严格证据检查与执行后元数据快照，不增加第二个 Agent 或自由文本报告节点。当前验收见[Phase 8](phase-8.md)，[Phase 7](phase-7.md)及更早结果保持历史边界。
+当前 Phase 9 / 0.9.0 使用一张 LangGraph 图，复用 OrderService、RefundService、KnowledgeService 和 AnalyticsService。模型负责路由、工具规划、有限检索改写、引用原文选择与受限 SQL 规划；后端决定权限、业务规则、确认和实际执行。Vue 和评估器消费持久任务契约，严格证据检查与执行后元数据快照继续使用已有实现。容器部署与 CI 不增加第二个 Agent 或自由文本报告节点；部署验收见[Phase 9](phase-9.md)，模型评估见[Phase 8](phase-8.md)，此前结果保持历史边界。
 
 ## 当前图
 

@@ -1,0 +1,32 @@
+{
+    "recorded_at_utc":  "2026-10-14T20:47:01.2218225Z",
+    "status":  "passed",
+    "scope":  "Actual Linux model-integrity check with a private disk-backed model copy",
+    "test":  "tests/integration/test_rag_models.py::test_cached_model_verification_rejects_same_size_changed_artifact",
+    "tests":  1,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "pytest_reported_elapsed_seconds":  12.13,
+    "junit_elapsed_seconds":  12.09,
+    "temporary_capture_files":  "/tmp native Linux tmpfs, size 128 MiB",
+    "large_named_pytest_fixtures":  "/app/var/tmp/ci-run.\u003crandom\u003e/pytest, private D-backed bind mount",
+    "source_artifacts_remain_read_only":  true,
+    "prior_directory_deletion":  false,
+    "application_logic_changes":  false,
+    "copied_model_evidence":  [
+                                  {
+                                      "directory_name":  "resource-run.fatH6Hs0",
+                                      "file_count":  14,
+                                      "bytes_on_disk":  396804133,
+                                      "private_model_directory_present":  true
+                                  },
+                                  {
+                                      "directory_name":  "resource-run.Uzmg3Jkr",
+                                      "file_count":  0,
+                                      "bytes_on_disk":  0,
+                                      "private_model_directory_present":  false
+                                  }
+                              ],
+    "configured_minimum_free_disk_bytes":  2147483648
+}

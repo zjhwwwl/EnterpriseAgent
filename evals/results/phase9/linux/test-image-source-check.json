@@ -1,0 +1,784 @@
+{
+    "checked_at_utc":  "2026-10-15T08:47:49.0946039Z",
+    "status":  "passed",
+    "image_id":  "sha256:be55cd35fb2d565bfee015a64986121f97952aa942edb00c9391528abd624f79",
+    "file_count":  155,
+    "files":  [
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "eb48d40f35bb97134d7169bedcf69be329b4014cdb3a6a8993818781c0625773",
+                      "relative_file":  "alembic/env.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "0fdbd0b3054a0f8ed0cf8c29ea30b260ea8c04bf6c7cc4d2828fa8c9e2ccf29e",
+                      "relative_file":  "alembic/versions/0001_ecommerce.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "09a5849b75fb4a97ce51cf12cfbf1507a0b7dcd1ba798b40fb97f43e06db21f3",
+                      "relative_file":  "alembic/versions/0002_knowledge.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "3f0042c3159d073488f92ae25aa055a45d9b78f9942f8b79f3f266a382dc41e1",
+                      "relative_file":  "alembic/versions/0003_agent.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "ef35f273d878ba018229c940f462afbdd37a0b30eee87e87afa511387179c64f",
+                      "relative_file":  "alembic/versions/0004_agent_role.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "7f79e4b6e7984193e05fae2c7b95386d714715c4efc084ed06979710f36b2e60",
+                      "relative_file":  "alembic/versions/0005_analytics.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "7f9d266e2c51d048ac1a094f2834d0f9aaf17cc3791275fad1fb5863c4f1f192",
+                      "relative_file":  "alembic.ini"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "2a8614bd79af3182a81e39b76d3f69d42f0816e30d7b7ad831663d6b0a6bbf54",
+                      "relative_file":  "deploy/Dockerfile.api"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "a123765cd76620894e9d8973300566a88712d03ca3987cf113cc540451a60928",
+                      "relative_file":  "deploy/Dockerfile.web"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "cf2a9c8a7533ec82d0088b63f059ecd80800119e5edb31e03c180ce038b22395",
+                      "relative_file":  "deploy/compose.full.yaml"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "f257d860914b077d771457fe32b742c1b41ef1821567158141f789b5a85d5bf3",
+                      "relative_file":  "deploy/nginx.conf"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "fcb7c790c4217818c5f19296ca4ee68a87fe02391783dd986d0ecc28e06936fc",
+                      "relative_file":  "evals/datasets/agent-boundaries.json"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e636ff8a4218495938fa46d1cc07a5a51fd2880013b2f98faf17c4f770bf0e4c",
+                      "relative_file":  "evals/datasets/agent-evaluation.json"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "414262ebfdafafe8717dfe283a1924a8b5c67f0c72210c994652139fc7e60ab7",
+                      "relative_file":  "evals/datasets/agent-smoke.json"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "b1f85c6987ec2eaf72ee47c9ebaf4155a073be2b1d872cef2d9d98b7a4cf71c0",
+                      "relative_file":  "evals/datasets/analytics-live-smoke.json"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "6b1fbe0d6d5266c2bd364c1b9bba50b7d1ad9ea856448ae58b78b8104372867a",
+                      "relative_file":  "evals/datasets/analytics-sql.json"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "999abf3e4cc7d5cb8b41e7d177b7348b439793c0040b454182b44c5ae51c8d52",
+                      "relative_file":  "evals/datasets/rag.json"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "c53b7309f77833dde9e256721c6aed78ee6a694de200b627ebde3d97ab3a0f67",
+                      "relative_file":  "main.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d0b33f4b21d6a31b87b09bc6330e80d49430aa3e0f9db64e5cccb4b8439c39ce",
+                      "relative_file":  "pyproject.toml"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e33fa473a5efd1eba75093191d1ad68a34505405c3f56dc91812e464a9259a34",
+                      "relative_file":  "scripts/ci/check_stack.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "dcf9df13a75e57089b71ca859e718574e33d8e9ffc2d01a251a47bfae835cd01",
+                      "relative_file":  "scripts/evaluate-agent-live.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "852faf5e8e4f675db25cedeac1dc67dd22eebee6902bbe50b87424ee9dc2faa7",
+                      "relative_file":  "scripts/evaluate-analytics-live.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "5ddfcb349b48487a93bc92bb927d119f8cf5b4e297cf32da8f04171ec858dd5c",
+                      "relative_file":  "scripts/prepare-frontend-demo.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "35e6a28210990554e550c31892acca532f964684491fecadf2f3212fbf081670",
+                      "relative_file":  "scripts/prepare-rag-models.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "7eb91a7a17a9b54e5ade5123e0a236ef8d72cda25bab091d836080e51fe68dbb",
+                      "relative_file":  "src/enterprise_agent/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "1eb040d23d8a3a3c8985fd30b9075153920ebfbb1b4d5aae355fd4a9c3124102",
+                      "relative_file":  "src/enterprise_agent/agents/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "9de34ddaeb94b58e3a6155bafe511a4419c5202b497006fb9be71be180dae746",
+                      "relative_file":  "src/enterprise_agent/agents/checkpoint.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "b0a35f9614c5a018cee0e64cd9f3d5c4f34466f5925410426a31540242095691",
+                      "relative_file":  "src/enterprise_agent/agents/graph.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "7eca87d7a8b3366871b4b8b66efdaf1accba6f91b2be4a5e8fa2f9b544238ecd",
+                      "relative_file":  "src/enterprise_agent/agents/llm.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "b11842bb23874bc4db194b04087c7c230656478577f03d4207e4ca16ca83560e",
+                      "relative_file":  "src/enterprise_agent/analytics/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e5fde25083bb51d9f3b30a3b63b2109f06f13de2b6b382c79619b2ccbf05389d",
+                      "relative_file":  "src/enterprise_agent/analytics/catalog.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "461090f1c66fb18afd880e9f86610d1eccd98103938dc8aa7213b9823aed0c19",
+                      "relative_file":  "src/enterprise_agent/analytics/evaluation.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "7227ebc862b821f7b10ac9114f260e677633aa64b527840848dfeeee330e601f",
+                      "relative_file":  "src/enterprise_agent/analytics/runtime.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "1527ae1ce43c1c91df0afc612cd6d8313e2b35c5cbba288381aae3bf161869fc",
+                      "relative_file":  "src/enterprise_agent/analytics/sql.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "1ea40c6c4884f97c8022edbd3907b6fb282417a0771cf22745805ec6a2ba311c",
+                      "relative_file":  "src/enterprise_agent/api/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "c11690519b3888354d5ece1638150608e1b2f051abd252bda9dd733e93888759",
+                      "relative_file":  "src/enterprise_agent/api/dependencies.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "9d1ee334a8e16be7a6831ea7b1cb21bab1392c3d9bdbf5ff900f6d56ffdaaff2",
+                      "relative_file":  "src/enterprise_agent/api/errors.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "dab9089f6e5e76ff3617fb8244e267dbffd3204aba183185f618358eceb70702",
+                      "relative_file":  "src/enterprise_agent/api/routes/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "7d74d20d813aaafa87f731ba292ae26deac10f8cdb0bda6d6014f7a4e987a42c",
+                      "relative_file":  "src/enterprise_agent/api/routes/agent.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "0a9c5e9a361ca7c1da5b1a8d155f3233c3a825efe5c9d9f2cce5185a42e4388a",
+                      "relative_file":  "src/enterprise_agent/api/routes/analytics.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "fb446977d082b00e3f33bdc46abc3d12cef51fc20e9ddc4da87aca3241479e72",
+                      "relative_file":  "src/enterprise_agent/api/routes/auth.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "696497730fcaa7ddc5e3a43df96144d6b907a1ca077210b59d26554a60fbb856",
+                      "relative_file":  "src/enterprise_agent/api/routes/knowledge.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "afba3dcf6b7dec595cc7debfeafa8ae252e65b8e784bc42d2fb401661a240e21",
+                      "relative_file":  "src/enterprise_agent/api/routes/orders.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d9eb0514519f29828e180b558ff13ead0410cd9f0f1d4ef59a0e2bb1d7ce5f3e",
+                      "relative_file":  "src/enterprise_agent/api/routes/refunds.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "99cae433ae684a7e2140170348dd0d7b2578a4163f9a5d2a7281827eed290807",
+                      "relative_file":  "src/enterprise_agent/api/routes/system.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "33be620f38beb00367e745b51027470ee4c99e498fcff1892c9c17767ef7a241",
+                      "relative_file":  "src/enterprise_agent/api/upload_limit.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d634f2c86d1bfd10271d13f4b0436456c1fb29ff95015cc0af40021a36b8f898",
+                      "relative_file":  "src/enterprise_agent/application.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "76d1b49ad15b1d8a422740f46e9993698695ced76c59945ddc77c64ed2d604af",
+                      "relative_file":  "src/enterprise_agent/cli.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "96bfc18aa8111fa5e577253501e8940039ed32855784066394b235b4c1308627",
+                      "relative_file":  "src/enterprise_agent/config.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "4100a50217affb668b503c9705f8ab64c90cafb8730cc27c0e0357ef86e0a8b5",
+                      "relative_file":  "src/enterprise_agent/database.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e862c1f4e2bf7e5413f00c965d2119219903a83bf6c27d6c6dc1837bb53e465c",
+                      "relative_file":  "src/enterprise_agent/deployment.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "5f410031b7ba8dd376382a7120523c911a6d057d1f83e9c9bb501a8011928f4a",
+                      "relative_file":  "src/enterprise_agent/domain_errors.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "51ea6286f086fcb0487dae28783d05d800a678fe6643d729b0aa69ab16f97c0e",
+                      "relative_file":  "src/enterprise_agent/evaluation.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "970077e77e4dfe88b689d11ae99c3bb439104b798b105c5c9dd370fbd505ae42",
+                      "relative_file":  "src/enterprise_agent/evaluations/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "9822982af71e4a937be6331266d7155cc610f6db46bea6001018e7015963500f",
+                      "relative_file":  "src/enterprise_agent/evaluations/boundaries.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "9d0603f39333fa333a38aa86efe746c7cca0c2c8b953bec613e56339f6c0e6e3",
+                      "relative_file":  "src/enterprise_agent/evaluations/checks.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "2b11f93ccce68cd1d18a77364e7b2fe2174e39d994a1db2d97f5d9f95850e472",
+                      "relative_file":  "src/enterprise_agent/evaluations/dataset.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "22a64ecc7f051393583172c0c09a8f62685b635587a132e9be1a405ec455af8a",
+                      "relative_file":  "src/enterprise_agent/evaluations/live.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "18dd3c54a86e6d12e900e4dd320bfffb0dacc271857571fbf71d8973ec5c5cec",
+                      "relative_file":  "src/enterprise_agent/evaluations/references.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "90e175bc211c8308a1cad6b641a3192144a038e7b54f138cdffb6c497b10a0cf",
+                      "relative_file":  "src/enterprise_agent/knowledge_cli.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "36f68139a486455d5017951f1340366cb75c0b4c46cf6193a6b5e78ae74a590a",
+                      "relative_file":  "src/enterprise_agent/logging_config.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "691bc187319a0437c4a7a4a535d0076560e68c73f3228dc37e813a04729c84af",
+                      "relative_file":  "src/enterprise_agent/main.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "8a0a744ee2eb33b750659697aa9514ef59d7f672fd660cb6d14fd78cb5532b15",
+                      "relative_file":  "src/enterprise_agent/mcp/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "86637343bd3169a5e69629a53dbee6330a7233c47dca18c04e0049c8abfb2dee",
+                      "relative_file":  "src/enterprise_agent/mcp/client.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "6a95a4f568ebc219824caff8a6a41cd798b6137f592fe47911e7285fa64b4c3c",
+                      "relative_file":  "src/enterprise_agent/mcp/server.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "87c0d321ef80a120e5354b72fc390980faeb3ecea203da2f4a0922ba75972465",
+                      "relative_file":  "src/enterprise_agent/models/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "3070b4a02381b4502effb3c1b81bf8f8640c24df546d768f3bb7e828dd51c2ff",
+                      "relative_file":  "src/enterprise_agent/models/entities.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "0442bb87f8917ff51ba02abd901d40335821dff47915fd812d7feb1a592a0e42",
+                      "relative_file":  "src/enterprise_agent/observability.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "c5a1733c9a595526c78ad74c79e6c282dedd4760176a7253287535a73de78f26",
+                      "relative_file":  "src/enterprise_agent/rag/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "7c6f9d6faa81312edba0a8320a280f475f49bb6aa67019bb031e73cc7c99620d",
+                      "relative_file":  "src/enterprise_agent/rag/backends.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "6859deb941258809710dafc8de5af0614840c97c2898400ee4bf8f1e1d9175eb",
+                      "relative_file":  "src/enterprise_agent/rag/chunking.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "b71bd2c1ad6f724d0865071e73013e0e15a9c247a9182631b396a1e98a612837",
+                      "relative_file":  "src/enterprise_agent/rag/parsing.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "5b13b3b2275943f3460cd28694338345af9e3e211b53485ede86422f45e8568c",
+                      "relative_file":  "src/enterprise_agent/rag/ranking.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "630fe2314cb9a9a3bf27221910ad313d760d672bd59a935ad0b3f109895c399a",
+                      "relative_file":  "src/enterprise_agent/rag/runtime.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "028d07eac7f14907d7b1bd033d6df4b30aea95ed896b5d37e9624914c0845d4a",
+                      "relative_file":  "src/enterprise_agent/rag/store.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "18ee1bf0f32da91345d5a793ba4b9144065b50d19a26c376a2f770f56495d84c",
+                      "relative_file":  "src/enterprise_agent/repositories/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e677a8af9ebc2b442a5ca50e7f0ffd3c126cafb709b7d515b9b39dba4c9bdff9",
+                      "relative_file":  "src/enterprise_agent/repositories/agent.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "dce831d2dc39f79ff4b26b9f59e12c917169709bb0d4065df1b6e800002d948a",
+                      "relative_file":  "src/enterprise_agent/repositories/knowledge.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "48947b85b20509011531b82d88258e06e17f029d844306b98be02dc40bdc6020",
+                      "relative_file":  "src/enterprise_agent/repositories/orders.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "49f08b5d84875608175f497b7b36fa7a81e02b3f4de2125b1573a98fbaf88022",
+                      "relative_file":  "src/enterprise_agent/repositories/refunds.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "cb9790e43bb866ee4ecaba1290e9e40af9bca6baf84839547631f8d37b86c694",
+                      "relative_file":  "src/enterprise_agent/request_context.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "6dceddf3bcac5bacbbe06c67cc17e806b0130dfcdef219b5ee346c8ea6925533",
+                      "relative_file":  "src/enterprise_agent/schemas/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "994e34eb9a56867a36b23c0670f8eae1ea9adc7b5ce61f5121df2ff551c5ca0d",
+                      "relative_file":  "src/enterprise_agent/schemas/agent.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d340ec4667f5e8cdc37c7439a1b4fa07165ba4fcb322acc9dfdf9bce90656b0e",
+                      "relative_file":  "src/enterprise_agent/schemas/analytics.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "ba09e600614b905e23990c3be4bfc1625b414ec97c36b4c9c84bf7e6eee4e030",
+                      "relative_file":  "src/enterprise_agent/schemas/analytics_report.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "16ed96a09cc0d582f2a913d798e82e0b0639e84fe01f9e90580ef6666c7433cf",
+                      "relative_file":  "src/enterprise_agent/schemas/auth.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d416c93c6ada78b26301efa9108b6f4080f8ac405aebbb765de561a565f3f4c5",
+                      "relative_file":  "src/enterprise_agent/schemas/business.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "8105339232e3eed310d7e422a00d3bf60b9b90897f384d357a3cb5c632104199",
+                      "relative_file":  "src/enterprise_agent/schemas/knowledge.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "3c7909e8ffa7a0e8ae5c2f90f3fc1748602fd227ed66844424ddc62ccf5a4403",
+                      "relative_file":  "src/enterprise_agent/schemas/system.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "df804b275b7aa9ec4f1416265d3b47645b6c1e94fd55507977720125cf8c0f94",
+                      "relative_file":  "src/enterprise_agent/security.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e273dc1631935e3e3d88f1ba285415653b8499b38ccd837449925192fc98db9e",
+                      "relative_file":  "src/enterprise_agent/seed.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e18a0394699ac660d8c7ebcdb3b8a92155edc7d3a4a5abbe12ed43d302255bd4",
+                      "relative_file":  "src/enterprise_agent/services/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "beea18da482e28ad6f348bb9e26875fbaa53dc251c4e627fb2f999319717c63c",
+                      "relative_file":  "src/enterprise_agent/services/agent.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e621d55fb55df1fab99a472c05ef2c5d64ff10cc52b2c0912b9187b9b6dd95a1",
+                      "relative_file":  "src/enterprise_agent/services/analytics.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "4af404c2cd097df2f8cc5e69930001a2c38e717948a84a64fd7ad3c0c935c62f",
+                      "relative_file":  "src/enterprise_agent/services/auth.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "470b7cfdd5d4324a2a580adde20afa26c07253ae9ba429392396d99ccfa747f5",
+                      "relative_file":  "src/enterprise_agent/services/knowledge.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "a525ca8af89a6caa0b1a15490d1ed84f6e19d6d1653dd6347078984f4e531136",
+                      "relative_file":  "src/enterprise_agent/services/orders.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "858ed7ac0f23e0efd157b6f8e2582233264ce3485ff30ac181873a07f8c584d1",
+                      "relative_file":  "src/enterprise_agent/services/refunds.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "82f8c8b7dbcf059fd209918586ea7d10ef1a2f1334730913f811b394910f2247",
+                      "relative_file":  "src/enterprise_agent/tools/__init__.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "b77977af062273995d6627a2f311684ae19adabc55c4829dd95315c8f8bd7b3e",
+                      "relative_file":  "src/enterprise_agent/tools/business.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "15f8d4995eff1213938f604ea44c1e54b7fbcd620697de1a51b60e4bafd3cf56",
+                      "relative_file":  "tests/conftest.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d950049d0a8d071ea1958180277bc1460e2ef82b170b7fdcbe036b0c7196d3d6",
+                      "relative_file":  "tests/e2e/agent_control_server.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "121e148d6641f552d810b8158b94ac1c1478d24e0e8c248053fea08ca08b03f2",
+                      "relative_file":  "tests/e2e/database_scope.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "a238370e6125a07866859242cd072de9ccb9011f8e019bce006fbd58334d80b9",
+                      "relative_file":  "tests/e2e/test_agent_server.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "0c459e7157945a29c5394bb70e9d13b9d56b09d819316ba6c1b74ddda1df608e",
+                      "relative_file":  "tests/e2e/test_local_server.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "1449d06f9a676e78eec2dbfb64ead3cf852ffc276c0f122fe82afd519c4795e9",
+                      "relative_file":  "tests/e2e/test_mcp_stdio.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "2ca80df9d5138394c7e29ab5a41ae3e843892e2853c581b07d5f53f894cb813d",
+                      "relative_file":  "tests/integration/test_agent_analytics.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "5c4dcd0733139ecef4f6f2e63cc18386d186789ac49b8eaa8efaace902f9c890",
+                      "relative_file":  "tests/integration/test_agent_api.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "be94b537c1c8894c66ea43ddf5e7cbb8db2b62df8d7823f598eae1b65127e1e2",
+                      "relative_file":  "tests/integration/test_agent_observability.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "afd9feddbec9a3309f326e6b6adafe1f14c74053ad70e62bbdc78023c9fbf910",
+                      "relative_file":  "tests/integration/test_agent_persistence.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "00b1808eab9e2050e0e49fdf449f48bbcf9deb5288b4bda604c31e24be5c4dcd",
+                      "relative_file":  "tests/integration/test_agent_tools_database.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "97ec8b550f2bac409aea35cb0322cf046bfcf415fa367f242c8964e948fe8549",
+                      "relative_file":  "tests/integration/test_agent_workflow.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "2efb1d36f0583d432986805109c0434adfbdaec229a9649965ab50deb67541f8",
+                      "relative_file":  "tests/integration/test_analytics_api.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "aca8f2c5db3582683d0171ce40038369a1077a49761b031b7cb6126e2528810e",
+                      "relative_file":  "tests/integration/test_analytics_evaluation.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "daa3a4fcba8673ebb9a3d7659b7aa48d48c7f2152a516f77e5e2c47f0198eace",
+                      "relative_file":  "tests/integration/test_analytics_runtime.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "493f4e57d027127d8232eab8e2ad9fad9577308d1355d7663527781f13eaa300",
+                      "relative_file":  "tests/integration/test_analytics_views.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "1984a6967d65dd7d47782fc944cfe0bcd0295ed6e19c9d33b41a1a84b91235b3",
+                      "relative_file":  "tests/integration/test_api.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d9a828821e2c63e1787f8326f32fe1afc0bc7142203dee0530b8f17fb8aab79f",
+                      "relative_file":  "tests/integration/test_auth_api.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "f14a69c4706a412bf3ff88c6be0a282d38918ed095296880b02832c55100df6d",
+                      "relative_file":  "tests/integration/test_business.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d868dc804425450fc07c0bb1d2bc5ad46fc7b41b318915899ce6bc1d4df05f20",
+                      "relative_file":  "tests/integration/test_chroma_timeout.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "548b08720f97d8e8fd968d779169dd62435e80796550292fc6d319dca8cbc851",
+                      "relative_file":  "tests/integration/test_database_integrity.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "003178c3709f00738a6df49348aeb8211a8563f037e1d25187705d483f58908e",
+                      "relative_file":  "tests/integration/test_database_runtime.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d1dad9c068a2e8bd02e76b868fad8b8500aa568f8a109bf5b1b40ea122680eae",
+                      "relative_file":  "tests/integration/test_knowledge_integrity.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "14bd333e76777cb6e45591b484fc2bf8875c3214c6ca198f7049f28480ec9720",
+                      "relative_file":  "tests/integration/test_knowledge_service.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "67e652d881ee20aa4db636d4c68c8d54a5b3f798ac1c1e2d573a4fadbad2910f",
+                      "relative_file":  "tests/integration/test_mcp_authorization.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "e72ea22bfa122d3d97f8cf26b7889e757e9c7b90251ec86088783adec43cf55d",
+                      "relative_file":  "tests/integration/test_migration_scope.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "3d62b912f180f55cdb1b72fc7f02218adbd16d1def9c3abb83045a414c9c636f",
+                      "relative_file":  "tests/integration/test_rag_models.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "bedd733fc76df4080a204ebbc43cb0b7ac7585d012d55e7d94ce98ce42bf801f",
+                      "relative_file":  "tests/integration/test_upload_cors.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "0cce1404b9a05328ae2c06917b23ffd7c865decc67d1c8dbc9c6c2f745cc6645",
+                      "relative_file":  "tests/unit/test_agent_analytics_graph.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "a689d20af48149ba013f4867669adc02cb8ef264f1915e65b8380381bff8a880",
+                      "relative_file":  "tests/unit/test_agent_checkpoint_serializer.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "b79796479066f089f833d44915ecc83709db39565be941f11aa9ef212661af1b",
+                      "relative_file":  "tests/unit/test_agent_graph.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "6d61c05f4c5a9e1c233178ba6fa29021d9ac330fd1ba283c01ded97e3581ef96",
+                      "relative_file":  "tests/unit/test_agent_llm.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "2caf0b3f0445e8a82d7feb21db295d5b2ce55d110ea7d8044616a50edf66b34d",
+                      "relative_file":  "tests/unit/test_agent_tools.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "a0725ceb0fcf59a67112a41f1030237e272addb2a41c70f1fb382fd3ade98a34",
+                      "relative_file":  "tests/unit/test_analytics_live_checks.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "b6d60b1fdc2b547d75f14c410e6975f5ad65ff92e36b300239603a2f96c47d9c",
+                      "relative_file":  "tests/unit/test_analytics_service.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "fae9e6c5944e44a32d4b9b3c38925cdf36788982322752d6b00e85d544d6127d",
+                      "relative_file":  "tests/unit/test_analytics_sql.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "31482001ffaf533f32d4d349a51d7da298bf9c2bdb7db62a96ad97018c8ce03e",
+                      "relative_file":  "tests/unit/test_boundary_evaluation.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "2e0106c639769b7033614b2cebb46614a1977e624dbd8fb83ba3cd00758d3b79",
+                      "relative_file":  "tests/unit/test_chunking.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "f3165663b01d5807f8d0e2648bfc39b157429fe45cf7af74ce5636d38a98f33e",
+                      "relative_file":  "tests/unit/test_config.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "4f6f47f48e140b51a0acc53ea39372b9d46a66c3f012009414f225a9a4f5b642",
+                      "relative_file":  "tests/unit/test_deployment.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "9fcc3fec9e3765c4008c2b97f25aff0b45f81d55ee4702a3ea018b9ab73816ec",
+                      "relative_file":  "tests/unit/test_deployment_rag_cli.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "a52d9c56933f491293faa354e39c72169594b84cf5ac0c7083ee191388e7e694",
+                      "relative_file":  "tests/unit/test_document_parsing.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "2d306db9b4309187f0ffd95f2d3c490020bbb778359d10f371f921fcf9ee5e59",
+                      "relative_file":  "tests/unit/test_evaluation_contracts.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "1e339559d67980ef2bd6232d4f8a55de8c3f73d1b877e77b0c085528b03c95ba",
+                      "relative_file":  "tests/unit/test_evaluation_references.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "0e1630b39ea5937458f676182f51849d129c2c6001b9c7287afef8dcc310a156",
+                      "relative_file":  "tests/unit/test_factory_import.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "a0e1f69eba5814332b267013393a8dc35dafab1139f9d7a1df6ff673e6969ddf",
+                      "relative_file":  "tests/unit/test_live_evaluation.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "b5a3c44a574e64370b58094518fbc53a812850a6599f9fbb905de2195510349d",
+                      "relative_file":  "tests/unit/test_logging.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "8d7173c1c2d810e3bfab2e1bebb15cfadc525a8377b8f1724e98f7958d8ad3ce",
+                      "relative_file":  "tests/unit/test_mcp_client.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "6f20774966fe0a1efd2854c471e80c17662fc5734aee47920f666e67557072d6",
+                      "relative_file":  "tests/unit/test_mcp_server.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "c3490d6975cce77780d2459d5c71a1b0594fa49a73f1e3b95c10800f6ede5b8c",
+                      "relative_file":  "tests/unit/test_observability.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "d251d15334a8bd04f1e6a43d2ab7e56a437b5dea8511639420e7c30a28800de0",
+                      "relative_file":  "tests/unit/test_process_database_scope.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "4b5214d993c8dedea102f0f752cc1e8d33cdb565b73851623ccf02ed8c3fc297",
+                      "relative_file":  "tests/unit/test_rag_runtime.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "18254379cff0ce0ca3c65653419ca66d6506193d4e50b09fed72f5937ada40ba",
+                      "relative_file":  "tests/unit/test_ranking.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "ab473b4cc4a976da5e9c97ee66ab17c53f2299a56008ae640ef5f2b6d428c7c1",
+                      "relative_file":  "tests/unit/test_refund_rules.py"
+                  },
+                  {
+                      "matches_test_image":  true,
+                      "sha256":  "f2de80a14c3e9eb50053e30cc5509b1abd5c2e50d7e311019ac93f32846aebcb",
+                      "relative_file":  "tests/unit/test_security.py"
+                  }
+              ],
+    "scope":  "Post-run comparison of final test image files with workspace Python source, tests, scripts, Alembic, evaluation datasets and included deployment files. This is not a pre-run snapshot or all-repository freeze; README and secrets intentionally outside scope."
+}

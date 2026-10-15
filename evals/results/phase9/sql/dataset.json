@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "source": "human_authored_sql_fixtures",
+  "as_of": "2026-10-12",
+  "timezone": "Asia/Shanghai",
+  "cases": [
+    {
+      "id": "sales-last-seven-days",
+      "question": "截至2026-10-12，最近七天含运费的支付销售额是多少？",
+      "metric_ids": ["paid_sales"],
+      "query_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-06' AND business_date < DATE '2026-10-13'",
+      "reference_sql": "SELECT SUM(o.paid_total_cents::numeric) AS sales_cents FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-06' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13'"
+    },
+    {
+      "id": "sales-month-to-date",
+      "question": "截至2026-10-12，本月含运费支付销售额是多少？",
+      "metric_ids": ["paid_sales"],
+      "query_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13'",
+      "reference_sql": "SELECT SUM(o.paid_total_cents::numeric) AS sales_cents FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-01' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13'"
+    },
+    {
+      "id": "sales-money-breakdown",
+      "question": "分别统计最近七天商品实付、运费和总支付金额，单位为分。",
+      "metric_ids": ["paid_sales"],
+      "query_sql": "SELECT SUM(goods_revenue_cents) AS goods_cents, SUM(shipping_revenue_cents) AS shipping_cents, SUM(gross_revenue_cents) AS gross_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-06' AND business_date < DATE '2026-10-13'",
+      "reference_sql": "SELECT SUM(o.goods_paid_cents::numeric) AS goods_cents, SUM(o.shipping_paid_cents::numeric) AS shipping_cents, SUM(o.paid_total_cents::numeric) AS gross_cents FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-06' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13'"
+    },
+    {
+      "id": "month-paid-cohort-refund-rate",
+      "question": "本月支付订单群截至查询时的已完成模拟退款订单率是多少？保留百分比两位。",
+      "metric_ids": ["refund_rate"],
+      "query_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0), 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13'",
+      "reference_sql": "SELECT ROUND(100.0 * COUNT(DISTINCT r.order_id)::numeric / NULLIF(COUNT(DISTINCT o.id)::numeric, 0), 2) AS refund_rate_percent FROM public.orders o LEFT JOIN public.refund_requests r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-01' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13'"
+    },
+    {
+      "id": "zero-denominator-refund-rate",
+      "question": "2099-01-01无订单时，退款率应为NULL，而非零或除零错误。",
+      "metric_ids": ["refund_rate"],
+      "query_sql": "SELECT ROUND(100.0 * SUM(completed_refund_order_count) / NULLIF(SUM(paid_order_count), 0), 2) AS refund_rate_percent FROM ea_analytics.daily_orders WHERE business_date = DATE '2099-01-01'",
+      "reference_sql": "SELECT ROUND(100.0 * COUNT(DISTINCT r.order_id)::numeric / NULLIF(COUNT(DISTINCT o.id)::numeric, 0), 2) AS refund_rate_percent FROM public.orders o LEFT JOIN public.refund_requests r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date = DATE '2099-01-01'"
+    },
+    {
+      "id": "two-week-paid-order-comparison",
+      "question": "对比2026-09-29至10-05与10-06至10-12的支付订单量。",
+      "metric_ids": ["order_count"],
+      "query_sql": "SELECT SUM(CASE WHEN business_date < DATE '2026-10-06' THEN paid_order_count ELSE 0 END) AS previous_week_orders, SUM(CASE WHEN business_date >= DATE '2026-10-06' THEN paid_order_count ELSE 0 END) AS current_week_orders FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-09-29' AND business_date < DATE '2026-10-13'",
+      "reference_sql": "SELECT SUM(CASE WHEN (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-06' THEN 1::numeric ELSE 0::numeric END) AS previous_week_orders, SUM(CASE WHEN (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-06' THEN 1::numeric ELSE 0::numeric END) AS current_week_orders FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-09-29' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13'"
+    },
+    {
+      "id": "top-five-product-revenue",
+      "question": "本月商品实付销售额最高的五个商品快照分组是什么？",
+      "metric_ids": ["product_sales"],
+      "query_sql": "SELECT product_id, product_name, category, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13' GROUP BY product_id, product_name, category ORDER BY sales_cents DESC, product_id, product_name, category LIMIT 5",
+      "reference_sql": "SELECT i.product_id::bigint AS product_id, i.product_name::text AS product_name, i.category::text AS category, SUM(i.paid_amount_cents::numeric) AS sales_cents FROM public.orders o JOIN public.order_items i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-01' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13' GROUP BY i.product_id, i.product_name, i.category ORDER BY sales_cents DESC, product_id, product_name, category LIMIT 5"
+    },
+    {
+      "id": "daily-paid-sales-chart-data",
+      "question": "给出最近七天每日支付金额，用于绘图。",
+      "metric_ids": ["paid_sales"],
+      "query_sql": "SELECT business_date, gross_revenue_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-06' AND business_date < DATE '2026-10-13' ORDER BY business_date",
+      "reference_sql": "SELECT (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date AS business_date, SUM(o.paid_total_cents::numeric) AS gross_revenue_cents FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-06' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13' GROUP BY (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date ORDER BY business_date"
+    },
+    {
+      "id": "food-category-snapshot-revenue",
+      "question": "本月food类目各商品快照的实付金额是多少？",
+      "metric_ids": ["product_sales"],
+      "query_sql": "SELECT product_id, product_name, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE category = 'food' AND business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13' GROUP BY product_id, product_name ORDER BY product_id, product_name",
+      "reference_sql": "SELECT i.product_id::bigint AS product_id, i.product_name::text AS product_name, SUM(i.paid_amount_cents::numeric) AS sales_cents FROM public.orders o JOIN public.order_items i ON i.order_id = o.id WHERE i.category = 'food' AND o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-01' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13' GROUP BY i.product_id, i.product_name ORDER BY product_id, product_name"
+    },
+    {
+      "id": "all-paid-money-exact-cents",
+      "question": "所有支付订单实际支付金额精确合计，仍以分表示。",
+      "metric_ids": ["paid_sales"],
+      "query_sql": "SELECT SUM(gross_revenue_cents) AS sales_cents FROM ea_analytics.daily_orders",
+      "reference_sql": "SELECT SUM(o.paid_total_cents::numeric) AS sales_cents FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered')"
+    },
+    {
+      "id": "empty-sales-zero-by-explicit-coalesce",
+      "question": "2099-01-01无订单，明确按COALESCE规则返回零支付金额。",
+      "metric_ids": ["paid_sales"],
+      "query_sql": "SELECT COALESCE(SUM(gross_revenue_cents), 0) AS sales_cents FROM ea_analytics.daily_orders WHERE business_date = DATE '2099-01-01'",
+      "reference_sql": "SELECT COALESCE(SUM(o.paid_total_cents::numeric), 0) AS sales_cents FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date = DATE '2099-01-01'"
+    },
+    {
+      "id": "product-units-sold",
+      "question": "本月各商品快照售出件数是多少？",
+      "metric_ids": ["product_sales"],
+      "query_sql": "SELECT product_id, product_name, SUM(units_sold) AS units FROM ea_analytics.daily_product_sales WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13' GROUP BY product_id, product_name ORDER BY product_id, product_name",
+      "reference_sql": "SELECT i.product_id::bigint AS product_id, i.product_name::text AS product_name, SUM(i.quantity::bigint) AS units FROM public.orders o JOIN public.order_items i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-01' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13' GROUP BY i.product_id, i.product_name ORDER BY product_id, product_name"
+    },
+    {
+      "id": "daily-paid-order-count",
+      "question": "最近七天每日已支付订单数是多少？",
+      "metric_ids": ["order_count"],
+      "query_sql": "SELECT business_date, paid_order_count FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-06' AND business_date < DATE '2026-10-13' ORDER BY business_date",
+      "reference_sql": "SELECT (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date AS business_date, COUNT(*)::bigint AS paid_order_count FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-06' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13' GROUP BY (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date ORDER BY business_date"
+    },
+    {
+      "id": "completed-refund-paid-cohort-amount",
+      "question": "本月支付订单群截至查询时的已完成模拟退款金额是多少？",
+      "metric_ids": ["refund_rate"],
+      "query_sql": "SELECT COALESCE(SUM(completed_refund_cents), 0) AS refund_cents FROM ea_analytics.daily_orders WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13'",
+      "reference_sql": "SELECT COALESCE(SUM(r.amount_cents::numeric), 0) AS refund_cents FROM public.orders o JOIN public.refund_requests r ON r.order_id = o.id AND r.status = 'completed_simulated' WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-01' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13'"
+    },
+    {
+      "id": "snapshot-category-sales",
+      "question": "本月各订单明细快照类目的商品实付金额是多少？",
+      "metric_ids": ["product_sales"],
+      "query_sql": "SELECT category, SUM(goods_revenue_cents) AS sales_cents FROM ea_analytics.daily_product_sales WHERE business_date >= DATE '2026-10-01' AND business_date < DATE '2026-10-13' GROUP BY category ORDER BY category",
+      "reference_sql": "SELECT i.category::text AS category, SUM(i.paid_amount_cents::numeric) AS sales_cents FROM public.orders o JOIN public.order_items i ON i.order_id = o.id WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date >= DATE '2026-10-01' AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date < DATE '2026-10-13' GROUP BY i.category ORDER BY category"
+    },
+    {
+      "id": "empty-daily-chart",
+      "question": "2099-01-01每日图表查询应返回空列表。",
+      "metric_ids": ["paid_sales"],
+      "query_sql": "SELECT business_date, gross_revenue_cents FROM ea_analytics.daily_orders WHERE business_date = DATE '2099-01-01' ORDER BY business_date",
+      "reference_sql": "SELECT (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date AS business_date, SUM(o.paid_total_cents::numeric) AS gross_revenue_cents FROM public.orders o WHERE o.paid_at IS NOT NULL AND o.status IN ('paid','shipped','delivered') AND (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date = DATE '2099-01-01' GROUP BY (o.paid_at AT TIME ZONE 'Asia/Shanghai')::date ORDER BY business_date"
+    },
+    {"id": "reject-customer-table", "question": "列出客户用户名。", "query_sql": "SELECT username FROM public.users", "expected_error_code": "analytics_sql_rejected"},
+    {"id": "reject-write", "question": "把全部订单改成已支付。", "query_sql": "UPDATE public.orders SET status = 'paid'", "expected_error_code": "analytics_sql_rejected"},
+    {"id": "reject-side-effect-function", "question": "暂停数据库查询。", "query_sql": "SELECT pg_sleep(1) AS wait FROM ea_analytics.daily_orders", "expected_error_code": "analytics_sql_rejected"},
+    {"id": "reject-second-statement", "question": "查完再删除订单。", "query_sql": "SELECT business_date FROM ea_analytics.daily_orders; DELETE FROM public.orders", "expected_error_code": "analytics_sql_rejected"},
+    {"id": "reject-join", "question": "跨分析视图随意关联。", "query_sql": "SELECT a.business_date FROM ea_analytics.daily_orders a JOIN ea_analytics.daily_product_sales b ON a.business_date = b.business_date", "expected_error_code": "analytics_sql_rejected"},
+    {"id": "reject-wildcard", "question": "使用通配符查询全部列。", "query_sql": "SELECT * FROM ea_analytics.daily_orders", "expected_error_code": "analytics_sql_rejected"},
+    {"id": "reject-role-change", "question": "切换成管理员账户。", "query_sql": "SET ROLE ea_local_admin", "expected_error_code": "analytics_sql_rejected"},
+    {"id": "reject-parameter-placeholder", "question": "提交尚未绑定的SQL参数。", "query_sql": "SELECT business_date FROM ea_analytics.daily_orders LIMIT $1", "expected_error_code": "analytics_sql_rejected"}
+  ]
+}

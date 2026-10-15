@@ -1,0 +1,79 @@
+{
+    "checked_at_utc":  "2026-10-15T08:51:22.7972739Z",
+    "status":  "passed",
+    "origins":  [
+                    {
+                        "status":  "passed",
+                        "readiness":  {
+                                          "status":  "ok",
+                                          "service":  "EnterpriseAgent",
+                                          "version":  "0.9.0",
+                                          "phase":  9,
+                                          "checks":  {
+                                                         "application":  "ok",
+                                                         "database":  "ok",
+                                                         "redis":  "ok",
+                                                         "knowledge":  "ok",
+                                                         "agent_checkpoint":  "ok",
+                                                         "analytics":  "ok"
+                                                     }
+                                      },
+                        "origin":  "http://127.0.0.1:18000"
+                    },
+                    {
+                        "status":  "passed",
+                        "readiness":  {
+                                          "status":  "ok",
+                                          "service":  "EnterpriseAgent",
+                                          "version":  "0.9.0",
+                                          "phase":  9,
+                                          "checks":  {
+                                                         "application":  "ok",
+                                                         "database":  "ok",
+                                                         "redis":  "ok",
+                                                         "knowledge":  "ok",
+                                                         "agent_checkpoint":  "ok",
+                                                         "analytics":  "ok"
+                                                     }
+                                      },
+                        "origin":  "http://127.0.0.1:15173"
+                    },
+                    {
+                        "status":  "passed",
+                        "readiness":  {
+                                          "status":  "ok",
+                                          "service":  "EnterpriseAgent",
+                                          "version":  "0.9.0",
+                                          "phase":  9,
+                                          "checks":  {
+                                                         "application":  "ok",
+                                                         "database":  "ok",
+                                                         "redis":  "ok",
+                                                         "knowledge":  "ok",
+                                                         "agent_checkpoint":  "ok",
+                                                         "analytics":  "ok"
+                                                     }
+                                      },
+                        "origin":  "http://127.0.0.1:8000"
+                    },
+                    {
+                        "status":  "passed",
+                        "readiness":  {
+                                          "status":  "ok",
+                                          "service":  "EnterpriseAgent",
+                                          "version":  "0.9.0",
+                                          "phase":  9,
+                                          "checks":  {
+                                                         "application":  "ok",
+                                                         "database":  "ok",
+                                                         "redis":  "ok",
+                                                         "knowledge":  "ok",
+                                                         "agent_checkpoint":  "ok",
+                                                         "analytics":  "ok"
+                                                     }
+                                      },
+                        "origin":  "http://127.0.0.1:5173"
+                    }
+                ],
+    "scope":  "Fresh independent loopback checks after restoring only project native API/Vite on free ports; all four actual responses validated independently with terminating errors. No cloud/model call or browser interaction."
+}

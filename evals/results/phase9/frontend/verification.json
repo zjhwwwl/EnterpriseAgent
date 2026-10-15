@@ -1,0 +1,27 @@
+{
+    "phase":  9,
+    "platform":  "linux/amd64",
+    "python_required":  false,
+    "node":  "24.19.0",
+    "unit_tests":  43,
+    "failures":  0,
+    "errors":  0,
+    "format":  "passed",
+    "typecheck":  "passed",
+    "build":  "passed",
+    "build_elapsed_seconds":  9.28,
+    "audit_scope":  "production",
+    "audit_vulnerabilities":  {
+                                  "info":  0,
+                                  "low":  0,
+                                  "moderate":  0,
+                                  "high":  0,
+                                  "critical":  0,
+                                  "total":  0
+                              },
+    "github_actions_executed":  false,
+    "evidence_root":  "var/linux-frontend-check",
+    "generated_at_utc":  "2026-10-14T19:56:45.6984045Z",
+    "junit_case_elapsed_sum_seconds":  0.432399204,
+    "vitest_run_elapsed_seconds":  16.38
+}

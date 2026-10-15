@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "python_version": "3.13.15",
+  "platform": "linux",
+  "architecture": "x86_64",
+  "glibc": [
+    "glibc",
+    "2.36"
+  ],
+  "locked_package_count": 119,
+  "all_locked_versions_match": true,
+  "runtime_imports": [
+    "fastapi",
+    "pydantic",
+    "sqlalchemy",
+    "psycopg",
+    "redis",
+    "alembic",
+    "chromadb",
+    "fastembed",
+    "onnxruntime",
+    "langgraph.graph",
+    "langgraph.checkpoint.postgres",
+    "langsmith",
+    "mcp",
+    "sqlglot",
+    "enterprise_agent.application"
+  ],
+  "onnx_providers": [
+    "AzureExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "lock_sha256": "0b4eeddbd847cb61f4e2c5045d90a486d8ae7eb304ae6d4003fcc6a0e6371398",
+  "hash_locked_install_completed": true,
+  "actual_model_inference_executed": false
+}

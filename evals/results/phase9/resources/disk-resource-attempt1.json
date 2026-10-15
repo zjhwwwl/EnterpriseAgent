@@ -1,0 +1,14 @@
+{
+    "recorded_at_utc":  "2026-10-14T20:46:24.0797728Z",
+    "status":  "failed_before_test_execution",
+    "scope":  "single Linux model-integrity resource probe",
+    "pytest_collection_errors":  1,
+    "reported_collection_elapsed_seconds":  0.15,
+    "error_type":  "FileNotFoundError",
+    "failing_operation":  "pytest fd-capture TemporaryFile.truncate",
+    "tmpdir":  "/app/var/tmp/resource-run.\u003crandom\u003e",
+    "filesystem":  "Docker Desktop Windows disk bind mount",
+    "unchanged_test":  "tests/integration/test_rag_models.py::test_cached_model_verification_rejects_same_size_changed_artifact",
+    "next_adjustment":  "native /tmp capture with a separate new D-backed pytest --basetemp directory",
+    "counted_as_pass":  false
+}

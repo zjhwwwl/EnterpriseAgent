@@ -1,6 +1,6 @@
 # 技术决策
 
-当前 Phase 8 / 0.8.0 在既有 LangGraph 单 Agent、Agentic RAG、MCP、人工审批、受限分析与 Vue 五页外增加可复现证据检查和安全元数据追踪。执行状态、精确业务/SQL 行、工具参数和引用结构可以由程序核对，语义充分性仍需人工标签。当前验收见[Phase 8](phase-8.md)，此前阶段保持历史结果，工程检查和受控流程不替代数据库、浏览器或线上模型证据。
+当前 Phase 9 / 0.9.0 在既有 LangGraph 单 Agent、Agentic RAG、MCP、人工审批、受限分析、Vue 五页、评估与安全追踪外增加 Linux 镜像、全栈 Compose 与 CI。执行状态、精确业务/SQL 行、工具参数和引用结构可以由程序核对，语义充分性仍需人工标签。部署验收见[Phase 9](phase-9.md)，此前阶段保持历史结果，工程检查和受控流程不替代数据库、浏览器或线上模型证据。
 
 ## 模块化单体，单 Agent 多工具
 
@@ -10,7 +10,7 @@ API、Service、Repository、Schemas、RAG、Agents、Tools、MCP 和 CLI 在同
 
 ## Python 3.13 与哈希锁
 
-pyproject 声明依赖，requirements/base.lock、dev.lock 固定版本及分发文件哈希；bootstrap 使用 --require-hashes，再 --no-deps --no-build-isolation 可编辑安装。当前在 Windows Python 3.13 验证，不将锁文件存在当作 Linux 应用兼容证明。
+pyproject 声明依赖，Windows 使用 requirements/base.lock、dev.lock；Linux 镜像使用 linux-base.lock、linux-dev.lock，分别固定目标平台解析结果与分发文件哈希。bootstrap 使用 --require-hashes，再 --no-deps --no-build-isolation 可编辑安装；镜像以哈希安装和 --only-binary=:all: 拒绝隐式编译。Linux 解析通过 linux.constraints 保持共有包版本，并由真正的 Linux Python 3.13 重新计算依赖图，不能直接删除 Windows lock 中的 pywin32 就声称跨平台兼容。实际安装和推理证明见[Phase 9](phase-9.md)。
 
 使用项目 .venv、D 盘缓存与 TEMP/TMP，不修改全局 Python。Phase 3 本地推理采用 ONNX/FastEmbed，避免为展示功能引入整套训练框架；不能据此声称已经有GPU验证或训练能力。
 
@@ -82,7 +82,7 @@ Principal从HTTP认证/数据库取得，放在可信AgentContext，不从State�
 
 模型create_refund_request只准备操作摘要，先读适用结构化政策与对应知识文档。task_id可信绑定确保重复准备只有一审批；用户确认后固定服务端幂等键重用退款、工单、审计事务。业务提交和Checkpoint没有共同事务，显式recover通过原记录重放，不能将请求取消当作业务未提交。
 
-订单报告依据结构化事实，不采用模型最终自由文本；知识答案采用验证原文抽取。敏感操作提前保留后续步数，提交后陈旧引用只作为warning并保留真实申请结果。这里没有自动任务重领或后台维护系统，这一取舍使个人项目的失败边界明确且可测试。
+订单报告依据结构化事实，不采用模型最终自由文本；知识答案采用验证原文抽取。敏感操作提前保留后续步数，提交后陈旧引用只作为warning并保留真实申请结果。这里没有自动任务重领或后台维护系统，这一取舍使系统的失败边界明确且可测试。
 
 ## 官方 MCP 维护版本与协议边界
 
@@ -94,7 +94,7 @@ stdio 面向可信本机 Client，每个 Server 进程绑定一个现有 JWT，�
 
 Client / Server 不读取 `.env`，子进程配置白名单排除 DeepSeek、迁移/测试连接与 Redis；每次服务端预算默认 15 秒，示例客户端总预算 60 秒。stdout 仅协议、日志到 stderr，SDK 原始请求日志被隔离，业务日志只记安全工具名/错误码/耗时。Windows Client 的 Proactor 支持异步 subprocess，Server 的 Selector 兼容 psycopg；官方上下文负责退出实际子进程。[官方 stdio 源码](https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/v1.30.0/src/mcp/client/stdio/__init__.py)与真实退出测试同时保留。
 
-当前 Windows lock 含 `pywin32==312` 且没有平台 marker，不能直接用于 Linux 应用镜像。Phase 9 要为目标平台重新解析并验证依赖；本阶段不把本机锁安装通过当作跨平台部署证明。
+Windows lock 含 `pywin32==312` 且没有平台 marker，不能直接用于 Linux 应用镜像。Phase 9 已为 Linux Python 3.13 重新解析两套锁，并在实际目标环境完成哈希安装与全栈测试；Windows 安装结果和 Linux 验收分别记录。
 
 ## 专用分析身份与聚合视图
 
@@ -108,7 +108,7 @@ Client / Server 不读取 `.env`，子进程配置白名单排除 DeepSeek、迁
 
 固定 SQLGlot 30.22.0：该稳定分发声明 Python >=3.9，支持当前 Python 3.13；版本和哈希随锁文件审阅，不因存在更新就改动既有依赖。版本信息见[PyPI](https://pypi.org/project/sqlglot/30.22.0/)，AST 能力见[官方文档](https://sqlglot.com/sqlglot.html)。解析器负责语法树，不作为数据库权限隔离或业务语义证明。
 
-采用精确节点白名单，接受单个授权视图上的 SELECT；未知节点和函数拒绝。首版主动限制 JOIN、CTE、子查询、窗口函数、动态来源和用户函数，使审计面与个人项目测试范围清晰。有限聚合、算术、条件、CAST 足以覆盖当前四类运营例子。规划器返回严格 SQLPlan，后端不拼接模型自由文本，也不将 SQL 关键字黑名单作为安全保障。
+采用精确节点白名单，接受单个授权视图上的 SELECT；未知节点和函数拒绝。首版主动限制 JOIN、CTE、子查询、窗口函数、动态来源和用户函数，使审计面与系统测试范围清晰。有限聚合、算术、条件、CAST 足以覆盖当前四类运营例子。规划器返回严格 SQLPlan，后端不拼接模型自由文本，也不将 SQL 关键字黑名单作为安全保障。
 
 SQLGlot 部分解析警告包含完整原始 SQL，因此隔离其 logger、停止传播并用 NullHandler 接收；应用仅返回静态 analytics_sql_rejected 等错误码，不保存原始解析异常或未验证 SQL，避免第三方诊断绕过项目日志脱敏。
 
@@ -130,7 +130,7 @@ JWT 保存于内存，刷新后重新登录，避免演示 Key/Token 进入持�
 
 ## 明确评估合同，保留未知和失败
 
-本阶段新增 `evaluations` 包，不复制业务规则，也不让评估器通过特殊接口绕过确认。严格 Pydantic 合同冻结可核对的状态、工具、参数、引用、SQL 和预期拒绝，缺证据标为 `manual_review` 或失败。18 条自编场景分 development/regression/validation 呈现，validation 在首次在线运行前冻结；编写者知晓代码和语料，不称外部独立盲评。历史多意图退款失败纳入 regression，不通过事后改题或删除失败提高成绩。
+Phase 8 新增 `evaluations` 包，不复制业务规则，也不让评估器通过特殊接口绕过确认。严格 Pydantic 合同冻结可核对的状态、工具、参数、引用、SQL 和预期拒绝，缺证据标为 `manual_review` 或失败。18 条自编场景分 development/regression/validation 呈现，validation 在首次在线运行前冻结；编写者知晓代码和语料，不称外部独立盲评。历史多意图退款失败纳入 regression，不通过事后改题或删除失败提高成绩。
 
 引用当前版本校验、连续原文结构验证和片段语义足够是不同判断。工具名称和部分 DTO 参数也不能证明原始模型参数完整正确；只在实际采集原始调用后做 schema 检查，无法取得证据时保留复核状态。人工 review 未执行时不伪造标签或把 `manual_review` 算通过。
 
@@ -140,7 +140,7 @@ SQL 输出使用语义列角色与精确 Decimal 单元格核对，参考从真�
 
 ## 选择 LangSmith 摘要与默认本地追踪
 
-项目已有 LangGraph 依赖链中的 `langsmith==0.14.8`，本阶段选择它实现可选摘要出口，不再额外引入 Langfuse 服务、数据库或另一套 SDK。选择依据是复用现有稳定锁和满足当前作品集范围，不能把两个产品的名字互换，或把 SDK 存在当作云导出已验收。
+项目已有 LangGraph 依赖链中的 `langsmith==0.14.8`，本阶段选择它实现可选摘要出口，不再额外引入 Langfuse 服务、数据库或另一套 SDK。选择依据是复用现有稳定锁和满足当前系统的追踪需求，不能把两个产品的名字互换，或把 SDK 存在当作云导出已验收。
 
 本地 JSONL 采用显式元数据字段白名单，不序列化完整状态再尝试遮盖。保留 Task/segment UUID、固定节点与工具名、安全错误、耗时、累计 Token 和未知消费；不记录问题、回复、工具参数、SQL、文档、用户/订单数据。request ID 仅保存 SHA256。默认本地开启，远端需要项目专用开关、key、endpoint、project 全部显式配置；应用调用仍关闭 LangGraph 自动 tracing，避免继承 ambient 配置上传完整 prompt。
 
@@ -148,8 +148,16 @@ SQL 输出使用语义列角色与精确 Decimal 单元格核对，参考从真�
 
 实际冻结 18 案例的 5 pass/3 fail/9 manual_review/1 unobserved 保留，不为了展示成功改写失败。复杂退款未准备审批和知识规划失败揭示模型限制；退款“比例”对 percent oracle 的歧义与双周相同值/不同形状揭示 judge 范围。缺完整原始模型参数和人工语义标签时，schema/来源结构通过不能推导需求质量。修复评估参照和后续物流选样只改善软件证据采集，不把旧 run 改称新的模型成绩；完整 1034、参照专项 104 与最终定向 112 不累加，最后源码并未再跑全量或模型。详见[验收报告](../evals/results/phase8/report.md)。
 
-## 后续边界
+## 独立全栈项目与初始化权限
 
-- Phase9：应用镜像、Linux锁验证、全栈Compose、CI与干净启动。
+保留 Windows 开发方式和原有基础设施 Compose，新增独立项目以避免覆盖既有数据和端口。一次性 setup 负责初始化，API 与 web 是持续运行组件；setup 所需迁移账号不授予 API。业务账号与聚合分析 reader 继续使用已有权限检查，容器化不允许回退到 owner。
+
+模型资产已经由固定 revision、大小与 SHA256 校验，作为只读外部目录挂载。镜像不附带近 397 MB 的模型文件，容器启动也不暗中下载或调用 DeepSeek；聊天模型和远端追踪仍需显式启用。Linux 与 Windows 的依赖锁分别验证，工作流的实际 GitHub 执行结果与本机容器验证分开报告，详见[Phase 9](phase-9.md)。
+
+Nginx 使用 Docker 内部 DNS 与可重新解析的 upstream，DNS 缓存为 5 秒，避免 API 容器重建后继续使用旧地址。配置语法检查与重建后的真实代理请求分别记录；语法通过不替代实际 HTTP 结果，也不作为自动重发敏感业务请求的理由。
+
+本次 Linux 解析后两套锁为 107 / 119 项，仅排除四项 Windows 专用依赖，共有版本不变。最终解析复用同版本发行物的既有公开哈希，并通过两个独立 Linux 虚拟环境的严格哈希 / wheel 安装、pip check 与实际导入验证；未完成的全新跨平台哈希下载尝试保留，不包装为成功。真实容器和 HTTP 验收证明启动、配置与数据持久化，v2 RAG 两模式没有质量增益且混合重排时延更高；这些结果不推导新模型质量或 Linux 相对 Windows 的平台性能优势。
+
+完整测试保留实际非 root、只读根文件系统和真实模型要求。约 397 MB 的模型完整性测试副本超出小型 tmpfs 预算，因此具名 fixture 与缓存转入 D 盘独立测试挂载，每轮使用唯一目录并检查至少 2 GiB 空间；匿名捕获文件仍在 Linux `/tmp`。固定 Compose 数据库主机只在显式 Linux 测试标记、专用库名和普通测试账号均匹配时接受，不能将其推广为任意远端测试或应用库许可。最终 Linux 1097 项完整通过与前三轮失败分别归档。
 
 当前只验证本地模拟系统，不推送密钥、不接真实支付、不未经授权公开部署。

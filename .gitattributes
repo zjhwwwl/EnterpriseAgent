@@ -15,3 +15,4 @@ frontend/*.html text eol=lf
 frontend/.npmrc text eol=lf
 # Preserve archived evidence bytes so provenance hashes survive Git checkout.
 evals/results/phase8/** -text whitespace=blank-at-eol,space-before-tab,cr-at-eol
+evals/results/phase9/** -text whitespace=blank-at-eol,space-before-tab,cr-at-eol

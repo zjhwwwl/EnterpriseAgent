@@ -93,9 +93,9 @@ def _proxy(target=None):
 
 
 @pytest.fixture
-def live_chroma(request):
+def live_chroma(request, rag_settings):
     # This fixture never loads/prepares models; remove its isolated health probe.
-    settings = Settings(_env_file=None, app_env="test", chroma_timeout_seconds=0.5)
+    settings = rag_settings.model_copy(update={"chroma_timeout_seconds": 0.5})
     probe = ChromaStore(settings, "probe_" + uuid4().hex)
     try:
         available = probe.ready()

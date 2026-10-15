@@ -32,7 +32,7 @@ try {
     } else {
         & $npmPath run format:check
         if ($LASTEXITCODE -ne 0) { throw 'Frontend format check failed.' }
-        & $npmPath run test -- --reporter=default --reporter=json --outputFile=../var/test-results/phase8-frontend-unit.json
+        & $npmPath run test -- --reporter=default --reporter=json --outputFile=../var/test-results/phase9-frontend-unit.json
         if ($LASTEXITCODE -ne 0) { throw 'Frontend tests failed.' }
         & $npmPath run build
         if ($LASTEXITCODE -ne 0) { throw 'Frontend typecheck/build failed.' }

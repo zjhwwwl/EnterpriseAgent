@@ -1,0 +1,14 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "actual_linux_model_integrity_resource_regression",
+    "source":  "var/compose/test-output/test-results/phase9-disk-resource.xml",
+    "source_sha256":  "c40e56a5d664a5354a9f1bda92def6d78d93d298ba2a1360137b8d12493e1120",
+    "platform":  "linux/amd64",
+    "tests":  1,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "junit_elapsed_seconds":  12.09,
+    "counting_semantics":  "Focused resource regression; not added to complete-suite counts."
+}

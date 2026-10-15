@@ -1,0 +1,15 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "pytest_deployment_and_process_scope_unit",
+    "platform":  "Windows",
+    "source":  "var/test-results/phase9-process-scope-unit.xml",
+    "source_sha256":  "a8ff8f24154fa5c6fbd599cfdc7a90e385129f62f8f1eedf8f5be2e35114f8e6",
+    "tests":  48,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "junit_elapsed_seconds":  0.481,
+    "counting_semantics":  "Focused verification; not added to complete-suite counts.",
+    "online_deepseek_tested":  false
+}

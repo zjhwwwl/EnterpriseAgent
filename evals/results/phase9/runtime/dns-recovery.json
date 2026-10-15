@@ -1,0 +1,11 @@
+{
+    "checked_at_utc":  "2026-10-14T20:28:04.8728988Z",
+    "status":  "passed",
+    "old_edge_ip":  "172.20.0.2",
+    "new_edge_ip":  "172.20.0.254",
+    "container_id":  "814a98accbb3a9acf6d410e75fbb28fcf4e59f7a9522f870b439ad0620aba872",
+    "nginx_was_not_restarted":  true,
+    "proxy_ready_after_address_change":  true,
+    "poll_elapsed_ms":  3671.902,
+    "scope":  "Only this verified API endpoint on its own edge network was reattached to a previously unused in-subnet address; backend network and data were preserved. Actual proxy recovery, not a general DNS benchmark."
+}

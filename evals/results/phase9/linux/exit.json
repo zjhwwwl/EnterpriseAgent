@@ -1,0 +1,5 @@
+{
+    "finished_at_utc":  "2026-10-14T21:01:35.1313504Z",
+    "exit_code":  0,
+    "scope":  "Actual Linux full CI backend chain with D-backed unique named test fixtures, tmpfs anonymous capture, cache and fixed explicit test host corrections; failed and interrupted attempts retained"
+}

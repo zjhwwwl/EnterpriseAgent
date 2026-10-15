@@ -1,0 +1,15 @@
+{
+    "schema_version":  1,
+    "phase":  9,
+    "verification_kind":  "linux_frontend_unit_junit",
+    "platform":  "linux/amd64",
+    "source":  "var/linux-frontend-check/phase9-frontend.xml",
+    "source_sha256":  "c8dff6c3c94306370ed889e18b85b85d8ecb0c5e59706fde6a818a8c7cc02873",
+    "test_files":  6,
+    "tests":  43,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "junit_case_elapsed_sum_seconds":  0.432399204,
+    "elapsed_semantics":  "JUnit test-file durations are distinct from the Vitest process wall time."
+}
